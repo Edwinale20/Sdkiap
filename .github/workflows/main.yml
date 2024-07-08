@@ -13,14 +13,18 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'  # Cambia a la versión de Python que necesites
+        python-version: '3.8'
 
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
 
-    - name: Run script
+    - name: Create credentials file
       env:
-        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+        GDRIVE_CREDENTIALS_JSON: ${{ secrets.GDRIVE_CREDENTIALS_JSON }}
       run: |
-        streamlit run VentaPerdida.py  # Reemplaza "main.py" con el nombre de tu script si es diferente
+        echo "$GDRIVE_CREDENTIALS_JSON" > credentials.json
+
+    - name: Run script
+      run: |
+        streamlit run main.py  # Reemplaza "VentaPerdida.py" con el nombre de tu script si es diferente
