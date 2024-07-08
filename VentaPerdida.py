@@ -103,7 +103,7 @@ def plot_venta_perdida_tiempo(data, venta_pr_data):
     venta_pr_grouped = venta_pr_data.groupby('Día Contable')['Venta Neta Total'].sum().reset_index()
     fig.add_trace(go.Scatter(x=venta_pr_grouped['Día Contable'], y=venta_pr_grouped['Venta Neta Total'], mode='lines+markers', name='Venta Neta', line=dict(color='rgb(55, 128, 191)')))
 
-    fig.update_layout(title='Venta Total vs Venta Perdida por Día',
+    fig.update_layout(#title='Venta Total vs Venta Perdida por Día',
                       xaxis_title='Fecha',
                       yaxis_title='Monto (Pesos)',
                       yaxis=dict(tickformat="$,d"))
