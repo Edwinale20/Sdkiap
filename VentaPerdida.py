@@ -17,8 +17,8 @@ st.set_page_config(
 st.title("📊 Reporte de Venta Pérdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
-# Ruta de la carpeta con los archivos CSV
-folder_path = "C:\Users\omen0\OneDrive\Venta Perdida"
+# Ruta de la carpeta con los archivos CSV en OneDrive sincronizado
+folder_path = "C:/Users/omen0/OneDrive/Venta Perdida"
 venta_pr_path = "C:/Users/omen0/OneDrive/Venta Perdida/Venta PR.xlsx"
 
 # Función para procesar archivos en la carpeta especificada
@@ -273,3 +273,4 @@ if data is not None:
 
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
