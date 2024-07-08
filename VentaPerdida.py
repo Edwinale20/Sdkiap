@@ -222,7 +222,7 @@ if data is not None:
     col1, col2 = st.columns((1, 1))
 
     with col1:
-        st.markdown('#### Venta Perdida Total')
+        st.markdown('#### Venta Perdida Total 🧮')
         total_venta_perdida = data['VENTA_PERDIDA_PESOS'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
@@ -232,7 +232,7 @@ if data is not None:
         st.plotly_chart(venta_perdida_dia_chart, use_container_width=True)
 
     with col2:
-        st.markdown('#### Venta Perdida Acumulada')
+        st.markdown('#### Venta Perdida Acumulada 📅')
         total_venta_perdida_acumulada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         venta_perdida_acumulada_chart = make_donut_chart(total_venta_perdida_acumulada, total_venta_perdida, 'Acumulada', 'orange')
         st.plotly_chart(venta_perdida_acumulada_chart, use_container_width=True)
