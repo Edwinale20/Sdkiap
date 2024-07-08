@@ -146,14 +146,22 @@ def plot_venta_perdida_proveedor(data):
 # Función para gráfico de comparación de Venta Perdida vs Venta Neta Total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     filtered_venta_pr = venta_pr_data[venta_pr_data['Día Contable'].isin(filtro_fechas)]
-    comparacion_data = pd.DataFrame({
-        'Tipo de Venta': ['Venta Perdida', 'Venta Neta Total'],
-        'Monto (Pesos)': [data['VENTA_PERDIDA_PESOS'].sum(), filtered_venta_pr['Venta Neta Total'].sum()]
-    })
-    fig = px.bar(comparacion_data, x='Tipo de Venta', y='Monto (Pesos)', text='Monto (Pesos)', color='Tipo de Venta', color_discrete_map={'Venta Perdida': 'red', 'Venta Neta Total': 'blue'})
-    fig.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
-    fig.update_layout(title='Comparación de Venta Perdida vs Venta Neta Total',
-                      yaxis=dict(tickformat="$,d"))
+    
+    # Sumar las ventas
+    venta_perdida_total = data['VENTA_PERDIDA_PESOS'].sum()
+    venta_neta_total = filtered_venta_pr['Venta Neta Total'].sum()
+    venta_no_perdida = venta_neta_total - venta_perdida_total
+
+    # Crear figura de Plotly
+    fig = go.Figure(data=[
+        go.Bar(name='Venta Perdida', x=['Venta Total'], y=[venta_perdida_total], marker_color='red', text=f'${venta_perdida_total:,.0f}', textposition='inside'),
+        go.Bar(name='Venta Neta Total', x=['Venta Total'], y=[venta_no_perdida], marker_color='blue', text=f'${venta_no_perdida:,.0f}', textposition='inside')
+    ])
+    
+    fig.update_layout(barmode='stack', title='Comparación de Venta Perdida vs Venta Neta Total',
+                      yaxis=dict(tickformat="$,d", title='Monto (Pesos)'),
+                      xaxis=dict(title='Tipo de Venta'))
+
     return fig
 
 # Función para gráfico de comparación de Venta Perdida vs Venta Neta Total día por día
