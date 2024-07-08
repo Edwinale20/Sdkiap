@@ -1,0 +1,26 @@
+name: Google Drive Integration
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'  # Cambia a la versión de Python que necesites
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run script
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      run: |
+        streamlit run main.py  # Reemplaza "main.py" con el nombre de tu script si es diferente
