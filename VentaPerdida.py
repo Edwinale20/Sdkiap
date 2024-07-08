@@ -266,12 +266,12 @@ if data is not None:
     col7, col8 = st.columns((1, 1))
 
     with col7:
-        st.markdown('#### Artículos con Mayor Venta Perdida por División')
+        st.markdown('#### Artículos con Mayor Venta Perdida por División 🏙️')
         articulos_por_division_chart = plot_articulos_por_division(filtered_data)
         st.plotly_chart(articulos_por_division_chart, use_container_width=True)
 
     with col8:
-        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total Día por Día')
+        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total Día por Día 📅')
         comparacion_diaria_chart = plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha'])
         st.plotly_chart(comparacion_diaria_chart, use_container_width=True)
 
