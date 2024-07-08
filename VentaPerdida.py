@@ -63,7 +63,7 @@ def apply_filters(data, proveedor, plaza, categoria, fecha):
 # Función para aplicar la vista acumulativa
 def apply_accumulated_view(data):
     accumulated_data = data.copy()
-    accumulated_data = accumulated_data.groupby(['Fecha', 'PLAZA', 'DESC_ARTICULO', 'DIVISION', 'NOMBRE_TIENDA']).sum().groupby(level=[1, 2, 3, 4]).cumsum().reset_index()
+    accumulated_data['VENTA_PERDIDA_PESOS'] = accumulated_data.groupby(['PLAZA', 'DESC_ARTICULO', 'DIVISION', 'NOMBRE_TIENDA'])['VENTA_PERDIDA_PESOS'].cumsum()
     return accumulated_data
 
 # Función para gráfico de barras de VENTA_PERDIDA_PESOS por PLAZA
@@ -216,7 +216,7 @@ if data is not None:
 
     # Aplicar vista acumulativa si es necesario
     if vista == "Acumulada":
-        filtered_data = apply_accumulated_view(filtered_data)
+        filtered_data = apply_accumulated_view(data)
 
     # Columnas para la disposición de gráficos
     col1, col2 = st.columns((1, 1))
