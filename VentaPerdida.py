@@ -25,18 +25,19 @@ st.markdown("En esta página podrás visualizar la venta pérdida día con día,
 # Escopos de la API
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
-# Cargar las credenciales desde la variable de entorno
+# Cargar las credenciales desde el archivo JSON
 def authenticate_drive():
     creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # Si no hay (válidas) credenciales disponibles, deja que el usuario inicie sesión.
+    if os.path.exists('credentials.json'):
+        with open('credentials.json', 'r') as json_file:
+            creds_data = json.load(json_file)
+        creds = Credentials.from_authorized_user_info(creds_data, SCOPES)
+    
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_config(creds_data, SCOPES)
             creds = flow.run_local_server(port=0)
         # Guarda las credenciales para la próxima ejecución
         with open('token.json', 'w') as token:
