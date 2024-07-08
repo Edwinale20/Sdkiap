@@ -1,12 +1,7 @@
 import os
-import json
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
-import gdown
 
 # Configuración de la página
 st.set_page_config(
@@ -20,68 +15,26 @@ st.set_page_config(
 st.title("📊 Reporte de Venta Pérdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
-# Escopos de la API
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-
-# Cargar las credenciales desde el archivo JSON
-def authenticate_drive():
-    creds = None
-    if os.path.exists('credentials.json'):
-        with open('credentials.json', 'r') as json_file:
-            creds_data = json.load(json_file)
-        
-        # Load credentials using from_authorized_user_info method
-        creds = Credentials.from_authorized_user_info(creds_data, SCOPES)
-    
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_config(creds_data, SCOPES)
-            creds = flow.run_local_server(port=0)
-        
-        # Guardar las credenciales actualizadas para la próxima ejecución
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-
-    # Construir el servicio de Google Drive API
-    service = build('drive', 'v3', credentials=creds)
-    return service
-
-# Función para obtener la lista de archivos en la carpeta de Google Drive
-def get_files_in_folder(service, folder_id):
-    results = service.files().list(
-        q=f"'{folder_id}' in parents",
-        pageSize=1000, fields="nextPageToken, files(id, name)").execute()
-    items = results.get('files', [])
-    return items
-
-# Función para descargar y leer un archivo CSV desde Google Drive
-def load_data(file_id):
-    url = f'https://drive.google.com/uc?id={file_id}'
-    output = f'{file_id}.csv'
-    gdown.download(url, output, quiet=False)
-    return pd.read_csv(output, encoding='ISO-8859-1')
+# Ruta de la carpeta con los archivos CSV
+folder_path = "venta"
 
 # Función para procesar archivos en la carpeta especificada
 @st.cache_data
-def process_data(service, folder_id):
-    items = get_files_in_folder(service, folder_id)
+def process_data(folder_path):
+    all_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
     all_data = []
     file_dates = []
 
-    for item in items:
+    for file in all_files:
         try:
-            file_id = item['id']
-            file_name = item['name']
-            date_str = file_name.split('.')[0]
+            date_str = file.split('.')[0]
             date = datetime.strptime(date_str, '%d%m%Y')
-            df = load_data(file_id)
+            df = pd.read_csv(os.path.join(folder_path, file), encoding='ISO-8859-1')
             df['Fecha'] = date
             all_data.append(df)
             file_dates.append(date)
         except Exception as e:
-            st.write(f"Error leyendo el archivo {file_name}: {e}")
+            st.write(f"Error leyendo el archivo {file}: {e}")
 
     if not all_data:
         return None, file_dates
@@ -91,11 +44,8 @@ def process_data(service, folder_id):
         data['Semana'] = data['Fecha'].apply(lambda x: (x - timedelta(days=x.weekday())).strftime('%U'))
         return data, file_dates
 
-# Autenticar y procesar los archivos desde Google Drive
-service = authenticate_drive()
-folder_id = '1WzWr_OTJymi2dVRdcypTqdN9J-QLkm--'  # Reemplazar con el ID de tu carpeta en Google Drive
-
-data, file_dates = process_data(service, folder_id)
+# Procesar archivos en la carpeta especificada
+data, file_dates = process_data(folder_path)
 
 
 # Función para aplicar los filtros
