@@ -74,7 +74,7 @@ def plot_venta_perdida_plaza(data):
     fig = go.Figure()
     grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     fig.add_trace(go.Bar(x=grouped_data['PLAZA'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(26, 118, 255)'))
-    fig.update_layout(
+    fig.update_layout(title='Venta Perdida en Pesos por Plaza',
                       xaxis_title='Plaza',
                       yaxis_title='Venta Perdida (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -88,7 +88,7 @@ def plot_articulos_venta_perdida(data):
     grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
     fig.add_trace(go.Bar(x=grouped_data['DESC_ARTICULO'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(55, 83, 109)'))
-    fig.update_layout(
+    fig.update_layout(title='Top 10 Artículos con Más Venta Perdida en Pesos',
                       xaxis_title='Artículo',
                       yaxis_title='Venta Perdida (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -127,7 +127,7 @@ def plot_articulos_por_division(data):
         return "No se encontraron datos para la columna 'DIVISION'."
     fig = px.treemap(data, path=['DIVISION', 'DESC_ARTICULO'], values='VENTA_PERDIDA_PESOS',
                      color='VENTA_PERDIDA_PESOS', hover_data=['VENTA_PERDIDA_PESOS'],
-                     color_continuous_scale='RdBu')
+                     color_continuous_scale='RdBu', title='Artículos con Mayor Venta Perdida por División')
     return fig
 
 # Función para gráfico de barras de VENTA_PERDIDA_PESOS por PROVEEDOR
@@ -137,7 +137,7 @@ def plot_venta_perdida_proveedor(data):
     fig = go.Figure()
     grouped_data = data.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     fig.add_trace(go.Bar(x=grouped_data['PROVEEDOR'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(255, 165, 0)'))
-    fig.update_layout(
+    fig.update_layout(title='Venta Perdida en Pesos por Proveedor',
                       xaxis_title='Proveedor',
                       yaxis_title='Venta Perdida (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -152,7 +152,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     })
     fig = px.bar(comparacion_data, x='Tipo de Venta', y='Monto (Pesos)', text='Monto (Pesos)', color='Tipo de Venta', color_discrete_map={'Venta Perdida': 'red', 'Venta Neta Total': 'blue'})
     fig.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
-    fig.update_layout(
+    fig.update_layout(title='Comparación de Venta Perdida vs Venta Neta Total',
                       yaxis=dict(tickformat="$,d"))
     return fig
 
@@ -164,7 +164,7 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=comparacion_diaria['Fecha'], y=comparacion_diaria['VENTA_PERDIDA_PESOS'], mode='lines+markers', name='Venta Perdida', line=dict(color='red')))
     fig.add_trace(go.Scatter(x=comparacion_diaria['Fecha'], y=comparacion_diaria['Venta Neta Total'], mode='lines+markers', name='Venta Neta Total', line=dict(color='blue')))
-    fig.update_layout(
+    fig.update_layout(title='Comparación de Venta Perdida vs Venta Neta Total Día por Día',
                       xaxis_title='Fecha',
                       yaxis_title='Monto (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -226,23 +226,23 @@ if data is not None:
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
 
+        st.markdown('#### Venta Perdida por Día')
+        venta_perdida_dia_chart = plot_venta_perdida(data)
+        st.plotly_chart(venta_perdida_dia_chart, use_container_width=True)
+
+    with col2:
         st.markdown('#### Venta Perdida Acumulada')
         total_venta_perdida_acumulada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         venta_perdida_acumulada_chart = make_donut_chart(total_venta_perdida_acumulada, total_venta_perdida, 'Acumulada', 'orange')
         st.plotly_chart(venta_perdida_acumulada_chart, use_container_width=True)
 
-    with col2:
-        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total')
-        comparacion_chart = plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha'])
-        st.plotly_chart(comparacion_chart, use_container_width=True)
-
     # Segunda fila de gráficos
     col3, col4 = st.columns((1, 1))
 
     with col3:
-        st.markdown('#### Venta Perdida por Día')
-        venta_perdida_dia_chart = plot_venta_perdida(data)
-        st.plotly_chart(venta_perdida_dia_chart, use_container_width=True)
+        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total')
+        comparacion_chart = plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha'])
+        st.plotly_chart(comparacion_chart, use_container_width=True)
 
     with col4:
         st.markdown('#### Venta Perdida en Pesos por Plaza')
@@ -266,12 +266,12 @@ if data is not None:
     col7, col8 = st.columns((1, 1))
 
     with col7:
-        st.markdown('#### Artículos con Mayor Venta Perdida por División 🏙️')
+        st.markdown('#### Artículos con Mayor Venta Perdida por División')
         articulos_por_division_chart = plot_articulos_por_division(filtered_data)
         st.plotly_chart(articulos_por_division_chart, use_container_width=True)
 
     with col8:
-        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total Día por Día 📅')
+        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total Día por Día')
         comparacion_diaria_chart = plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha'])
         st.plotly_chart(comparacion_diaria_chart, use_container_width=True)
 
