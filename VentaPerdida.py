@@ -1,6 +1,7 @@
 import os
 import json
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import pandas as pd
 import streamlit as st
@@ -8,13 +9,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import gdown
-
-# Cargar las credenciales desde la variable de entorno
-def authenticate_drive():
-    credentials_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
-    credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=['https://www.googleapis.com/auth/drive.readonly'])
-    service = build('drive', 'v3', credentials=credentials)
-    return service
 
 # Configuración de la página
 st.set_page_config(
@@ -27,6 +21,29 @@ st.set_page_config(
 # Título de la aplicación
 st.title("📊 Reporte de Venta Pérdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
+
+# Escopos de la API
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+
+# Cargar las credenciales desde la variable de entorno
+def authenticate_drive():
+    creds = None
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # Si no hay (válidas) credenciales disponibles, deja que el usuario inicie sesión.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Guarda las credenciales para la próxima ejecución
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
+
+    service = build('drive', 'v3', credentials=creds)
+    return service
 
 # Función para obtener la lista de archivos en la carpeta de Google Drive
 def get_files_in_folder(service, folder_id):
@@ -77,6 +94,12 @@ def load_venta_pr(file_path):
     df = pd.read_excel(file_path)
     df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
     return df
+
+# Autenticar y procesar los archivos desde Google Drive
+service = authenticate_drive()
+folder_id = '1WzWr_OTJymi2dVRdcypTqdN9J-QLkm--'  # Reemplaza con el ID de tu carpeta en Google Drive
+
+data, file_dates = process_data(service, folder_id)
 
 # Función para aplicar los filtros
 def apply_filters(data, proveedor, plaza, categoria, fecha):
