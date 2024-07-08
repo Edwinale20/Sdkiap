@@ -88,7 +88,7 @@ def process_data(service, folder_id):
     else:
         data = pd.concat(all_data)
         data['Fecha'] = pd.to_datetime(data['Fecha'])
-        data['Semana'] = data['Fecha'].apply(lambda x: (x - timedelta(days=x.weekday())).strftime('%U')
+        data['Semana'] = data['Fecha'].apply(lambda x: (x - timedelta(days=x.weekday())).strftime('%U'))
         return data, file_dates
 
 # Autenticar y procesar los archivos desde Google Drive
