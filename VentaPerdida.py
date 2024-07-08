@@ -74,7 +74,7 @@ def plot_venta_perdida_plaza(data):
     fig = go.Figure()
     grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     fig.add_trace(go.Bar(x=grouped_data['PLAZA'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(26, 118, 255)'))
-    fig.update_layout(title='Venta Perdida en Pesos por Plaza',
+    fig.update_layout(#title='Venta Perdida en Pesos por Plaza',
                       xaxis_title='Plaza',
                       yaxis_title='Venta Perdida (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -88,7 +88,7 @@ def plot_articulos_venta_perdida(data):
     grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
     fig.add_trace(go.Bar(x=grouped_data['DESC_ARTICULO'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(55, 83, 109)'))
-    fig.update_layout(title='Top 10 Artículos con Más Venta Perdida en Pesos',
+    fig.update_layout(#title='Top 10 Artículos con Más Venta Perdida en Pesos',
                       xaxis_title='Artículo',
                       yaxis_title='Venta Perdida (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -127,7 +127,7 @@ def plot_articulos_por_division(data):
         return "No se encontraron datos para la columna 'DIVISION'."
     fig = px.treemap(data, path=['DIVISION', 'DESC_ARTICULO'], values='VENTA_PERDIDA_PESOS',
                      color='VENTA_PERDIDA_PESOS', hover_data=['VENTA_PERDIDA_PESOS'],
-                     color_continuous_scale='RdBu', title='Artículos con Mayor Venta Perdida por División')
+                     color_continuous_scale='RdBu', #title='Artículos con Mayor Venta Perdida por División')
     return fig
 
 # Función para gráfico de barras de VENTA_PERDIDA_PESOS por PROVEEDOR
@@ -137,7 +137,7 @@ def plot_venta_perdida_proveedor(data):
     fig = go.Figure()
     grouped_data = data.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     fig.add_trace(go.Bar(x=grouped_data['PROVEEDOR'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(255, 165, 0)'))
-    fig.update_layout(title='Venta Perdida en Pesos por Proveedor',
+    fig.update_layout(#title='Venta Perdida en Pesos por Proveedor',
                       xaxis_title='Proveedor',
                       yaxis_title='Venta Perdida (Pesos)',
                       yaxis=dict(tickformat="$,d"))
@@ -152,7 +152,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     })
     fig = px.bar(comparacion_data, x='Tipo de Venta', y='Monto (Pesos)', text='Monto (Pesos)', color='Tipo de Venta', color_discrete_map={'Venta Perdida': 'red', 'Venta Neta Total': 'blue'})
     fig.update_traces(texttemplate='$%{text:,.0f}', textposition='outside')
-    fig.update_layout(title='Comparación de Venta Perdida vs Venta Neta Total',
+    fig.update_layout(#title='Comparación de Venta Perdida vs Venta Neta Total',
                       yaxis=dict(tickformat="$,d"))
     return fig
 
@@ -164,7 +164,7 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=comparacion_diaria['Fecha'], y=comparacion_diaria['VENTA_PERDIDA_PESOS'], mode='lines+markers', name='Venta Perdida', line=dict(color='red')))
     fig.add_trace(go.Scatter(x=comparacion_diaria['Fecha'], y=comparacion_diaria['Venta Neta Total'], mode='lines+markers', name='Venta Neta Total', line=dict(color='blue')))
-    fig.update_layout(title='Comparación de Venta Perdida vs Venta Neta Total Día por Día',
+    fig.update_layout(#title='Comparación de Venta Perdida vs Venta Neta Total Día por Día',
                       xaxis_title='Fecha',
                       yaxis_title='Monto (Pesos)',
                       yaxis=dict(tickformat="$,d"))
