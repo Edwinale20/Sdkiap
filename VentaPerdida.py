@@ -5,8 +5,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import pandas as pd
 import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import gdown
 
@@ -31,6 +29,8 @@ def authenticate_drive():
     if os.path.exists('credentials.json'):
         with open('credentials.json', 'r') as json_file:
             creds_data = json.load(json_file)
+        
+        # Load credentials using from_authorized_user_info method
         creds = Credentials.from_authorized_user_info(creds_data, SCOPES)
     
     if not creds or not creds.valid:
@@ -39,10 +39,12 @@ def authenticate_drive():
         else:
             flow = InstalledAppFlow.from_client_config(creds_data, SCOPES)
             creds = flow.run_local_server(port=0)
-        # Guarda las credenciales para la próxima ejecución
+        
+        # Guardar las credenciales actualizadas para la próxima ejecución
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
+    # Construir el servicio de Google Drive API
     service = build('drive', 'v3', credentials=creds)
     return service
 
@@ -86,21 +88,15 @@ def process_data(service, folder_id):
     else:
         data = pd.concat(all_data)
         data['Fecha'] = pd.to_datetime(data['Fecha'])
-        data['Semana'] = data['Fecha'].apply(lambda x: (x - timedelta(days=x.weekday())).strftime('%U'))
+        data['Semana'] = data['Fecha'].apply(lambda x: (x - timedelta(days=x.weekday())).strftime('%U')
         return data, file_dates
-
-# Función para procesar el archivo de Venta PR
-@st.cache_data
-def load_venta_pr(file_path):
-    df = pd.read_excel(file_path)
-    df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
-    return df
 
 # Autenticar y procesar los archivos desde Google Drive
 service = authenticate_drive()
-folder_id = '1WzWr_OTJymi2dVRdcypTqdN9J-QLkm--'  # Reemplaza con el ID de tu carpeta en Google Drive
+folder_id = '1WzWr_OTJymi2dVRdcypTqdN9J-QLkm--'  # Reemplazar con el ID de tu carpeta en Google Drive
 
 data, file_dates = process_data(service, folder_id)
+
 
 # Función para aplicar los filtros
 def apply_filters(data, proveedor, plaza, categoria, fecha):
