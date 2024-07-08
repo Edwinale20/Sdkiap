@@ -127,6 +127,7 @@ def plot_articulos_por_division(data):
     fig = px.treemap(data, path=['DIVISION', 'DESC_ARTICULO'], values='VENTA_PERDIDA_PESOS',
                      color='VENTA_PERDIDA_PESOS', hover_data=['VENTA_PERDIDA_PESOS'],
                      color_continuous_scale='RdBu', title='Artículos con Mayor Venta Perdida por División')
+    fig.update_layout(coloraxis_colorbar_tickformat='$,.0f') # Formato de dólar sin decimales
     return fig
 
 # Función para gráfico de barras de VENTA_PERDIDA_PESOS por PROVEEDOR
@@ -179,6 +180,7 @@ def make_donut_chart(value, total, title, color):
         hole=0.7,
         textinfo='label+percent',
     ))
+    fig.update_traces(texttemplate='%{percent:.0f}%', textposition='inside') # Porcentajes sin decimales
     fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=200, width=200)
     return fig
 
@@ -226,7 +228,7 @@ if data is not None:
         st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
 
         st.markdown('#### Venta Perdida por Día')
-        venta_perdida_dia_chart = plot_venta_perdida(data)
+        venta_perdida_dia_chart = plot_venta_perdida(filtered_data)
         st.plotly_chart(venta_perdida_dia_chart, use_container_width=True)
 
     with col2:
@@ -273,6 +275,10 @@ if data is not None:
         st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total Día por Día')
         comparacion_diaria_chart = plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha'])
         st.plotly_chart(comparacion_diaria_chart, use_container_width=True)
+
+else:
+    st.warning("No se encontraron datos en la carpeta especificada.")
+
 
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
