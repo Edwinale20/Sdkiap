@@ -21,7 +21,6 @@ st.markdown("En esta página podrás visualizar la venta pérdida día con día,
 folder_path = "venta"
 
 # Función para procesar archivos en la carpeta especificada
-@st.cache_data
 def process_data(folder_path):
     all_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
     all_data = []
@@ -45,6 +44,9 @@ def process_data(folder_path):
         data['Fecha'] = pd.to_datetime(data['Fecha'])
         data['Semana'] = data['Fecha'].apply(lambda x: (x - timedelta(days=x.weekday())).strftime('%U'))
         return data, file_dates
+
+# Procesar archivos en la carpeta especificada
+data, file_dates = process_data(folder_path)
 
 # Función para aplicar los filtros
 def apply_filters(data, proveedor, plaza, categoria, fecha):
