@@ -27,4 +27,5 @@ jobs:
 
     - name: Run script
       run: |
-        streamlit run main.py  # Reemplaza "VentaPerdida.py" con el nombre de tu script si es diferente
+        streamlit run main.py  # Reemplaza "main.py" con el nombre de tu script si es diferente
+
