@@ -101,6 +101,7 @@ folder_id = '1WzWr_OTJymi2dVRdcypTqdN9J-QLkm--'  # Reemplaza con el ID de tu car
 
 data, file_dates = process_data(service, folder_id)
 
+
 # Función para aplicar los filtros
 def apply_filters(data, proveedor, plaza, categoria, fecha):
     if proveedor:
