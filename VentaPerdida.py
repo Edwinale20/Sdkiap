@@ -226,54 +226,51 @@ if data is not None:
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
 
+    with col2:
         st.markdown('#### Venta Perdida por Día')
         venta_perdida_dia_chart = plot_venta_perdida(data)
         st.plotly_chart(venta_perdida_dia_chart, use_container_width=True)
-
-    with col2:
-        st.markdown('#### Venta Perdida Acumulada')
-        total_venta_perdida_acumulada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
-        venta_perdida_acumulada_chart = make_donut_chart(total_venta_perdida_acumulada, total_venta_perdida, 'Acumulada', 'orange')
-        st.plotly_chart(venta_perdida_acumulada_chart, use_container_width=True)
 
     # Segunda fila de gráficos
     col3, col4 = st.columns((1, 1))
 
     with col3:
+        st.markdown('#### Venta Perdida Acumulada')
+        total_venta_perdida_acumulada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
+        venta_perdida_acumulada_chart = make_donut_chart(total_venta_perdida_acumulada, total_venta_perdida, 'Acumulada', 'orange')
+        st.plotly_chart(venta_perdida_acumulada_chart, use_container_width=True)
+
+    with col4:
         st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total')
         comparacion_chart = plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha'])
         st.plotly_chart(comparacion_chart, use_container_width=True)
-
-    with col4:
-        st.markdown('#### Venta Perdida en Pesos por Plaza')
-        venta_perdida_plaza_chart = plot_venta_perdida_plaza(filtered_data)
-        st.plotly_chart(venta_perdida_plaza_chart, use_container_width=True)
 
     # Tercera fila de gráficos
     col5, col6 = st.columns((1, 1))
     
     with col5:
+        st.markdown('#### Venta Perdida en Pesos por Plaza')
+        venta_perdida_plaza_chart = plot_venta_perdida_plaza(filtered_data)
+        st.plotly_chart(venta_perdida_plaza_chart, use_container_width=True)
+
+    with col6:
         st.markdown('#### Top 10 Artículos con Mayor Venta Perdida')
         articulos_venta_perdida_chart = plot_articulos_venta_perdida(filtered_data)
         st.plotly_chart(articulos_venta_perdida_chart, use_container_width=True)
-
-    with col6:
-        st.markdown('#### Venta Perdida en Pesos por Proveedor')
-        venta_perdida_proveedor_chart = plot_venta_perdida_proveedor(filtered_data)
-        st.plotly_chart(venta_perdida_proveedor_chart, use_container_width=True)
 
     # Cuarta fila de gráficos
     col7, col8 = st.columns((1, 1))
 
     with col7:
+        st.markdown('#### Venta Perdida en Pesos por Proveedor')
+        venta_perdida_proveedor_chart = plot_venta_perdida_proveedor(filtered_data)
+        st.plotly_chart(venta_perdida_proveedor_chart, use_container_width=True)
+
+    with col8:
         st.markdown('#### Artículos con Mayor Venta Perdida por División')
         articulos_por_division_chart = plot_articulos_por_division(filtered_data)
         st.plotly_chart(articulos_por_division_chart, use_container_width=True)
 
-    with col8:
-        st.markdown('#### Comparación de Venta Perdida vs Venta Neta Total Día por Día')
-        comparacion_diaria_chart = plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha'])
-        st.plotly_chart(comparacion_diaria_chart, use_container_width=True)
-
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
