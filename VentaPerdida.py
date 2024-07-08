@@ -278,4 +278,3 @@ if data is not None:
 
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
