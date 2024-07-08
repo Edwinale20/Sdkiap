@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 # Configuración de la página
@@ -46,7 +48,6 @@ def process_data(folder_path):
 
 # Procesar archivos en la carpeta especificada
 data, file_dates = process_data(folder_path)
-
 
 # Función para aplicar los filtros
 def apply_filters(data, proveedor, plaza, categoria, fecha):
@@ -182,10 +183,17 @@ def make_donut_chart(value, total, title, color):
     fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=200, width=200)
     return fig
 
-# Autenticar y procesar los archivos desde Google Drive
-service = authenticate_drive()
-folder_id = 'your_folder_id'  # Reemplaza con el ID de tu carpeta en Google Drive
-data, file_dates = process_data(service, folder_id)
+# Función para procesar el archivo de Venta PR
+@st.cache_data
+def load_venta_pr(file_path):
+    df = pd.read_excel(file_path)
+    df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
+    return df
+
+venta_pr_path = 'venta/Venta PR.xlsx'
+
+# Procesar archivos en la carpeta especificada
+data, file_dates = process_data(folder_path)
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Mostrar dashboard si hay datos disponibles
@@ -269,5 +277,3 @@ if data is not None:
 
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
-
