@@ -157,17 +157,34 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     return fig
 
 # Función para gráfico de comparación de Venta Perdida vs Venta Neta Total día por día
-def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fechas):
+def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fechas, view_percentage=False):
     filtered_venta_pr = venta_pr_data[venta_pr_data['Día Contable'].isin(filtro_fechas)]
     comparacion_diaria = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     comparacion_diaria = comparacion_diaria.merge(filtered_venta_pr.groupby('Día Contable')['Venta Neta Total'].sum().reset_index(), left_on='Fecha', right_on='Día Contable')
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=comparacion_diaria['Fecha'], y=comparacion_diaria['VENTA_PERDIDA_PESOS'], mode='lines+markers', name='Venta Perdida', line=dict(color='red')))
-    fig.add_trace(go.Scatter(x=comparacion_diaria['Fecha'], y=comparacion_diaria['Venta Neta Total'], mode='lines+markers', name='Venta Neta Total', line=dict(color='blue')))
-    fig.update_layout(title='Comparación de Venta Perdida vs Venta Neta Total Día por Día',
-                      xaxis_title='Fecha',
-                      yaxis_title='Monto (Pesos)',
-                      yaxis=dict(tickformat="$,d"))
+    
+    if view_percentage:
+        comparacion_diaria['Venta Perdida (%)'] = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+        comparacion_diaria['Venta Neta Total (%)'] = (comparacion_diaria['Venta Neta Total'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+
+        fig = go.Figure(data=[
+            go.Bar(name='Venta Perdida (%)', x=comparacion_diaria['Fecha'], y=comparacion_diaria['Venta Perdida (%)'], marker_color='red'),
+            go.Bar(name='Venta Neta Total (%)', x=comparacion_diaria['Fecha'], y=comparacion_diaria['Venta Neta Total (%)'], marker_color='blue')
+        ])
+        
+        fig.update_layout(barmode='stack', title='Comparación de Venta Perdida vs Venta Neta Total Día por Día (Porcentaje)',
+                          xaxis_title='Fecha',
+                          yaxis_title='Porcentaje (%)')
+    else:
+        fig = go.Figure(data=[
+            go.Bar(name='Venta Perdida', x=comparacion_diaria['Fecha'], y=comparacion_diaria['VENTA_PERDIDA_PESOS'], marker_color='red'),
+            go.Bar(name='Venta Neta Total', x=comparacion_diaria['Fecha'], y=comparacion_diaria['Venta Neta Total'], marker_color='blue')
+        ])
+        
+        fig.update_layout(barmode='stack', title='Comparación de Venta Perdida vs Venta Neta Total Día por Día',
+                          xaxis_title='Fecha',
+                          yaxis_title='Monto (Pesos)',
+                          yaxis=dict(tickformat="$,d"))
+
     return fig
 
 # Función para gráfico de donut
