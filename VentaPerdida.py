@@ -120,14 +120,29 @@ def plot_venta_perdida(data):
                       yaxis=dict(tickformat="$,d"))
     return fig
 
-# Función para gráfico de artículos con más venta perdida por división
-def plot_articulos_por_division(data):
-    if 'DIVISION' not in data.columns:
-        return "No se encontraron datos para la columna 'DIVISION'."
-    fig = px.treemap(data, path=['DIVISION', 'DESC_ARTICULO'], values='VENTA_PERDIDA_PESOS',
-                     color='VENTA_PERDIDA_PESOS', hover_data=['VENTA_PERDIDA_PESOS'],
-                     color_continuous_scale='RdBu', title='Artículos con Mayor Venta Perdida por División')
-    fig.update_layout(coloraxis_colorbar_tickformat='$,.0f') # Formato de dólar sin decimales
+# Función para gráfico de barras de venta perdida por día con línea de tendencia de cambio porcentual
+def plot_venta_perdida_con_tendencia(data):
+    # Calcular venta perdida diaria y cambio porcentual
+    grouped_data = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    grouped_data['Cambio (%)'] = grouped_data['VENTA_PERDIDA_PESOS'].pct_change() * 100
+
+    fig = go.Figure()
+
+    # Añadir barras de venta perdida
+    fig.add_trace(go.Bar(x=grouped_data['Fecha'], y=grouped_data['VENTA_PERDIDA_PESOS'], name='Venta Perdida', marker_color='rgb(219, 64, 82)'))
+
+    # Añadir línea de tendencia del cambio porcentual
+    fig.add_trace(go.Scatter(x=grouped_data['Fecha'], y=grouped_data['Cambio (%)'], mode='lines+markers', name='Cambio Porcentual', line=dict(color='white'), yaxis='y2'))
+
+    fig.update_layout(
+        title='Venta Perdida por Día y Cambio Porcentual',
+        xaxis_title='Fecha',
+        yaxis=dict(title='Monto (Pesos)', tickformat="$,d"),
+        yaxis2=dict(title='Cambio Porcentual (%)', overlaying='y', side='right', tickformat=".2f", showgrid=False),
+        legend=dict(x=0, y=1.1, orientation='h'),
+        barmode='group'
+    )
+
     return fig
 
 # Función para gráfico de barras de VENTA_PERDIDA_PESOS por PROVEEDOR
@@ -199,11 +214,12 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
 def make_donut_chart(value, total, title, color):
     percentage = (value / total) * 100
     fig = go.Figure(go.Pie(
-        values=[percentage, 100 - percentage],
-        labels=[title, ''],
+        values=[value, total - value],
+        labels=[title, 'Restante'],
         marker_colors=[color, '#E2E2E2'],
         hole=0.7,
-        textinfo='label+percent',
+        textinfo='percent+label',
+        hoverinfo='label+percent'
     ))
     fig.update_traces(texttemplate='%{percent:.0f}%', textposition='inside') # Porcentajes sin decimales
     fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=200, width=200)
@@ -216,7 +232,8 @@ def load_venta_pr(file_path):
     df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
     return df
 
-venta_pr_path = 'venta/Venta PR.xlsx'
+venta_pr_path = "venta/Venta PR.xlsx"
+
 
 # Procesar archivos en la carpeta especificada
 data, file_dates = process_data(folder_path)
@@ -241,7 +258,7 @@ if data is not None:
 
     # Aplicar vista acumulativa si es necesario
     if vista == "Acumulada":
-        filtered_data = apply_accumulated_view(data)
+     filtered_data = apply_accumulated_view(filtered_data)
 
     # Columnas para la disposición de gráficos
     col1, col2 = st.columns((1, 1))
@@ -250,7 +267,16 @@ if data is not None:
         st.markdown('#### Venta Perdida Total 🧮')
         total_venta_perdida = data['VENTA_PERDIDA_PESOS'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
+        porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100  # Calcular el porcentaje acumulado
+
+        # Calcular el % del total de venta perdida del día
+        comparacion_diaria = filtered_data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion_diaria = comparacion_diaria.merge(venta_pr_data.groupby('Día Contable')['Venta Neta Total'].sum().reset_index(), left_on='Fecha', right_on='Día Contable')
+        porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+
         st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
+        st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")  # Mostrar el porcentaje acumulado
+        st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")  # Mostrar el % del total de venta perdida del día
 
         st.markdown('#### Venta Perdida por Día')
         venta_perdida_dia_chart = plot_venta_perdida(filtered_data)
@@ -292,8 +318,8 @@ if data is not None:
     col7, col8 = st.columns((1, 1))
 
     with col7:
-        st.markdown('#### Artículos con Mayor Venta Perdida por División')
-        articulos_por_division_chart = plot_articulos_por_division(filtered_data)
+        st.markdown('#### Cambio porcentual de venta perdida')
+        articulos_por_division_chart = plot_venta_perdida_con_tendencia(filtered_data)
         st.plotly_chart(articulos_por_division_chart, use_container_width=True)
 
     with col8:
