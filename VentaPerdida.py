@@ -117,13 +117,18 @@ def plot_venta_perdida_con_tendencia(data):
     fig.update_layout(title='Venta Perdida por Día y Cambio Porcentual', xaxis_title='Fecha', yaxis=dict(title='Monto (Pesos)', tickformat="$,d"), yaxis2=dict(title='Cambio Porcentual (%)', overlaying='y', side='right', tickformat=".2f", showgrid=False), legend=dict(x=0, y=1.1, orientation='h'), barmode='group')
     return fig
 
-# Función para gráfico de barras de VENTA_PERDIDA_PESOS por PROVEEDOR
+# Función para gráfico de pastel de VENTA_PERDIDA_PESOS por PROVEEDOR
 def plot_venta_perdida_proveedor(data):
-    if 'PROVEEDOR' not in data.columns: return "No se encontraron datos para la columna 'PROVEEDOR'."
-    fig = go.Figure()
+    if 'PROVEEDOR' not in data.columns:
+        return "No se encontraron datos para la columna 'PROVEEDOR'."
+    
     grouped_data = data.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    fig.add_trace(go.Bar(x=grouped_data['PROVEEDOR'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(255, 165, 0)'))
-    fig.update_layout(title='Venta Perdida en Pesos por Proveedor', xaxis_title='Proveedor', yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
+    colors = ['gold', 'mediumturquoise', 'darkorange', 'lightgreen', 'lightblue', 'pink', 'red', 'purple', 'brown', 'gray']
+
+    fig = go.Figure(data=[go.Pie(labels=grouped_data['PROVEEDOR'], values=grouped_data['VENTA_PERDIDA_PESOS'])])
+    fig.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
+                      marker=dict(colors=colors, line=dict(color='#000000', width=2)))
+    fig.update_layout(title='Venta Perdida en Pesos por Proveedor')
     return fig
 
 # Función para gráfico de comparación de Venta Perdida vs Venta Neta Total
