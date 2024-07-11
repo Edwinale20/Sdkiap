@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 
 # Título de la aplicación
-st.title("📊 Reporte de Venta Pérdida Cigarros y RRPS")
+st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
 # Ruta de la carpeta con los archivos CSV
