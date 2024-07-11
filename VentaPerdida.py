@@ -56,12 +56,13 @@ def process_data(folder_path):
 data, file_dates = process_data(folder_path)
 
 # Función para aplicar los filtros
-def apply_filters(data, proveedor, plaza, categoria, fecha, semana):
+def apply_filters(data, proveedor, plaza, categoria, fecha, semana, division):
     if proveedor: data = data[data['PROVEEDOR'] == proveedor]
     if plaza: data = data[data['PLAZA'] == plaza]
     if categoria: data = data[data['CATEGORIA'] == categoria]
     if fecha: data = data[data['Fecha'] == fecha]
     if semana: data = data[data['Semana'] == semana]
+    if division: data = data[data['DIVISION'] == division]
     return data
 
 # Función para aplicar la vista acumulativa
@@ -133,7 +134,7 @@ def plot_venta_perdida_proveedor(data, selected_proveedor=None):
     fig.update_layout(title='Venta Perdida en Pesos por Proveedor')
 
     return fig
-    
+
 # Función para gráfico de comparación de Venta Perdida vs Venta Neta Total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     filtered_venta_pr = venta_pr_data[venta_pr_data['Día Contable'].isin(filtro_fechas)]
@@ -198,10 +199,11 @@ if data is not None:
     proveedores = st.sidebar.selectbox("Selecciona un proveedor", options=[None] + data['PROVEEDOR'].unique().tolist())
     plaza = st.sidebar.selectbox("Selecciona una plaza", options=[None] + data['PLAZA'].unique().tolist())
     categoria = st.sidebar.selectbox("Selecciona una categoría", options=[None] + data['CATEGORIA'].unique().tolist())
+    division = st.sidebar.selectbox("Selecciona una división", options=[None] + data['DIVISION'].unique().tolist())
     semana_opciones = [None] + sorted(data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana", options=semana_opciones)
     vista = st.sidebar.radio("Selecciona la vista:", ("Diaria", "Acumulada"))
-    filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada)
+    filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division)
     if vista == "Acumulada": filtered_data = apply_accumulated_view(filtered_data)
     col1, col2 = st.columns((1, 1))
     with col1:
@@ -244,7 +246,8 @@ if data is not None:
         st.plotly_chart(articulos_venta_perdida_chart, use_container_width=True)
     with col6:
         st.markdown('#### Venta Perdida en Pesos por Proveedor')
-        venta_perdida_proveedor_chart = plot_venta_perdida_proveedor(filtered_data)
+        selected_proveedor = proveedores  # Obtener el proveedor seleccionado para el gráfico de pastel
+        venta_perdida_proveedor_chart = plot_venta_perdida_proveedor(filtered_data, selected_proveedor)
         st.plotly_chart(venta_perdida_proveedor_chart, use_container_width=True)
     col7, col8 = st.columns((1, 1))
     with col7:
@@ -260,5 +263,3 @@ if data is not None:
     st.plotly_chart(venta_perdida_mercado_chart, use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
-
