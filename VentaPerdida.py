@@ -118,19 +118,22 @@ def plot_venta_perdida_con_tendencia(data):
     return fig
 
 # Función para gráfico de pastel de VENTA_PERDIDA_PESOS por PROVEEDOR
-def plot_venta_perdida_proveedor(data):
+def plot_venta_perdida_proveedor(data, selected_proveedor=None):
     if 'PROVEEDOR' not in data.columns:
         return "No se encontraron datos para la columna 'PROVEEDOR'."
     
     grouped_data = data.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     colors = ['gold', 'mediumturquoise', 'darkorange', 'lightgreen', 'lightblue', 'pink', 'red', 'purple', 'brown', 'gray']
+    
+    pull = [0.2 if proveedor == selected_proveedor else 0 for proveedor in grouped_data['PROVEEDOR']]
 
-    fig = go.Figure(data=[go.Pie(labels=grouped_data['PROVEEDOR'], values=grouped_data['VENTA_PERDIDA_PESOS'])])
+    fig = go.Figure(data=[go.Pie(labels=grouped_data['PROVEEDOR'], values=grouped_data['VENTA_PERDIDA_PESOS'], pull=pull)])
     fig.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
                       marker=dict(colors=colors, line=dict(color='#000000', width=2)))
     fig.update_layout(title='Venta Perdida en Pesos por Proveedor')
-    return fig
 
+    return fig
+    
 # Función para gráfico de comparación de Venta Perdida vs Venta Neta Total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     filtered_venta_pr = venta_pr_data[venta_pr_data['Día Contable'].isin(filtro_fechas)]
