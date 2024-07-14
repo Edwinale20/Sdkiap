@@ -274,14 +274,14 @@ if data is not None:
         comparacion_diaria = filtered_data.groupby('Fecha' if view == "diaria" else 'Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         comparacion_diaria = comparacion_diaria.merge(venta_pr_data.groupby('Día Contable' if view == "diaria" else 'Semana')['Venta Neta Total'].sum().reset_index(), left_on='Fecha' if view == "diaria" else 'Semana', right_on='Día Contable' if view == "diaria" else 'Semana', how='left')
         if not comparacion_diaria.empty:
-            porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'].sum() / comparacion_diaria['Venta Neta Total'].sum()) * 100
+            porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / comparacion_diaria['Venta Neta Total']) * 100
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
-            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia:.2f}%")
+            st.metric(label=f"% Venta Perdida del {'Día' if view == 'diaria' else 'Semana'}", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")
         else:
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
-            st.metric(label="% Venta Perdida del Día", value="N/A")
+            st.metric(label=f"% Venta Perdida del {'Día' if view == 'diaria' else 'Semana'}", value="N/A")
         st.markdown(f'#### Venta Perdida {view}')
         st.plotly_chart(plot_venta_perdida(filtered_data, view), use_container_width=True)
     with col2:
@@ -312,3 +312,4 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
