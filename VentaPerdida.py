@@ -14,10 +14,16 @@ st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
-# GitHub repository and token from secrets
+# Fetch GitHub token from secrets
+try:
+    github_token = st.secrets["github"]["token"]
+except KeyError:
+    st.error("GitHub token not found. Please add it to the secrets.")
+    st.stop()
+
+# GitHub repository details
 repo_owner = "Edwinale20"
 repo_name = "317B"
-github_token = st.secrets["github"]["token"]
 
 # File paths
 folder_path = "venta"
@@ -31,7 +37,10 @@ def fetch_csv_files(repo_owner, repo_name, path=""):
         "Accept": "application/vnd.github.v3+json"
     }
     response = requests.get(url, headers=headers)
-    response.raise_for_status()
+    if response.status_code != 200:
+        st.error(f"Failed to fetch files: {response.status_code} - {response.text}")
+        st.write(f"URL: {url}")
+        response.raise_for_status()
     files = response.json()
     return [file for file in files if file["name"].endswith(".csv")]
 
@@ -43,7 +52,10 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
         "Accept": "application/vnd.github.v3.raw"
     }
     response = requests.get(url, headers=headers)
-    response.raise_for_status()
+    if response.status_code != 200:
+        st.error(f"Failed to read file {file_path}: {response.status_code} - {response.text}")
+        st.write(f"URL: {url}")
+        response.raise_for_status()
     csv_content = StringIO(response.text)
     return pd.read_csv(csv_content, encoding='ISO-8859-1')
 
@@ -96,7 +108,10 @@ def load_venta_pr(file_path):
         "Accept": "application/vnd.github.v3.raw"
     }
     response = requests.get(url, headers=headers)
-    response.raise_for_status()
+    if response.status_code != 200:
+        st.error(f"Failed to read file {file_path}: {response.status_code} - {response.text}")
+        st.write(f"URL: {url}")
+        response.raise_for_status()
     excel_content = StringIO(response.content.decode('ISO-8859-1'))
     df = pd.read_excel(excel_content)
     df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
