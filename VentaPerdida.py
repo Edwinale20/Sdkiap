@@ -213,8 +213,12 @@ def plot_venta_perdida_mercado(data):
     return fig
 
 # Sidebar para seleccionar el rango de fechas
-start_date = st.sidebar.date_input("Fecha de inicio", value=datetime.now() - timedelta(days=30))
-end_date = st.sidebar.date_input("Fecha de fin", value=datetime.now())
+start_date = st.sidebar.date_input("Fecha de inicio", value=(datetime.now() - timedelta(days=30)).date())
+end_date = st.sidebar.date_input("Fecha de fin", value=datetime.now().date())
+
+# Asegurar que las fechas sean objetos datetime para comparación
+start_date = datetime.combine(start_date, datetime.min.time())
+end_date = datetime.combine(end_date, datetime.min.time())
 
 # Procesar archivos en la carpeta especificada
 data = process_data(repo_owner, repo_name, folder_path, start_date, end_date)
@@ -280,5 +284,6 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
 
 
