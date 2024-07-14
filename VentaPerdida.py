@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import StringIO, BytesIO
 import requests
 
@@ -55,16 +55,18 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     return pd.read_csv(StringIO(response.text), encoding='ISO-8859-1')
 
 # Function to process CSV files
-def process_data(repo_owner, repo_name, folder_path):
+@st.cache_data
+def process_data(repo_owner, repo_name, folder_path, start_date, end_date):
     all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
     all_data = []
     for file in all_files:
         try:
             date_str = file['name'].split('.')[0]
             date = datetime.strptime(date_str, '%d%m%Y')
-            df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
-            df['Fecha'] = date
-            all_data.append(df)
+            if start_date <= date <= end_date:
+                df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
+                df['Fecha'] = date
+                all_data.append(df)
         except Exception as e:
             st.write(f"Error leyendo el archivo {file['name']}: {e}")
     if not all_data:
@@ -86,9 +88,6 @@ def process_data(repo_owner, repo_name, folder_path):
     data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
     data = data[data['PROVEEDOR'] != "Eliminar"]
     return data
-
-# Procesar archivos en la carpeta especificada
-data = process_data(repo_owner, repo_name, folder_path)
 
 # Function to process Venta PR file
 @st.cache_data
@@ -213,6 +212,13 @@ def plot_venta_perdida_mercado(data):
     fig.update_layout(title='Venta Perdida por Día y por Mercado', xaxis_title='Fecha', yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
+# Sidebar para seleccionar el rango de fechas
+start_date = st.sidebar.date_input("Fecha de inicio", value=datetime.now() - timedelta(days=30))
+end_date = st.sidebar.date_input("Fecha de fin", value=datetime.now())
+
+# Procesar archivos en la carpeta especificada
+data = process_data(repo_owner, repo_name, folder_path, start_date, end_date)
+
 # Show dashboard if data is available
 if data is not None:
     st.sidebar.title('📈📉 Dashboard de Venta Perdida')
@@ -274,4 +280,5 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
 
