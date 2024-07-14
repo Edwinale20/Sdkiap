@@ -117,12 +117,12 @@ def load_venta_pr(file_path):
         st.error(f"Failed to read file {file_path}: {response.status_code} - {response.text}")
         st.write(f"URL: {url}")
         response.raise_for_status()
-    content_type = response.headers.get('Content-Type')
-    if 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' not in content_type:
-        st.error(f"Expected an Excel file but got {content_type}")
-        st.stop()
     excel_content = BytesIO(response.content)
-    df = pd.read_excel(excel_content)
+    try:
+        df = pd.read_excel(excel_content)
+    except Exception as e:
+        st.error(f"Error reading Excel file: {e}")
+        st.stop()
     df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
     return df
 
@@ -317,3 +317,4 @@ if data is not None:
     st.plotly_chart(venta_perdida_mercado_chart, use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
