@@ -4,7 +4,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from io import StringIO
+from io import StringIO, BytesIO
 import requests
 
 # Configuración de la página
@@ -29,8 +29,8 @@ repo_name = "317B"
 folder_path = "venta"
 venta_pr_path = "venta/Venta PR.xlsx"
 
-# Function to fetch CSV files from GitHub
-def fetch_csv_files(repo_owner, repo_name, path=""):
+# Function to fetch contents from GitHub
+def fetch_contents(repo_owner, repo_name, path=""):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
     headers = {
         "Authorization": f"token {github_token}",
@@ -38,11 +38,16 @@ def fetch_csv_files(repo_owner, repo_name, path=""):
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        st.error(f"Failed to fetch files: {response.status_code} - {response.text}")
+        st.error(f"Failed to fetch contents: {response.status_code} - {response.text}")
         st.write(f"URL: {url}")
         response.raise_for_status()
-    files = response.json()
-    return [file for file in files if file["name"].endswith(".csv")]
+    contents = response.json()
+    return contents
+
+# Function to fetch CSV files from GitHub
+def fetch_csv_files(repo_owner, repo_name, path=""):
+    contents = fetch_contents(repo_owner, repo_name, path)
+    return [file for file in contents if file["name"].endswith(".csv")]
 
 # Function to read a CSV file from GitHub
 def read_csv_from_github(repo_owner, repo_name, file_path):
@@ -112,7 +117,11 @@ def load_venta_pr(file_path):
         st.error(f"Failed to read file {file_path}: {response.status_code} - {response.text}")
         st.write(f"URL: {url}")
         response.raise_for_status()
-    excel_content = StringIO(response.content.decode('ISO-8859-1'))
+    content_type = response.headers.get('Content-Type')
+    if 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' not in content_type:
+        st.error(f"Expected an Excel file but got {content_type}")
+        st.stop()
+    excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
     df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
     return df
