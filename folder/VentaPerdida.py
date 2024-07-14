@@ -254,6 +254,70 @@ def plot_venta_perdida_mercado(data, view):
     for mercado in mercados:
         mercado_data = grouped_data[grouped_data['MERCADO'] == mercado]
         fig.add_trace(go.Scatter(x=mercado_data[x_title], y=mercado_data['VENTA_PERDIDA_PESOS'], mode='lines+markers', name=mercado))
-    fig.update_layout(title=f'Venta Perdida
+    fig.update_layout(title=f'Venta Perdida por {x_title} y por Mercado', xaxis_title=x_title, yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
+    return fig
 
+# Procesar archivos en la carpeta especificada
+data = process_data(repo_owner, repo_name, folder_path)
 
+# Show dashboard if data is available
+if data is not None:
+    st.sidebar.title('📈📉 Dashboard de Venta Perdida')
+    proveedores = st.sidebar.selectbox("Selecciona un proveedor", options=[None] + data['PROVEEDOR'].unique().tolist())
+    plaza = st.sidebar.selectbox("Selecciona una plaza", options=[None] + data['PLAZA'].unique().tolist())
+    categoria = st.sidebar.selectbox("Selecciona una categoría", options=[None] + data['CATEGORIA'].unique().tolist())
+    division = st.sidebar.selectbox("Selecciona una división", options=[None] + data['DIVISION'].unique().tolist())
+    semana_opciones = [None] + sorted(data['Semana'].unique())
+    semana_seleccionada = st.sidebar.selectbox("Selecciona una semana", options=semana_opciones)
+    articulo = st.sidebar.text_input("Buscar artículo o familia de artículos")
+    view = st.sidebar.radio("Selecciona la vista:", ("diaria", "semanal"))
+    filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division, articulo)
+    if view == "semanal":
+        filtered_data = apply_weekly_view(filtered_data)
+    col1, col2 = st.columns((1, 1))
+    with col1:
+        st.markdown('#### Venta Perdida Total 🧮')
+        total_venta_perdida = data['VENTA_PERDIDA_PESOS'].sum()
+        total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
+        porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
+        comparacion_diaria = filtered_data.groupby('Fecha' if view == "diaria" else 'Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion_diaria = comparacion_diaria.merge(venta_pr_data.groupby('Día Contable' if view == "diaria" else 'Semana')['Venta Neta Total'].sum().reset_index(), left_on='Fecha' if view == "diaria" else 'Semana', right_on='Día Contable' if view == "diaria" else 'Semana', how='left')
+        if not comparacion_diaria.empty:
+            porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+            st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
+            st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
+            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")
+        else:
+            st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
+            st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
+            st.metric(label="% Venta Perdida del Día", value="N/A")
+        st.markdown(f'#### Venta Perdida {view}')
+        st.plotly_chart(plot_venta_perdida(filtered_data, view), use_container_width=True)
+    with col2:
+        st.markdown('#### Venta Perdida Acumulada 📅')
+        st.plotly_chart(make_donut_chart(filtered_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
+    col3, col4 = st.columns((1, 1))
+    with col3:
+        st.markdown('#### Venta Perdida vs Venta Neta Total')
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha' if view == "diaria" else 'Semana'], view), use_container_width=True)
+    with col4:
+        st.markdown('#### Venta Perdida por Plaza')
+        st.plotly_chart(plot_venta_perdida_plaza(filtered_data, view), use_container_width=True)
+    col5, col6 = st.columns((1, 1))
+    with col5:
+        st.markdown('#### Top 10 Artículos con Mayor Venta Perdida')
+        st.plotly_chart(plot_articulos_venta_perdida(filtered_data), use_container_width=True)
+    with col6:
+        st.markdown('#### Venta Perdida por Proveedor')
+        st.plotly_chart(plot_venta_perdida_proveedor(filtered_data, proveedores), use_container_width=True)
+    col7, col8 = st.columns((1, 1))
+    with col7:
+        st.markdown('#### Cambio porcentual de venta perdida')
+        st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data, view), use_container_width=True)
+    with col8:
+        st.markdown('#### Venta Perdida vs Venta Neta Total')
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha' if view == "diaria" else 'Semana'], view), use_container_width=True)
+    st.markdown(f'#### Venta Perdida {view} por Mercado')
+    st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
+else:
+    st.warning("No se encontraron datos en la carpeta especificada.")
