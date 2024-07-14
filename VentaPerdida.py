@@ -4,6 +4,8 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from io import StringIO
+import requests
 
 # Configuración de la página
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
@@ -12,24 +14,54 @@ st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
-# Ruta de la carpeta con los archivos CSV
-folder_path = "venta"
+# GitHub repository and token from secrets
+repo_owner = "Edwinale20"
+repo_name = "317B"
+github_token = st.secrets["github"]["token"]
 
-# Función para procesar archivos en la carpeta especificada
-def process_data(folder_path):
-    all_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+# File paths
+folder_path = "venta"
+venta_pr_path = "venta/Venta PR.xlsx"
+
+# Function to fetch CSV files from GitHub
+def fetch_csv_files(repo_owner, repo_name, path=""):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    files = response.json()
+    return [file for file in files if file["name"].endswith(".csv")]
+
+# Function to read a CSV file from GitHub
+def read_csv_from_github(repo_owner, repo_name, file_path):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3.raw"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    csv_content = StringIO(response.text)
+    return pd.read_csv(csv_content, encoding='ISO-8859-1')
+
+# Function to process CSV files
+def process_data(repo_owner, repo_name, folder_path):
+    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
     all_data = []
     file_dates = []
     for file in all_files:
         try:
-            date_str = file.split('.')[0]
+            date_str = file['name'].split('.')[0]
             date = datetime.strptime(date_str, '%d%m%Y')
-            df = pd.read_csv(os.path.join(folder_path, file), encoding='ISO-8859-1')
+            df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
             df['Fecha'] = date
             all_data.append(df)
             file_dates.append(date)
         except Exception as e:
-            st.write(f"Error leyendo el archivo {file}: {e}")
+            st.write(f"Error leyendo el archivo {file['name']}: {e}")
     if not all_data:
         return None, file_dates
     else:
@@ -53,25 +85,44 @@ def process_data(folder_path):
         return data, file_dates
 
 # Procesar archivos en la carpeta especificada
-data, file_dates = process_data(folder_path)
+data, file_dates = process_data(repo_owner, repo_name, folder_path)
 
-# Función para aplicar los filtros
-def apply_filters(data, proveedor, plaza, categoria, fecha, semana, division):
+# Function to process Venta PR file
+@st.cache_data
+def load_venta_pr(file_path):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3.raw"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    excel_content = StringIO(response.content.decode('ISO-8859-1'))
+    df = pd.read_excel(excel_content)
+    df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
+    return df
+
+# Load Venta PR data
+venta_pr_data = load_venta_pr(venta_pr_path)
+
+# Function to apply filters
+def apply_filters(data, proveedor, plaza, categoria, fecha, semana, division, articulo):
     if proveedor: data = data[data['PROVEEDOR'] == proveedor]
     if plaza: data = data[data['PLAZA'] == plaza]
     if categoria: data = data[data['CATEGORIA'] == categoria]
     if fecha: data = data[data['Fecha'] == fecha]
     if semana: data = data[data['Semana'] == semana]
     if division: data = data[data['DIVISION'] == division]
+    if articulo: data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
     return data
 
-# Función para aplicar la vista acumulativa
+# Function to apply accumulated view
 def apply_accumulated_view(data):
     accumulated_data = data.copy()
     accumulated_data['VENTA_PERDIDA_PESOS'] = accumulated_data.groupby(['PLAZA', 'DESC_ARTICULO', 'DIVISION', 'NOMBRE_TIENDA'])['VENTA_PERDIDA_PESOS'].cumsum()
     return accumulated_data
 
-# Función para gráfico de barras de VENTA_PERDIDA_PESOS por PLAZA
+# Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(data):
     if 'PLAZA' not in data.columns: return "No se encontraron datos para la columna 'PLAZA'."
     fig = go.Figure()
@@ -80,7 +131,7 @@ def plot_venta_perdida_plaza(data):
     fig.update_layout(title='Venta Perdida por Plaza', xaxis_title='Plaza', yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Función para gráfico de los artículos con más venta perdida
+# Function to plot top 10 artículos con mayor venta perdida
 def plot_articulos_venta_perdida(data):
     if 'DESC_ARTICULO' not in data.columns: return "No se encontraron datos para la columna 'DESC_ARTICULO'."
     fig = go.Figure()
@@ -90,17 +141,7 @@ def plot_articulos_venta_perdida(data):
     fig.update_layout(title='Top 10 Artículos con mayor Venta Perdida', xaxis_title='Artículo', yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Función para gráfico de serie temporal de venta perdida por día
-def plot_venta_perdida_tiempo(data, venta_pr_data):
-    fig = go.Figure()
-    grouped_data = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    fig.add_trace(go.Scatter(x=grouped_data['Fecha'], y=grouped_data['VENTA_PERDIDA_PESOS'], mode='lines+markers', name='Venta Perdida', line=dict(color='rgb(219, 64, 82)')))
-    venta_pr_grouped = venta_pr_data.groupby('Día Contable')['Venta Neta Total'].sum().reset_index()
-    fig.add_trace(go.Scatter(x=venta_pr_grouped['Día Contable'], y=venta_pr_grouped['Venta Neta Total'], mode='lines+markers', name='Venta Neta', line=dict(color='rgb(55, 128, 191)')))
-    fig.update_layout(title='Venta Total vs Venta Perdida por Día', xaxis_title='Fecha', yaxis_title='Monto (Pesos)', yaxis=dict(tickformat="$,d"))
-    return fig
-
-# Función para gráfico de serie temporal de venta perdida por día
+# Function to plot venta perdida por día
 def plot_venta_perdida(data):
     fig = go.Figure()
     grouped_data = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -108,7 +149,7 @@ def plot_venta_perdida(data):
     fig.update_layout(title='Venta Perdida Diaria', xaxis_title='Fecha', yaxis_title='Monto (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Función para gráfico de barras de venta perdida por día con línea de tendencia de cambio porcentual
+# Function to plot venta perdida con tendencia
 def plot_venta_perdida_con_tendencia(data):
     grouped_data = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     grouped_data['Cambio (%)'] = grouped_data['VENTA_PERDIDA_PESOS'].pct_change() * 100
@@ -118,7 +159,7 @@ def plot_venta_perdida_con_tendencia(data):
     fig.update_layout(title='Venta Perdida por Día y Cambio Porcentual', xaxis_title='Fecha', yaxis=dict(title='Monto (Pesos)', tickformat="$,d"), yaxis2=dict(title='Cambio Porcentual (%)', overlaying='y', side='right', tickformat=".2f", showgrid=False), legend=dict(x=0, y=1.1, orientation='h'), barmode='group')
     return fig
 
-# Función para gráfico de pastel de VENTA_PERDIDA_PESOS por PROVEEDOR
+# Function to plot venta perdida por proveedor
 def plot_venta_perdida_proveedor(data, selected_proveedor=None):
     if 'PROVEEDOR' not in data.columns:
         return "No se encontraron datos para la columna 'PROVEEDOR'."
@@ -129,13 +170,13 @@ def plot_venta_perdida_proveedor(data, selected_proveedor=None):
     pull = [0.2 if proveedor == selected_proveedor else 0 for proveedor in grouped_data['PROVEEDOR']]
 
     fig = go.Figure(data=[go.Pie(labels=grouped_data['PROVEEDOR'], values=grouped_data['VENTA_PERDIDA_PESOS'], pull=pull)])
-    fig.update_traces(hoverinfo='label+percent', textinfo='value', textfont_size=20,
+    fig.update_traces(hoverinfo='label+percent', textinfo='value', texttemplate='$%{value:,.0f}', textfont_size=20,
                       marker=dict(colors=colors, line=dict(color='#000000', width=2)))
     fig.update_layout(title='Venta Perdida por Proveedor')
 
     return fig
 
-# Función para gráfico de comparación de Venta Perdida vs Venta Neta Total
+# Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     filtered_venta_pr = venta_pr_data[venta_pr_data['Día Contable'].isin(filtro_fechas)]
     venta_perdida_total = data['VENTA_PERDIDA_PESOS'].sum()
@@ -145,7 +186,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, filtro_fechas):
     fig.update_layout(barmode='stack', title='Venta Perdida vs Venta Neta Total', yaxis=dict(tickformat="$,d", title='Monto (Pesos)'), xaxis=dict(title='Tipo de Venta'))
     return fig
 
-# Función para gráfico de comparación de Venta Perdida vs Venta Neta Total día por día
+# Function to plot venta perdida vs venta neta total diaria
 def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fechas, view_percentage=False):
     filtered_venta_pr = venta_pr_data[venta_pr_data['Día Contable'].isin(filtro_fechas)]
     comparacion_diaria = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -160,7 +201,7 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
         fig.update_layout(barmode='stack', title='Venta Perdida vs Venta Neta Total', xaxis_title='Fecha', yaxis_title='Monto (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Función para gráfico de donut
+# Function to make a donut chart
 def make_donut_chart(value, total, title, color):
     percentage = (value / total) * 100
     fig = go.Figure(go.Pie(values=[value, total - value], labels=[title, 'Restante'], marker_colors=[color, '#E2E2E2'], hole=0.7, textinfo='percent+label', hoverinfo='label+percent'))
@@ -168,20 +209,7 @@ def make_donut_chart(value, total, title, color):
     fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=200, width=200)
     return fig
 
-# Función para procesar el archivo de Venta PR
-@st.cache_data
-def load_venta_pr(file_path):
-    df = pd.read_excel(file_path)
-    df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
-    return df
-
-venta_pr_path = "venta/Venta PR.xlsx"
-
-# Procesar archivos en la carpeta especificada
-data, file_dates = process_data(folder_path)
-venta_pr_data = load_venta_pr(venta_pr_path)
-
-# Función para gráfico de venta perdida por día y por mercado
+# Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data):
     if 'MERCADO' not in data.columns or 'DIVISION' not in data.columns or 'PLAZA' not in data.columns: return "No se encontraron datos suficientes para 'MERCADO', 'DIVISION' o 'PLAZA'."
     fig = go.Figure()
@@ -193,7 +221,7 @@ def plot_venta_perdida_mercado(data):
     fig.update_layout(title='Venta Perdida por Día y por Mercado', xaxis_title='Fecha', yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Mostrar dashboard si hay datos disponibles
+# Show dashboard if data is available
 if data is not None:
     st.sidebar.title('📈📉 Dashboard de Venta Perdida')
     proveedores = st.sidebar.selectbox("Selecciona un proveedor", options=[None] + data['PROVEEDOR'].unique().tolist())
@@ -202,9 +230,11 @@ if data is not None:
     division = st.sidebar.selectbox("Selecciona una división", options=[None] + data['DIVISION'].unique().tolist())
     semana_opciones = [None] + sorted(data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana", options=semana_opciones)
+    articulo = st.sidebar.text_input("Buscar artículo")
     vista = st.sidebar.radio("Selecciona la vista:", ("Diaria", "Acumulada"))
-    filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division)
-    if vista == "Acumulada": filtered_data = apply_accumulated_view(filtered_data)
+    filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division, articulo)
+    if vista == "Acumulada":
+        filtered_data = apply_accumulated_view(filtered_data)
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### Venta Perdida Total 🧮')
