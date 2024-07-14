@@ -223,7 +223,7 @@ if data is not None:
     division = st.sidebar.selectbox("Selecciona una división", options=[None] + data['DIVISION'].unique().tolist())
     semana_opciones = [None] + sorted(data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana", options=semana_opciones)
-    articulo = st.sidebar.text_input("Buscar artículo")
+    articulo = st.sidebar.text_input("Buscar artículo o familia de artículos")
     vista = st.sidebar.radio("Selecciona la vista:", ("Diaria", "Acumulada"))
     filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division, articulo)
     accumulated_data = apply_accumulated_view(filtered_data) if vista == "Acumulada" else filtered_data
