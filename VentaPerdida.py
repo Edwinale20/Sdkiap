@@ -195,7 +195,7 @@ def plot_venta_perdida_mercado(data):
 
 # Mostrar dashboard si hay datos disponibles
 if data is not None:
-    st.sidebar.title('Configuración del Dashboard')
+    st.sidebar.title('📈📉 Dashboard de Venta Perdida')
     proveedores = st.sidebar.selectbox("Selecciona un proveedor", options=[None] + data['PROVEEDOR'].unique().tolist())
     plaza = st.sidebar.selectbox("Selecciona una plaza", options=[None] + data['PLAZA'].unique().tolist())
     categoria = st.sidebar.selectbox("Selecciona una categoría", options=[None] + data['CATEGORIA'].unique().tolist())
