@@ -245,15 +245,17 @@ if data is not None:
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
             st.metric(label="% Venta Perdida del Día", value="N/A")
-        st.markdown('#### Venta Perdida diaria')
-        st.plotly_chart(plot_venta_perdida(filtered_data), use_container_width=True)
+        if vista != "Acumulada":
+            st.markdown('#### Venta Perdida diaria')
+            st.plotly_chart(plot_venta_perdida(filtered_data), use_container_width=True)
     with col2:
         st.markdown('#### Venta Perdida Acumulada 📅')
         st.plotly_chart(make_donut_chart(filtered_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
     col3, col4 = st.columns((1, 1))
     with col3:
         st.markdown('#### Venta Perdida vs Venta Neta Total')
-        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha']), use_container_width=True)
+        if vista != "Acumulada":
+            st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha']), use_container_width=True)
     with col4:
         st.markdown('#### Venta Perdida por Plaza')
         st.plotly_chart(plot_venta_perdida_plaza(filtered_data), use_container_width=True)
@@ -267,11 +269,15 @@ if data is not None:
     col7, col8 = st.columns((1, 1))
     with col7:
         st.markdown('#### Cambio porcentual de venta perdida')
-        st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data), use_container_width=True)
+        if vista != "Acumulada":
+            st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data), use_container_width=True)
     with col8:
         st.markdown('#### Venta Perdida vs Venta Neta Total')
-        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha']), use_container_width=True)
-    st.markdown('#### Venta Perdida diaria por Mercado')
-    st.plotly_chart(plot_venta_perdida_mercado(filtered_data), use_container_width=True)
+        if vista != "Acumulada":
+            st.plotly_chart(plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha']), use_container_width=True)
+    if vista != "Acumulada":
+        st.markdown('#### Venta Perdida diaria por Mercado')
+        st.plotly_chart(plot_venta_perdida_mercado(filtered_data), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
