@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 from datetime import datetime
 from io import StringIO, BytesIO
 import requests
-import hashlib
 
 # Configuración de la página
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
@@ -55,32 +54,31 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     response.raise_for_status()
     return pd.read_csv(StringIO(response.text), encoding='ISO-8859-1')
 
-# Function to get the current hash of the files in the folder
-def get_files_hash(files):
-    files_str = ''.join(sorted([file['name'] for file in files]))
-    return hashlib.md5(files_str.encode()).hexdigest()
-
 # Function to process CSV files
-@st.cache_data
-def process_data(repo_owner, repo_name, folder_path, files_hash):
+def process_data(repo_owner, repo_name, folder_path):
     all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-    all_data = []
-    for file in all_files:
+    processed_files = st.session_state.get('processed_files', [])
+    
+    new_files = [file for file in all_files if file['name'] not in processed_files]
+    if not new_files:
+        return st.session_state.get('data', None)
+    
+    all_data = st.session_state.get('data', pd.DataFrame())
+    for file in new_files:
         try:
             date_str = file['name'].split('.')[0]
             date = datetime.strptime(date_str, '%d%m%Y')
             df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
             df['Fecha'] = date
-            all_data.append(df)
+            all_data = pd.concat([all_data, df])
+            processed_files.append(file['name'])
         except Exception as e:
             st.write(f"Error leyendo el archivo {file['name']}: {e}")
-    if not all_data:
-        return None
-    data = pd.concat(all_data)
-    data['Fecha'] = pd.to_datetime(data['Fecha'])
-    data['Semana'] = data['Fecha'].dt.isocalendar().week
-    data.loc[data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
-    # Renombrar proveedores y eliminar proveedor dummy
+    
+    all_data['Fecha'] = pd.to_datetime(all_data['Fecha'])
+    all_data['Semana'] = all_data['Fecha'].dt.isocalendar().week
+    all_data.loc[all_data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
+    
     proveedores_renombrados = {
         "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
         "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
@@ -90,12 +88,15 @@ def process_data(repo_owner, repo_name, folder_path, files_hash):
         "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
         "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
     }
-    data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
-    data = data[data['PROVEEDOR'] != "Eliminar"]
-    return data
+    all_data['PROVEEDOR'] = all_data['PROVEEDOR'].replace(proveedores_renombrados)
+    all_data = all_data[all_data['PROVEEDOR'] != "Eliminar"]
+    
+    st.session_state['processed_files'] = processed_files
+    st.session_state['data'] = all_data
+    
+    return all_data
 
 # Function to process Venta PR file
-@st.cache_data
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -222,8 +223,8 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
         x_title = 'Fecha'
 
     if view_percentage:
-        comparacion_diaria['Venta Perdida (%)'] = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / comparacion_diaria['Venta Neta Total']) * 100
-        comparacion_diaria['Venta Neta Total (%)'] = (comparacion_diaria['Venta Neta Total'] / comparacion_diaria['VENTA_PERDIDA_PESOS']) * 100
+        comparacion_diaria['Venta Perdida (%)'] = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+        comparacion_diaria['Venta Neta Total (%)'] = (comparacion_diaria['Venta Neta Total'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
         fig = go.Figure(data=[go.Bar(name='Venta Perdida (%)', x=comparacion_diaria[x_title], y=comparacion_diaria['Venta Perdida (%)'], marker_color='red'), go.Bar(name='Venta Neta Total (%)', x=comparacion_diaria[x_title], y=comparacion_diaria['Venta Neta Total (%)'], marker_color='blue')])
         fig.update_layout(barmode='stack', title=f'Venta Perdida vs Venta Neta Total ({x_title})', xaxis_title=x_title, yaxis_title='Porcentaje (%)')
     else:
@@ -254,12 +255,8 @@ def plot_venta_perdida_mercado(data, view):
     fig.update_layout(title=f'Venta Perdida por {x_title} y por Mercado', xaxis_title=x_title, yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Fetch all CSV files and their hash
-all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-files_hash = get_files_hash(all_files)
-
 # Procesar archivos en la carpeta especificada
-data = process_data(repo_owner, repo_name, folder_path, files_hash)
+data = process_data(repo_owner, repo_name, folder_path)
 
 # Show dashboard if data is available
 if data is not None:
@@ -284,10 +281,10 @@ if data is not None:
         comparacion_diaria = filtered_data.groupby('Fecha' if view == "diaria" else 'Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         comparacion_diaria = comparacion_diaria.merge(venta_pr_data.groupby('Día Contable' if view == "diaria" else 'Semana')['Venta Neta Total'].sum().reset_index(), left_on='Fecha' if view == "diaria" else 'Semana', right_on='Día Contable' if view == "diaria" else 'Semana', how='left')
         if not comparacion_diaria.empty:
-            porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / comparacion_diaria['Venta Neta Total'].sum()) * 100
+            porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / comparacion_diaria['Venta Neta Total']) * 100
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
-            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia:.2f}%")
+            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")
         else:
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
@@ -322,3 +319,4 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
