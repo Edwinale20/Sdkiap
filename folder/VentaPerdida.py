@@ -226,8 +226,7 @@ if data is not None:
     articulo = st.sidebar.text_input("Buscar artículo")
     vista = st.sidebar.radio("Selecciona la vista:", ("Diaria", "Acumulada"))
     filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division, articulo)
-    if vista == "Acumulada":
-        filtered_data = apply_accumulated_view(filtered_data)
+    accumulated_data = apply_accumulated_view(filtered_data) if vista == "Acumulada" else filtered_data
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### Venta Perdida Total 🧮')
@@ -250,7 +249,7 @@ if data is not None:
             st.plotly_chart(plot_venta_perdida(filtered_data), use_container_width=True)
     with col2:
         st.markdown('#### Venta Perdida Acumulada 📅')
-        st.plotly_chart(make_donut_chart(filtered_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
+        st.plotly_chart(make_donut_chart(accumulated_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
     col3, col4 = st.columns((1, 1))
     with col3:
         st.markdown('#### Venta Perdida vs Venta Neta Total')
