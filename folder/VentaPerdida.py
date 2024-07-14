@@ -133,13 +133,24 @@ def apply_weekly_view(data):
 def plot_venta_perdida_plaza(data, view):
     fig = go.Figure()
     if view == "semanal":
-        grouped_data = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        grouped_data = data.groupby(['Semana', 'PLAZA'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
         x_title = 'Semana'
     else:
-        grouped_data = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        grouped_data = data.groupby(['Fecha', 'PLAZA'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
         x_title = 'Fecha'
-    fig.add_trace(go.Bar(x=grouped_data[x_title], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(26, 118, 255)'))
-    fig.update_layout(title=f'Venta Perdida por {x_title}', xaxis_title=x_title, yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
+    
+    plazas = grouped_data['PLAZA'].unique()
+    for plaza in plazas:
+        plaza_data = grouped_data[grouped_data['PLAZA'] == plaza]
+        fig.add_trace(go.Bar(x=plaza_data[x_title], y=plaza_data['VENTA_PERDIDA_PESOS'], name=plaza))
+
+    fig.update_layout(
+        title=f'Venta Perdida por Plaza y por {x_title}',
+        xaxis_title=x_title,
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d"),
+        barmode='stack'
+    )
     return fig
 
 # Function to plot top 10 artículos con mayor venta perdida
