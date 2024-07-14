@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import StringIO, BytesIO
 import requests
 
@@ -56,17 +56,16 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
 
 # Function to process CSV files
 @st.cache_data
-def process_data(repo_owner, repo_name, folder_path, start_date, end_date):
+def process_data(repo_owner, repo_name, folder_path):
     all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
     all_data = []
     for file in all_files:
         try:
             date_str = file['name'].split('.')[0]
             date = datetime.strptime(date_str, '%d%m%Y')
-            if start_date <= date <= end_date:
-                df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
-                df['Fecha'] = date
-                all_data.append(df)
+            df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
+            df['Fecha'] = date
+            all_data.append(df)
         except Exception as e:
             st.write(f"Error leyendo el archivo {file['name']}: {e}")
     if not all_data:
@@ -212,16 +211,8 @@ def plot_venta_perdida_mercado(data):
     fig.update_layout(title='Venta Perdida por Día y por Mercado', xaxis_title='Fecha', yaxis_title='Venta Perdida (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
 
-# Sidebar para seleccionar el rango de fechas
-start_date = st.sidebar.date_input("Fecha de inicio", value=(datetime.now() - timedelta(days=30)).date())
-end_date = st.sidebar.date_input("Fecha de fin", value=datetime.now().date())
-
-# Asegurar que las fechas sean objetos datetime para comparación
-start_date = datetime.combine(start_date, datetime.min.time())
-end_date = datetime.combine(end_date, datetime.min.time())
-
 # Procesar archivos en la carpeta especificada
-data = process_data(repo_owner, repo_name, folder_path, start_date, end_date)
+data = process_data(repo_owner, repo_name, folder_path)
 
 # Show dashboard if data is available
 if data is not None:
