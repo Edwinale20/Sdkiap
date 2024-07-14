@@ -55,7 +55,6 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     return pd.read_csv(StringIO(response.text), encoding='ISO-8859-1')
 
 # Function to process CSV files
-@st.cache_data
 def process_data(repo_owner, repo_name, folder_path):
     all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
     all_data = []
@@ -89,7 +88,6 @@ def process_data(repo_owner, repo_name, folder_path):
     return data
 
 # Function to process Venta PR file
-@st.cache_data
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -216,8 +214,8 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
         x_title = 'Fecha'
 
     if view_percentage:
-        comparacion_diaria['Venta Perdida (%)'] = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
-        comparacion_diaria['Venta Neta Total (%)'] = (comparacion_diaria['Venta Neta Total'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+        comparacion_diaria['Venta Perdida (%)'] = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / comparacion_diaria['Venta Neta Total']) * 100
+        comparacion_diaria['Venta Neta Total (%)'] = (comparacion_diaria['Venta Neta Total'] / comparacion_diaria['VENTA_PERDIDA_PESOS']) * 100
         fig = go.Figure(data=[go.Bar(name='Venta Perdida (%)', x=comparacion_diaria[x_title], y=comparacion_diaria['Venta Perdida (%)'], marker_color='red'), go.Bar(name='Venta Neta Total (%)', x=comparacion_diaria[x_title], y=comparacion_diaria['Venta Neta Total (%)'], marker_color='blue')])
         fig.update_layout(barmode='stack', title=f'Venta Perdida vs Venta Neta Total ({x_title})', xaxis_title=x_title, yaxis_title='Porcentaje (%)')
     else:
@@ -277,11 +275,11 @@ if data is not None:
             porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / comparacion_diaria['Venta Neta Total']) * 100
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
-            st.metric(label=f"% Venta Perdida del {'Día' if view == 'diaria' else 'Semana'}", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")
+            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")
         else:
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
-            st.metric(label=f"% Venta Perdida del {'Día' if view == 'diaria' else 'Semana'}", value="N/A")
+            st.metric(label="% Venta Perdida del Día", value="N/A")
         st.markdown(f'#### Venta Perdida {view}')
         st.plotly_chart(plot_venta_perdida(filtered_data, view), use_container_width=True)
     with col2:
