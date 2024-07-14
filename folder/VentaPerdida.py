@@ -310,7 +310,7 @@ if data is not None:
         st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha' if view == "diaria" else 'Semana'], view), use_container_width=True)
     with col4:
         st.markdown('#### Venta Perdida por Plaza')
-        st.plotly_chart(plot_venta_perdida_plaza(filtered_data, view), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_plaza(filtered_data), use_container_width=True)
     col5, col6 = st.columns((1, 1))
     with col5:
         st.markdown('#### Top 10 Artículos con Mayor Venta Perdida')
@@ -329,3 +329,4 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
