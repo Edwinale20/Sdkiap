@@ -1,9 +1,7 @@
-import os
 import pandas as pd
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import StringIO, BytesIO
 import requests
 
@@ -37,12 +35,8 @@ def fetch_contents(repo_owner, repo_name, path=""):
         "Accept": "application/vnd.github.v3+json"
     }
     response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        st.error(f"Failed to fetch contents: {response.status_code} - {response.text}")
-        st.write(f"URL: {url}")
-        response.raise_for_status()
-    contents = response.json()
-    return contents
+    response.raise_for_status()
+    return response.json()
 
 # Function to fetch CSV files from GitHub
 def fetch_csv_files(repo_owner, repo_name, path=""):
@@ -57,18 +51,13 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
         "Accept": "application/vnd.github.v3.raw"
     }
     response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        st.error(f"Failed to read file {file_path}: {response.status_code} - {response.text}")
-        st.write(f"URL: {url}")
-        response.raise_for_status()
-    csv_content = StringIO(response.text)
-    return pd.read_csv(csv_content, encoding='ISO-8859-1')
+    response.raise_for_status()
+    return pd.read_csv(StringIO(response.text), encoding='ISO-8859-1')
 
 # Function to process CSV files
 def process_data(repo_owner, repo_name, folder_path):
     all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
     all_data = []
-    file_dates = []
     for file in all_files:
         try:
             date_str = file['name'].split('.')[0]
@@ -76,33 +65,30 @@ def process_data(repo_owner, repo_name, folder_path):
             df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
             df['Fecha'] = date
             all_data.append(df)
-            file_dates.append(date)
         except Exception as e:
             st.write(f"Error leyendo el archivo {file['name']}: {e}")
     if not all_data:
-        return None, file_dates
-    else:
-        data = pd.concat(all_data)
-        data['Fecha'] = pd.to_datetime(data['Fecha'])
-        data['Semana'] = data['Fecha'].dt.isocalendar().week
-        data.loc[data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
-
-        # Renombrar proveedores y eliminar proveedor dummy
-        proveedores_renombrados = {
-            "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
-            "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
-            "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
-            "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
-            "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
-            "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
-            "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
-        }
-        data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
-        data = data[data['PROVEEDOR'] != "Eliminar"]
-        return data, file_dates
+        return None
+    data = pd.concat(all_data)
+    data['Fecha'] = pd.to_datetime(data['Fecha'])
+    data['Semana'] = data['Fecha'].dt.isocalendar().week
+    data.loc[data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
+    # Renombrar proveedores y eliminar proveedor dummy
+    proveedores_renombrados = {
+        "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
+        "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
+        "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
+        "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
+        "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
+        "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
+        "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
+    }
+    data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
+    data = data[data['PROVEEDOR'] != "Eliminar"]
+    return data
 
 # Procesar archivos en la carpeta especificada
-data, file_dates = process_data(repo_owner, repo_name, folder_path)
+data = process_data(repo_owner, repo_name, folder_path)
 
 # Function to process Venta PR file
 @st.cache_data
@@ -113,16 +99,9 @@ def load_venta_pr(file_path):
         "Accept": "application/vnd.github.v3.raw"
     }
     response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        st.error(f"Failed to read file {file_path}: {response.status_code} - {response.text}")
-        st.write(f"URL: {url}")
-        response.raise_for_status()
+    response.raise_for_status()
     excel_content = BytesIO(response.content)
-    try:
-        df = pd.read_excel(excel_content)
-    except Exception as e:
-        st.error(f"Error reading Excel file: {e}")
-        st.stop()
+    df = pd.read_excel(excel_content)
     df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y')
     return df
 
@@ -148,7 +127,6 @@ def apply_accumulated_view(data):
 
 # Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(data):
-    if 'PLAZA' not in data.columns: return "No se encontraron datos para la columna 'PLAZA'."
     fig = go.Figure()
     grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     fig.add_trace(go.Bar(x=grouped_data['PLAZA'], y=grouped_data['VENTA_PERDIDA_PESOS'], marker_color='rgb(26, 118, 255)'))
@@ -157,7 +135,6 @@ def plot_venta_perdida_plaza(data):
 
 # Function to plot top 10 artículos con mayor venta perdida
 def plot_articulos_venta_perdida(data):
-    if 'DESC_ARTICULO' not in data.columns: return "No se encontraron datos para la columna 'DESC_ARTICULO'."
     fig = go.Figure()
     grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
@@ -185,19 +162,12 @@ def plot_venta_perdida_con_tendencia(data):
 
 # Function to plot venta perdida por proveedor
 def plot_venta_perdida_proveedor(data, selected_proveedor=None):
-    if 'PROVEEDOR' not in data.columns:
-        return "No se encontraron datos para la columna 'PROVEEDOR'."
-    
     grouped_data = data.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     colors = ['gold', 'mediumturquoise', 'darkorange', 'lightgreen', 'lightblue', 'pink', 'red', 'purple', 'brown', 'gray']
-    
     pull = [0.2 if proveedor == selected_proveedor else 0 for proveedor in grouped_data['PROVEEDOR']]
-
     fig = go.Figure(data=[go.Pie(labels=grouped_data['PROVEEDOR'], values=grouped_data['VENTA_PERDIDA_PESOS'], pull=pull)])
-    fig.update_traces(hoverinfo='label+percent', textinfo='value', texttemplate='$%{value:,.0f}', textfont_size=20,
-                      marker=dict(colors=colors, line=dict(color='#000000', width=2)))
+    fig.update_traces(hoverinfo='label+percent', textinfo='value', texttemplate='$%{value:,.0f}', textfont_size=20, marker=dict(colors=colors, line=dict(color='#000000', width=2)))
     fig.update_layout(title='Venta Perdida por Proveedor')
-
     return fig
 
 # Function to plot venta perdida vs venta neta total
@@ -227,7 +197,6 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
 
 # Function to make a donut chart
 def make_donut_chart(value, total, title, color):
-    percentage = (value / total) * 100
     fig = go.Figure(go.Pie(values=[value, total - value], labels=[title, 'Restante'], marker_colors=[color, '#E2E2E2'], hole=0.7, textinfo='percent+label', hoverinfo='label+percent'))
     fig.update_traces(texttemplate='%{percent:.0f}%', textposition='inside')
     fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=200, width=200)
@@ -235,7 +204,6 @@ def make_donut_chart(value, total, title, color):
 
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data):
-    if 'MERCADO' not in data.columns or 'DIVISION' not in data.columns or 'PLAZA' not in data.columns: return "No se encontraron datos suficientes para 'MERCADO', 'DIVISION' o 'PLAZA'."
     fig = go.Figure()
     mercados = data['MERCADO'].unique()
     for mercado in mercados:
@@ -277,44 +245,33 @@ if data is not None:
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
             st.metric(label="% Venta Perdida del Día", value="N/A")
         st.markdown('#### Venta Perdida diaria')
-        venta_perdida_dia_chart = plot_venta_perdida(filtered_data)
-        st.plotly_chart(venta_perdida_dia_chart, use_container_width=True)
+        st.plotly_chart(plot_venta_perdida(filtered_data), use_container_width=True)
     with col2:
         st.markdown('#### Venta Perdida Acumulada 📅')
-        total_venta_perdida_acumulada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
-        venta_perdida_acumulada_chart = make_donut_chart(total_venta_perdida_acumulada, total_venta_perdida, 'Acumulada', 'orange')
-        st.plotly_chart(venta_perdida_acumulada_chart, use_container_width=True)
+        st.plotly_chart(make_donut_chart(filtered_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
     col3, col4 = st.columns((1, 1))
     with col3:
         st.markdown('#### Venta Perdida vs Venta Neta Total')
-        comparacion_chart = plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha'])
-        st.plotly_chart(comparacion_chart, use_container_width=True)
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha']), use_container_width=True)
     with col4:
         st.markdown('#### Venta Perdida por Plaza')
-        venta_perdida_plaza_chart = plot_venta_perdida_plaza(filtered_data)
-        st.plotly_chart(venta_perdida_plaza_chart, use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_plaza(filtered_data), use_container_width=True)
     col5, col6 = st.columns((1, 1))
     with col5:
         st.markdown('#### Top 10 Artículos con Mayor Venta Perdida')
-        articulos_venta_perdida_chart = plot_articulos_venta_perdida(filtered_data)
-        st.plotly_chart(articulos_venta_perdida_chart, use_container_width=True)
+        st.plotly_chart(plot_articulos_venta_perdida(filtered_data), use_container_width=True)
     with col6:
         st.markdown('#### Venta Perdida por Proveedor')
-        selected_proveedor = proveedores  # Obtener el proveedor seleccionado para el gráfico de pastel
-        venta_perdida_proveedor_chart = plot_venta_perdida_proveedor(filtered_data, selected_proveedor)
-        st.plotly_chart(venta_perdida_proveedor_chart, use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_proveedor(filtered_data, proveedores), use_container_width=True)
     col7, col8 = st.columns((1, 1))
     with col7:
         st.markdown('#### Cambio porcentual de venta perdida')
-        articulos_por_division_chart = plot_venta_perdida_con_tendencia(filtered_data)
-        st.plotly_chart(articulos_por_division_chart, use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data), use_container_width=True)
     with col8:
         st.markdown('#### Venta Perdida vs Venta Neta Total')
-        comparacion_diaria_chart = plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha'])
-        st.plotly_chart(comparacion_diaria_chart, use_container_width=True)
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha']), use_container_width=True)
     st.markdown('#### Venta Perdida diaria por Mercado')
-    venta_perdida_mercado_chart = plot_venta_perdida_mercado(filtered_data)
-    st.plotly_chart(venta_perdida_mercado_chart, use_container_width=True)
+    st.plotly_chart(plot_venta_perdida_mercado(filtered_data), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
 
