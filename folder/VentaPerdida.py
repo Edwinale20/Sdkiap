@@ -58,28 +58,23 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
 @st.cache_data
 def process_data(repo_owner, repo_name, folder_path):
     all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-    processed_files = st.session_state.get('processed_files', [])
-    
-    new_files = [file for file in all_files if file['name'] not in processed_files]
-    if not new_files:
-        return st.session_state.get('data', None)
-    
-    all_data = st.session_state.get('data', pd.DataFrame())
-    for file in new_files:
+    all_data = []
+    for file in all_files:
         try:
             date_str = file['name'].split('.')[0]
             date = datetime.strptime(date_str, '%d%m%Y')
             df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
             df['Fecha'] = date
-            all_data = pd.concat([all_data, df])
-            processed_files.append(file['name'])
+            all_data.append(df)
         except Exception as e:
             st.write(f"Error leyendo el archivo {file['name']}: {e}")
-    
-    all_data['Fecha'] = pd.to_datetime(all_data['Fecha'])
-    all_data['Semana'] = all_data['Fecha'].dt.isocalendar().week
-    all_data.loc[all_data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
-    
+    if not all_data:
+        return None
+    data = pd.concat(all_data)
+    data['Fecha'] = pd.to_datetime(data['Fecha'])
+    data['Semana'] = data['Fecha'].dt.isocalendar().week
+    data.loc[data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
+    # Renombrar proveedores y eliminar proveedor dummy
     proveedores_renombrados = {
         "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
         "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
@@ -89,13 +84,9 @@ def process_data(repo_owner, repo_name, folder_path):
         "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
         "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
     }
-    all_data['PROVEEDOR'] = all_data['PROVEEDOR'].replace(proveedores_renombrados)
-    all_data = all_data[all_data['PROVEEDOR'] != "Eliminar"]
-    
-    st.session_state['processed_files'] = processed_files
-    st.session_state['data'] = all_data
-    
-    return all_data
+    data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
+    data = data[data['PROVEEDOR'] != "Eliminar"]
+    return data
 
 # Function to process Venta PR file
 @st.cache_data
@@ -283,10 +274,10 @@ if data is not None:
         comparacion_diaria = filtered_data.groupby('Fecha' if view == "diaria" else 'Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         comparacion_diaria = comparacion_diaria.merge(venta_pr_data.groupby('Día Contable' if view == "diaria" else 'Semana')['Venta Neta Total'].sum().reset_index(), left_on='Fecha' if view == "diaria" else 'Semana', right_on='Día Contable' if view == "diaria" else 'Semana', how='left')
         if not comparacion_diaria.empty:
-            porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'] / (comparacion_diaria['VENTA_PERDIDA_PESOS'] + comparacion_diaria['Venta Neta Total'])) * 100
+            porcentaje_venta_perdida_dia = (comparacion_diaria['VENTA_PERDIDA_PESOS'].sum() / comparacion_diaria['Venta Neta Total'].sum()) * 100
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
-            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia.iloc[-1]:.2f}%")
+            st.metric(label="% Venta Perdida del Día", value=f"{porcentaje_venta_perdida_dia:.2f}%")
         else:
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
