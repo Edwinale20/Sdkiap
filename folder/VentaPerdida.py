@@ -312,7 +312,7 @@ if data is not None:
         st.plotly_chart(make_donut_chart(filtered_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
     col3, col4 = st.columns((1, 1))
     with col3:
-        st.markdown('#### Venta Perdida vs Venta Neta Total 🎚️')
+        st.markdown('#### Venta Perdida vs Venta Neta Total ⚖️')
         st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha' if view == "diaria" else 'Semana'], view), use_container_width=True)
     with col4:
         st.markdown('#### Venta Perdida por Plaza 🏝️')
