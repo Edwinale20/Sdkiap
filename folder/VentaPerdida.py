@@ -113,14 +113,14 @@ def load_venta_pr(file_path):
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Function to apply filters
-def apply_filters(data, articulo, proveedor, plaza, categoria, fecha, semana, division):
-    if articulo: data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+def apply_filters(data, proveedor, plaza, categoria, fecha, semana, division, articulo):
     if proveedor: data = data[data['PROVEEDOR'] == proveedor]
     if plaza: data = data[data['PLAZA'] == plaza]
     if categoria: data = data[data['CATEGORIA'] == categoria]
     if fecha: data = data[data['Fecha'] == fecha]
     if semana: data = data[data['Semana'] == semana]
     if division: data = data[data['DIVISION'] == division]
+    if articulo: data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
     return data
 
 # Function to apply weekly view
@@ -250,7 +250,6 @@ def make_donut_chart(value, total, title, color):
     )
     return fig
 
-
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
     fig = go.Figure()
@@ -335,3 +334,4 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
