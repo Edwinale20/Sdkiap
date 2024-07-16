@@ -290,7 +290,7 @@ if data is not None:
         filtered_data = apply_weekly_view(filtered_data)
     col1, col2 = st.columns((1, 1))
     with col1:
-        st.markdown('#### Venta Perdida Total 🧮')
+        st.markdown('#### KPI´S de Venta Perdida 🧮')
         total_venta_perdida = data['VENTA_PERDIDA_PESOS'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
@@ -312,24 +312,24 @@ if data is not None:
         st.plotly_chart(make_donut_chart(filtered_data['VENTA_PERDIDA_PESOS'].sum(), total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
     col3, col4 = st.columns((1, 1))
     with col3:
-        st.markdown('#### Venta Perdida vs Venta Neta Total')
+        st.markdown('#### Venta Perdida vs Venta Neta Total 🎚️')
         st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, filtered_data['Fecha' if view == "diaria" else 'Semana'], view), use_container_width=True)
     with col4:
-        st.markdown('#### Venta Perdida por Plaza')
+        st.markdown('#### Venta Perdida por Plaza 🏝️')
         st.plotly_chart(plot_venta_perdida_plaza(filtered_data), use_container_width=True)
     col5, col6 = st.columns((1, 1))
     with col5:
-        st.markdown('#### Top 10 Artículos con Mayor Venta Perdida')
+        st.markdown('#### Top 10 Artículos con Mayor Venta Perdida 🔝')
         st.plotly_chart(plot_articulos_venta_perdida(filtered_data), use_container_width=True)
     with col6:
-        st.markdown('#### Venta Perdida por Proveedor')
+        st.markdown('#### Venta Perdida por Proveedor 🚩')
         st.plotly_chart(plot_venta_perdida_proveedor(filtered_data, proveedores), use_container_width=True)
     col7, col8 = st.columns((1, 1))
     with col7:
-        st.markdown('#### Cambio porcentual de venta perdida')
+        st.markdown('#### Cambio porcentual de venta perdida 🎢')
         st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data, view), use_container_width=True)
     with col8:
-        st.markdown('#### Venta Perdida vs Venta Neta Total')
+        st.markdown('#### Venta Perdida vs Venta Neta Total 📶')
         st.plotly_chart(plot_comparacion_venta_perdida_vs_neta_diaria(filtered_data, venta_pr_data, filtered_data['Fecha' if view == "diaria" else 'Semana'], view), use_container_width=True)
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
