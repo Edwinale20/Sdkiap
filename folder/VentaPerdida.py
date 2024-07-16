@@ -245,8 +245,8 @@ def make_donut_chart(value, total, title, color):
         title="Proporción de la Venta Perdida Filtrada al Total",
         showlegend=False,
         margin=dict(t=50, b=0, l=0, r=0),  # Adjust top margin to make room for the title
-        height=200,
-        width=200
+        height=300,
+        width=300
     )
     return fig
 
