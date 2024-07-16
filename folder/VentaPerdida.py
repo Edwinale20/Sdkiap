@@ -305,7 +305,7 @@ if data is not None:
             st.metric(label="Total Venta Perdida", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="% Acumulado", value=f"{porcentaje_acumulado:.2f}%")
             st.metric(label="% Venta Perdida del Día", value="N/A")
-        st.markdown(f'#### Venta Perdida {view}')
+        st.markdown(f'#### Venta Perdida {view} 🕑')
         st.plotly_chart(plot_venta_perdida(filtered_data, view), use_container_width=True)
     with col2:
         st.markdown('#### Venta Perdida Acumulada 📅')
