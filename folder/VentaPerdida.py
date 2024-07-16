@@ -166,7 +166,7 @@ def plot_venta_perdida(data, view):
         x_title = 'Semana'
     else:
         grouped_data = data.groupby('Fecha')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'Día'
+        x_title = 'Fecha'
     fig.add_trace(go.Scatter(x=grouped_data[x_title], y=grouped_data['VENTA_PERDIDA_PESOS'], mode='lines+markers', name='Venta Perdida', line=dict(color='rgb(219, 64, 82)')))
     fig.update_layout(title=f'Venta Perdida por {x_title}', xaxis_title=x_title, yaxis_title='Monto (Pesos)', yaxis=dict(tickformat="$,d"))
     return fig
