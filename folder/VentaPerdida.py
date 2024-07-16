@@ -291,7 +291,7 @@ if data is not None:
         comparacion_diaria = comparacion_diaria.merge(venta_pr_data.groupby('Día Contable' if view == "diaria" else 'Semana')['Venta Neta Total'].sum().reset_index(), left_on='Fecha' if view == "diaria" else 'Semana', right_on='Día Contable' if view == "diaria" else 'Semana', how='left')
         if not comparacion_diaria.empty:
             porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / comparacion_diaria['Venta Neta Total'].sum()) * 100
-            st.metric(label="Total Venta Perdida (21/7/2024-Presente", value=f"${total_venta_perdida_filtrada:,.0f}")
+            st.metric(label="Total Venta Perdida (21/7/2024-Presente)", value=f"${total_venta_perdida_filtrada:,.0f}")
             st.metric(label="Proporción de la Venta Perdida Filtrada al Total", value=f"{porcentaje_acumulado:.2f}%")
             st.metric(label="Proporción de Venta Perdida respecto a la Venta Neta Total", value=f"{porcentaje_venta_perdida_dia:.2f}%")
         else:
