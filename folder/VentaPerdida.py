@@ -113,7 +113,7 @@ def load_venta_pr(file_path):
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Function to apply filters
-def apply_filters(data, proveedor, plaza, categoria, fecha, semana, division, articulo):
+def apply_filters(data, articulo, proveedor, plaza, categoria, fecha, semana, division):
     if articulo: data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
     if proveedor: data = data[data['PROVEEDOR'] == proveedor]
     if plaza: data = data[data['PLAZA'] == plaza]
