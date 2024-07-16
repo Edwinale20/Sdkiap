@@ -277,13 +277,13 @@ data = process_data(repo_owner, repo_name, folder_path, files_hash)
 # Show dashboard if data is available
 if data is not None:
     st.sidebar.title('📈📉 Dashboard de Venta Perdida')
+    articulo = st.sidebar.text_input("Buscar artículo o familia de artículos")
     proveedores = st.sidebar.selectbox("Selecciona un proveedor", options=[None] + data['PROVEEDOR'].unique().tolist())
     plaza = st.sidebar.selectbox("Selecciona una plaza", options=[None] + data['PLAZA'].unique().tolist())
     categoria = st.sidebar.selectbox("Selecciona una categoría", options=[None] + data['CATEGORIA'].unique().tolist())
     division = st.sidebar.selectbox("Selecciona una división", options=[None] + data['DIVISION'].unique().tolist())
     semana_opciones = [None] + sorted(data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana", options=semana_opciones)
-    articulo = st.sidebar.text_input("Buscar artículo o familia de artículos")
     view = st.sidebar.radio("Selecciona la vista:", ("diaria", "semanal"))
     filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division, articulo)
     if view == "semanal":
