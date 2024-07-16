@@ -283,7 +283,7 @@ if data is not None:
     categoria = st.sidebar.selectbox("Selecciona una categoría 🗃️", options=[None] + data['CATEGORIA'].unique().tolist())
     division = st.sidebar.selectbox("Selecciona una división 🗺️", options=[None] + data['DIVISION'].unique().tolist())
     semana_opciones = [None] + sorted(data['Semana'].unique())
-    semana_seleccionada = st.sidebar.selectbox("Selecciona una semana", options=semana_opciones)
+    semana_seleccionada = st.sidebar.selectbox("Selecciona una semana 🗓️", options=semana_opciones)
     view = st.sidebar.radio("Selecciona la vista:", ("diaria", "semanal"))
     filtered_data = apply_filters(data, proveedores, plaza, categoria, None, semana_seleccionada, division, articulo)
     if view == "semanal":
