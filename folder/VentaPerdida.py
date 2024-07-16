@@ -95,7 +95,6 @@ def process_data(repo_owner, repo_name, folder_path, files_hash):
     return data
 
 # Function to process Venta PR file
-@st.cache_data
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -329,5 +328,3 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
-
