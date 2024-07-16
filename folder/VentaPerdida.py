@@ -290,7 +290,7 @@ if data is not None:
         filtered_data = apply_weekly_view(filtered_data)
     col1, col2 = st.columns((1, 1))
     with col1:
-        st.markdown('#### KPI´S de Venta Perdida 🧮')
+        st.markdown('#### KPI´s de Venta Perdida 🧮')
         total_venta_perdida = data['VENTA_PERDIDA_PESOS'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
