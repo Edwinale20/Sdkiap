@@ -243,13 +243,12 @@ def make_donut_chart(value, total, title, color):
     fig.update_traces(texttemplate='%{percent:.0f}%', textposition='inside')
     fig.update_layout(
         title="Proporción de la Venta Perdida Filtrada respecto al Total",
-        showlegend=False,
+        showlegend=True,
         margin=dict(t=50, b=0, l=0, r=0),  # Adjust top margin to make room for the title
         height=300,
         width=300
     )
     return fig
-
 
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
