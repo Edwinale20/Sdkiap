@@ -239,8 +239,8 @@ def plot_comparacion_venta_perdida_vs_neta_diaria(data, venta_pr_data, filtro_fe
 
 # Function to make a donut chart
 def make_donut_chart(value, total, title, color):
-    fig = go.Figure(go.Pie(values=[value, total - value], labels=[title, 'Restante'], marker_colors=[color, '#E2E2E2'], hole=0.7, textinfo='percent+label', hoverinfo='label+percent'))
-    fig.update_traces(texttemplate='%{percent:.0f}%', textposition='inside')
+    fig = go.Figure(go.Pie(values=[value, total - value], labels=[title, 'Restante'], marker_colors=[color, '#E2E2E2'], hole=0.7, textinfo='label', hoverinfo='label+percent'))
+    fig.update_traces(texttemplate='', textposition='inside')
     fig.update_layout(
         title="Proporción de la Venta Perdida Filtrada respecto al Total",
         showlegend=True,
@@ -249,6 +249,7 @@ def make_donut_chart(value, total, title, color):
         width=300
     )
     return fig
+
 
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
