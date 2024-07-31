@@ -106,9 +106,18 @@ def load_venta_pr(file_path):
     response.raise_for_status()
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
-    df = df.rename(columns={'Plaza': 'PLAZA', 'División': 'DIVISIÓN', 'Categoría': 'CATEGORIA', 'PROVEEDOR': 'Proveedor', 'Artículo': 'ID_ARTICULO'})
-    if 'Semana' not in df.columns or 'Venta Neta Total' not in df.columns:
-        st.error("Las columnas 'Semana' o 'Venta Neta Total' no se encontraron en los datos de 'Venta PR'")
+    # Ajustando los nombres de columnas a los proporcionados
+    df = df.rename(columns={
+        'Plaza': 'PLAZA',
+        'División': 'DIVISIÓN',
+        'Categoría': 'CATEGORIA',
+        'Artículo': 'ID_ARTICULO',
+        'Semana Contable': 'Semana Contable',
+        'Venta Neta Total': 'Venta Neta Total',
+        'Proveedor': 'PROVEEDOR'
+    })
+    if 'Semana Contable' not in df.columns or 'Venta Neta Total' not in df.columns:
+        st.error("Las columnas 'Semana Contable' o 'Venta Neta Total' no se encontraron en los datos de 'Venta PR'")
         return pd.DataFrame()  # Retorna un DataFrame vacío en caso de error
     return df
 
@@ -142,9 +151,9 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
         return go.Figure()
 
     if view == "semanal":
-        venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
+        venta_pr_data_grouped = venta_pr_data.groupby('Semana Contable')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana', how='left')
+        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana Contable', how='left')
     else:
         venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -415,5 +424,4 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
 
