@@ -68,6 +68,7 @@ def load_venta_pr(file_path):
         'Artículo': 'ID_ARTICULO',
         'Semana Contable': 'Semana',
         'Venta Neta Total': 'Venta Neta Total',
+        'DESC_ARTICULO': 'DESC_ARTICULO',
         'Proveedor': 'PROVEEDOR'
     })
 
@@ -225,10 +226,11 @@ def plot_venta_perdida_plaza(data):
 def plot_articulos_venta_perdida(data):
     if 'DESC_ARTICULO' not in data.columns:
         st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
-        return go.Figure()  # Retorna una figura vacía en caso de que la columna no exista
+        return go.Figure()
+
+    fig = go.Figure()
     grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
-    fig = go.Figure()
     fig.add_trace(go.Bar(
         x=grouped_data['DESC_ARTICULO'], 
         y=grouped_data['VENTA_PERDIDA_PESOS'], 
@@ -242,6 +244,37 @@ def plot_articulos_venta_perdida(data):
     )
     return fig
 
+# Function to plot venta perdida por mercado
+def plot_venta_perdida_mercado(data, view):
+    fig = go.Figure()
+
+    # Verificar si la columna 'MERCADO' existe en los datos
+    if 'MERCADO' not in data.columns:
+        st.warning("La columna 'MERCADO' no está en los datos.")
+        return fig  # Retorna una figura vacía si la columna no está presente
+
+    if view == "semanal":
+        grouped_data = data.groupby(['Semana', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Semana'
+    else:
+        grouped_data = data.groupby(['Mes', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Mes'
+    mercados = grouped_data['MERCADO'].unique()
+    for mercado in mercados:
+        mercado_data = grouped_data[grouped_data['MERCADO'] == mercado]
+        fig.add_trace(go.Scatter(
+            x=mercado_data[x_title], 
+            y=mercado_data['VENTA_PERDIDA_PESOS'], 
+            mode='lines+markers', 
+            name=mercado
+        ))
+    fig.update_layout(
+        title=f'Venta Perdida por {x_title} y por Mercado',
+        xaxis_title=x_title,
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d")
+    )
+    return fig
 
 # Function to plot venta perdida por semana/mes
 def plot_venta_perdida(data, view):
