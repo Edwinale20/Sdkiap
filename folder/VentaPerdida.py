@@ -61,9 +61,8 @@ def load_venta_pr(file_path):
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Verifica si los datos se cargaron correctamente antes de continuar
-if not venta_pr_data.empty:
-    st.write("Datos cargados correctamente desde 'Venta PR.xlsx'")
-else:
+if venta_pr_data.empty:
+    st.error("No se pudo cargar los datos desde 'Venta PR.xlsx'")
     st.stop()
 
 # Function to apply filters
