@@ -96,22 +96,36 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Cargar y combinar datos de venta perdida de la carpeta
 all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=get_week_number_from_filename(file)) for file in all_files])
+venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}") for file in all_files])
 
 # Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
 venta_perdida_data = venta_perdida_data.rename(columns={
-    'PROVEEDOR': 'PROVEEDOR',
+    'PLAZA': 'PLAZA',
+    'DIVISION': 'DIVISION',
     'CATEGORIA': 'CATEGORIA',
     'ID_ARTICULO': 'ID_ARTICULO',
-    'DIVISION': 'DIVISION',
-    'PLAZA': 'PLAZA',
-    'VENTA_PERDIDA_PESOS': 'VENTA_PERDIDA_PESOS'
+    'PROVEEDOR': 'PROVEEDOR',
+    'Semana': 'Semana'
 })
 
-# Verifica si 'Semana Contable' en venta_pr_data coincide con 'Semana' en venta_perdida_data
-venta_pr_data = venta_pr_data.rename(columns={
-    'Semana Contable': 'Semana'
-})
+# Convertir tipos de datos antes de hacer el merge
+venta_perdida_data['PLAZA'] = venta_perdida_data['PLAZA'].astype(str)
+venta_pr_data['PLAZA'] = venta_pr_data['PLAZA'].astype(str)
+
+venta_perdida_data['DIVISION'] = venta_perdida_data['DIVISION'].astype(str)
+venta_pr_data['DIVISION'] = venta_pr_data['DIVISION'].astype(str)
+
+venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].astype(str)
+venta_pr_data['CATEGORIA'] = venta_pr_data['CATEGORIA'].astype(str)
+
+venta_perdida_data['ID_ARTICULO'] = venta_perdida_data['ID_ARTICULO'].astype(str)
+venta_pr_data['ID_ARTICULO'] = venta_pr_data['ID_ARTICULO'].astype(str)
+
+venta_perdida_data['PROVEEDOR'] = venta_perdida_data['PROVEEDOR'].astype(str)
+venta_pr_data['PROVEEDOR'] = venta_pr_data['PROVEEDOR'].astype(str)
+
+venta_perdida_data['Semana'] = venta_perdida_data['Semana'].astype(int)
+venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
 
 # Combinar datos de venta perdida con venta pr
 combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"], how="left")
