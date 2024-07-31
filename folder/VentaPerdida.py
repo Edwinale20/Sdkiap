@@ -77,8 +77,12 @@ def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo)
 
 # Function to apply weekly view
 def apply_weekly_view(data):
-    weekly_data = data.groupby(['Semana Contable', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISIÓN', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
-    return weekly_data
+    if 'VENTA_PERDIDA_PESOS' in data.columns:
+        weekly_data = data.groupby(['Semana Contable', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISIÓN', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+        return weekly_data
+    else:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
+        return pd.DataFrame()  # Retorna un DataFrame vacío en caso de error
 
 # Function to apply monthly view
 def apply_monthly_view(data):
@@ -367,4 +371,3 @@ if not venta_pr_data.empty:
         st.warning("No se encontraron datos filtrados.")
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
