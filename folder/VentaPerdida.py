@@ -132,6 +132,45 @@ def apply_monthly_view(data):
     monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'DESC_ARTICULO', 'MERCADO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return monthly_data
 
+# Function to plot venta perdida vs venta neta total
+def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
+    if view == "semanal":
+        venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
+        comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana', how='left')
+    else:
+        venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
+        comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Mes', right_on='Mes', how='left')
+
+    comparacion['Venta No Perdida'] = comparacion['Venta Neta Total'] - comparacion['VENTA_PERDIDA_PESOS']
+    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
+
+    fig = go.Figure(data=[
+        go.Bar(
+            name='Venta Perdida',
+            x=comparacion['Semana' if view == "semanal" else 'Mes'],
+            y=comparacion['VENTA_PERDIDA_PESOS'],
+            marker_color='red',
+            text=comparacion['% Venta Perdida'].apply(lambda x: f'{x:.0f}%'),
+            textposition='inside'
+        ),
+        go.Bar(
+            name='Venta No Perdida',
+            x=comparacion['Semana' if view == "semanal" else 'Mes'],
+            y=comparacion['Venta No Perdida'],
+            marker_color='blue'
+        )
+    ])
+    fig.update_layout(
+        barmode='stack',
+        title='Venta Perdida vs Venta Neta Total',
+        xaxis_title='Semana' if view == "semanal" else 'Mes',
+        yaxis=dict(tickformat="$,d", title='Monto (Pesos)'),
+        xaxis=dict(title='Tipo de Venta')
+    )
+    return fig
+
 # Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(data):
     fig = go.Figure()
@@ -362,9 +401,11 @@ if data is not None:
     with col7:
         st.markdown('#### 🎢 Cambio porcentual de venta perdida ')
         st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data, view), use_container_width=True)
+    with col8:
+        st.markdown('#### 📶 Venta Perdida vs Venta Neta Total ')
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, view), use_container_width=True)
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
 
