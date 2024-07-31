@@ -62,32 +62,29 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Verifica si los datos se cargaron correctamente antes de continuar
 if not venta_pr_data.empty:
-    # Aquí puedes continuar con el resto del código, asumiendo que las columnas están correctas
     st.write("Datos cargados correctamente desde 'Venta PR.xlsx'")
 else:
     st.stop()
-
-# El resto del código para el procesamiento y visualización de datos sigue aquí...
-
 
 # Function to apply filters
 def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
     if proveedor: data = data[data['PROVEEDOR'] == proveedor]
     if plaza: data = data[data['PLAZA'] == plaza]
     if categoria: data = data[data['CATEGORIA'] == categoria]
-    if semana: data = data[data['Semana'] == semana]
-    if division: data = data[data['DIVISION'] == division]
-    if articulo: data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+    if semana: data = data[data['Semana Contable'] == semana]
+    if division: data = data[data['DIVISIÓN'] == division]
+    if articulo: data = data[data['ID_ARTICULO'].str.contains(articulo, case=False, na=False)]
     return data
 
 # Function to apply weekly view
 def apply_weekly_view(data):
-    weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'DESC_ARTICULO', 'MERCADO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    weekly_data = data.groupby(['Semana Contable', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISIÓN', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
 # Function to apply monthly view
 def apply_monthly_view(data):
-    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'DESC_ARTICULO', 'MERCADO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    data['Mes'] = pd.to_datetime(data['Semana Contable'], format='%Y%U').dt.to_period('M')
+    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISIÓN', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return monthly_data
 
 # Function to plot venta perdida vs venta neta total
@@ -98,9 +95,10 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
 
     if view == "semanal":
         venta_pr_data_grouped = venta_pr_data.groupby('Semana Contable')['Venta Neta Total'].sum().reset_index()
-        comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana Contable', how='left')
+        comparacion = data.groupby('Semana Contable')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana Contable', right_on='Semana Contable', how='left')
     else:
+        venta_pr_data['Mes'] = pd.to_datetime(venta_pr_data['Semana Contable'], format='%Y%U').dt.to_period('M')
         venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Mes', right_on='Mes', how='left')
@@ -111,7 +109,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     fig = go.Figure(data=[
         go.Bar(
             name='Venta Perdida',
-            x=comparacion['Semana' if view == "semanal" else 'Mes'],
+            x=comparacion['Semana Contable' if view == "semanal" else 'Mes'],
             y=comparacion['VENTA_PERDIDA_PESOS'],
             marker_color='red',
             text=comparacion['% Venta Perdida'].apply(lambda x: f'{x:.0f}%'),
@@ -119,7 +117,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
         ),
         go.Bar(
             name='Venta No Perdida',
-            x=comparacion['Semana' if view == "semanal" else 'Mes'],
+            x=comparacion['Semana Contable' if view == "semanal" else 'Mes'],
             y=comparacion['Venta No Perdida'],
             marker_color='blue'
         )
@@ -127,7 +125,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     fig.update_layout(
         barmode='stack',
         title='Venta Perdida vs Venta Neta Total',
-        xaxis_title='Semana' if view == "semanal" else 'Mes',
+        xaxis_title='Semana Contable' if view == "semanal" else 'Mes',
         yaxis=dict(tickformat="$,d", title='Monto (Pesos)'),
         xaxis=dict(title='Tipo de Venta')
     )
