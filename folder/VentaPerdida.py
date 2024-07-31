@@ -21,11 +21,36 @@ except KeyError:
 # GitHub repository details
 repo_owner = "Edwinale20"
 repo_name = "317B"
+folder_path = "venta"
 
-# File paths
-venta_pr_path = "venta/Venta PR.xlsx"
+# Function to fetch contents from GitHub
+def fetch_contents(repo_owner, repo_name, path=""):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
 
-# Function to process Venta PR file
+# Function to fetch CSV files from GitHub
+def fetch_csv_files(repo_owner, repo_name, path=""):
+    contents = fetch_contents(repo_owner, repo_name, path)
+    return [file for file in contents if file["name"].endswith(".csv")]
+
+# Function to read a CSV file from GitHub
+def read_csv_from_github(repo_owner, repo_name, file_path):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3.raw"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
+
+# Function to load Venta PR data
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -48,13 +73,36 @@ def load_venta_pr(file_path):
         'Proveedor': 'PROVEEDOR'
     })
 
-    # Verificar las columnas disponibles
-    st.write("Columnas disponibles en 'Venta PR':", df.columns.tolist())
-
     return df
 
+# Function to load Venta Perdida data
+def load_venta_perdida(folder_path):
+    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+    combined_df = pd.DataFrame()
+
+    for file in all_files:
+        try:
+            df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
+            combined_df = pd.concat([combined_df, df], ignore_index=True)
+        except Exception as e:
+            st.error(f"Error al cargar el archivo {file['name']}: {e}")
+            continue
+
+    return combined_df
+
 # Cargar datos
-venta_pr_data = load_venta_pr(venta_pr_path)
+venta_pr_data = load_venta_pr(f"{folder_path}/Venta PR.xlsx")
+venta_perdida_data = load_venta_perdida(folder_path)
+
+# Verificar si las columnas necesarias existen en ambos DataFrames antes del merge
+required_columns = ["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"]
+
+if all(col in venta_pr_data.columns for col in required_columns):
+    # Combinar datos de venta perdida con venta pr
+    combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=required_columns, how="left")
+else:
+    st.error(f"Algunas de las columnas requeridas no se encontraron en 'venta_pr_data'. Columnas requeridas: {required_columns}")
+    st.stop()
 
 # Function to apply filters
 def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
@@ -74,60 +122,44 @@ def apply_weekly_view(data):
     weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
-# Verificar si las columnas necesarias existen en ambos DataFrames antes del merge
-required_columns = ["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"]
-
-if all(col in venta_pr_data.columns for col in required_columns):
-    # Cargar y combinar datos de venta perdida
-    # Asegúrate de que los archivos de venta perdida tienen las mismas columnas
-    try:
-        venta_perdida_data = pd.read_csv("ruta/al/archivo/de/venta_perdida.csv")  # Ajusta la ruta al archivo de venta perdida
-
-        if all(col in venta_perdida_data.columns for col in required_columns):
-            # Combinar datos de venta perdida con venta pr
-            combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=required_columns, how="left")
-
-            # Continuar con el análisis y gráficos
-            # Resto del código que incluye gráficos y análisis
-            # ... (el resto de tu código va aquí)
-
-        else:
-            st.error(f"Algunas de las columnas requeridas no se encontraron en 'venta_perdida_data'. Columnas requeridas: {required_columns}")
-    except Exception as e:
-        st.error(f"Error al cargar o combinar los datos de venta perdida: {e}")
-else:
-    st.error(f"Algunas de las columnas requeridas no se encontraron en 'venta_pr_data'. Columnas requeridas: {required_columns}")
+# Function to apply monthly view
+def apply_monthly_view(data):
+    data['Mes'] = pd.to_datetime(data['Semana'], format='%Y%U').dt.to_period('M')
+    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    return monthly_data
 
 # Function to plot venta perdida vs venta neta total
-def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
-    if venta_pr_data.empty:
-        st.warning("No hay datos disponibles para 'Venta PR'")
+def plot_comparacion_venta_perdida_vs_neta(data, view):
+    if 'Venta Neta Total' not in data.columns or 'VENTA_PERDIDA_PESOS' not in data.columns:
+        st.warning("No se encontraron columnas de 'Venta Neta Total' o 'VENTA_PERDIDA_PESOS' en los datos combinados.")
         return go.Figure()
 
     if view == "semanal":
-        venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
-        comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana', how='left')
+        data_grouped = data.groupby('Semana').agg({
+            'VENTA_PERDIDA_PESOS': 'sum',
+            'Venta Neta Total': 'sum'
+        }).reset_index()
     else:
-        venta_pr_data['Mes'] = pd.to_datetime(venta_pr_data['Semana'], format='%Y%U').dt.to_period('M')
-        venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
-        comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Mes', right_on='Mes', how='left')
+        data['Mes'] = pd.to_datetime(data['Semana'], format='%Y%U').dt.to_period('M')
+        data_grouped = data.groupby('Mes').agg({
+            'VENTA_PERDIDA_PESOS': 'sum',
+            'Venta Neta Total': 'sum'
+        }).reset_index()
 
-    comparacion['Venta No Perdida'] = comparacion['Venta Neta Total'] - comparacion['VENTA_PERDIDA_PESOS']
-    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
+    data_grouped['Venta No Perdida'] = data_grouped['Venta Neta Total'] - data_grouped['VENTA_PERDIDA_PESOS']
+    data_grouped['% Venta Perdida'] = (data_grouped['VENTA_PERDIDA_PESOS'] / data_grouped['Venta Neta Total']) * 100
 
     fig = go.Figure(data=[
         go.Bar(
             name='Venta Perdida',
-            x=comparacion['Semana' if view == "semanal" else 'Mes'],
-            y=comparacion['VENTA_PERDIDA_PESOS'],
+            x=data_grouped['Semana' if view == "semanal" else 'Mes'],
+            y=data_grouped['VENTA_PERDIDA_PESOS'],
             marker_color='red'
         ),
         go.Bar(
             name='Venta No Perdida',
-            x=comparacion['Semana' if view == "semanal" else 'Mes'],
-            y=comparacion['Venta No Perdida'],
+            x=data_grouped['Semana' if view == "semanal" else 'Mes'],
+            y=data_grouped['Venta No Perdida'],
             marker_color='blue'
         )
     ])
@@ -303,17 +335,17 @@ def plot_venta_perdida_mercado(data, view):
     return fig
 
 # Show dashboard if data is available
-if not venta_pr_data.empty:
+if not combined_data.empty:
     st.sidebar.title('📈📉 Dashboard de Venta Perdida')
     articulo = st.sidebar.text_input("Buscar artículo o familia de artículos 🚬")
-    proveedores = st.sidebar.selectbox("Selecciona un proveedor 🏳️🏴🚩", options=[None] + venta_pr_data['PROVEEDOR'].unique().tolist())
-    division = st.sidebar.selectbox("Selecciona una división 🗺️", options=[None] + venta_pr_data['DIVISION'].unique().tolist())
-    plaza = st.sidebar.selectbox("Selecciona una plaza 🏙️", options=[None] + venta_pr_data['PLAZA'].unique().tolist())
-    categoria = st.sidebar.selectbox("Selecciona una categoría 🗃️", options=[None] + venta_pr_data['CATEGORIA'].unique().tolist())
-    semana_opciones = [None] + sorted(venta_pr_data['Semana'].unique())
+    proveedores = st.sidebar.selectbox("Selecciona un proveedor 🏳️🏴🚩", options=[None] + combined_data['PROVEEDOR'].unique().tolist())
+    division = st.sidebar.selectbox("Selecciona una división 🗺️", options=[None] + combined_data['DIVISION'].unique().tolist())
+    plaza = st.sidebar.selectbox("Selecciona una plaza 🏙️", options=[None] + combined_data['PLAZA'].unique().tolist())
+    categoria = st.sidebar.selectbox("Selecciona una categoría 🗃️", options=[None] + combined_data['CATEGORIA'].unique().tolist())
+    semana_opciones = [None] + sorted(combined_data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana 🗓️", options=semana_opciones)
     view = st.sidebar.radio("Selecciona la vista:", ("semanal", "mensual"))
-    filtered_data = apply_filters(venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
+    filtered_data = apply_filters(combined_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
     if view == "semanal":
         filtered_data = apply_weekly_view(filtered_data)
     else:
@@ -321,7 +353,7 @@ if not venta_pr_data.empty:
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
-        total_venta_perdida = venta_pr_data['Venta Neta Total'].sum()
+        total_venta_perdida = combined_data['Venta Neta Total'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
         st.metric(label="Total Venta Perdida (21/6/2024-Presente)", value=f"${total_venta_perdida_filtrada:,.0f}")
@@ -348,7 +380,7 @@ if not venta_pr_data.empty:
         st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data, view), use_container_width=True)
     with col8:
         st.markdown('#### 📶 Venta Perdida vs Venta Neta Total ')
-        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, view), use_container_width=True)
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, view), use_container_width=True)
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
