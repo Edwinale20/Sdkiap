@@ -1,17 +1,15 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from datetime import datetime
-from io import StringIO, BytesIO
+from io import BytesIO
 import requests
-import hashlib
 
 # Configuración de la página
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 
 # Título de la aplicación
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
-st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
+st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta perdida")
 
 # Fetch GitHub token from secrets
 try:
@@ -25,74 +23,7 @@ repo_owner = "Edwinale20"
 repo_name = "317B"
 
 # File paths
-folder_path = "venta"
 venta_pr_path = "venta/Venta PR.xlsx"
-
-# Function to fetch contents from GitHub
-def fetch_contents(repo_owner, repo_name, path=""):
-    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
-    headers = {
-        "Authorization": f"token {github_token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-# Function to fetch CSV files from GitHub
-def fetch_csv_files(repo_owner, repo_name, path=""):
-    contents = fetch_contents(repo_owner, repo_name, path)
-    return [file for file in contents if file["name"].endswith(".csv")]
-
-# Function to read a CSV file from GitHub
-def read_csv_from_github(repo_owner, repo_name, file_path):
-    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
-    headers = {
-        "Authorization": f"token {github_token}",
-        "Accept": "application/vnd.github.v3.raw"
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return pd.read_csv(StringIO(response.text), encoding='ISO-8859-1')
-
-# Function to get the current hash of the files in the folder
-def get_files_hash(files):
-    files_str = ''.join(sorted([file['name'] for file in files]))
-    return hashlib.md5(files_str.encode()).hexdigest()
-
-# Function to process CSV files
-@st.cache_data
-def process_data(repo_owner, repo_name, folder_path, files_hash):
-    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-    all_data = []
-    for file in all_files:
-        try:
-            date_str = file['name'].split('.')[0]
-            date = datetime.strptime(date_str, '%d%m%Y')
-            df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
-            df['Fecha'] = date
-            all_data.append(df)
-        except Exception as e:
-            st.write(f"Error leyendo el archivo {file['name']}: {e}")
-    if not all_data:
-        return None
-    data = pd.concat(all_data)
-    data['Fecha'] = pd.to_datetime(data['Fecha'])
-    data['Semana'] = data['Fecha'].dt.isocalendar().week
-    data.loc[data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
-    # Renombrar proveedores y eliminar proveedor dummy
-    proveedores_renombrados = {
-        "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
-        "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
-        "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
-        "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
-        "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
-        "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
-        "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
-    }
-    data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
-    data = data[data['PROVEEDOR'] != "Eliminar"]
-    return data
 
 # Function to process Venta PR file
 def load_venta_pr(file_path):
@@ -105,13 +36,11 @@ def load_venta_pr(file_path):
     response.raise_for_status()
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
-    df['Día Contable'] = pd.to_datetime(df['Día Contable'], format='%d/%m/%Y', errors='coerce')
-    df['Semana'] = df['Día Contable'].dt.isocalendar().week
 
-    # Renombrar columnas para que coincidan con las de la venta perdida
+    # Renombrar las columnas para coincidir con las esperadas en el código
     df = df.rename(columns={
         'Plaza': 'PLAZA',
-        'División': 'DIVISIÓN',
+        'División': 'DIVISION',
         'Categoría': 'CATEGORIA',
         'Artículo': 'ID_ARTICULO',
         'Semana Contable': 'Semana',
@@ -119,9 +48,10 @@ def load_venta_pr(file_path):
         'Proveedor': 'PROVEEDOR'
     })
 
+    # Asegurarse de que los nombres de las columnas coinciden
     return df
 
-# Load Venta PR data
+# Cargar datos
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Function to apply filters
@@ -130,27 +60,33 @@ def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo)
     if plaza: data = data[data['PLAZA'] == plaza]
     if categoria: data = data[data['CATEGORIA'] == categoria]
     if semana: data = data[data['Semana'] == semana]
-    if division: data = data[data['DIVISIÓN'] == division]
-    if articulo: data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+    if division: data = data[data['DIVISION'] == division]
+    if articulo: data = data[data['ID_ARTICULO'].str.contains(articulo, case=False, na=False)]
     return data
 
 # Function to apply weekly view
 def apply_weekly_view(data):
-    weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISIÓN', 'DESC_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
 # Function to apply monthly view
 def apply_monthly_view(data):
-    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISIÓN', 'DESC_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    data['Mes'] = pd.to_datetime(data['Semana'], format='%Y%U').dt.to_period('M')
+    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return monthly_data
 
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
+    if venta_pr_data.empty:
+        st.warning("No hay datos disponibles para 'Venta PR'")
+        return go.Figure()
+
     if view == "semanal":
         venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana', how='left')
     else:
+        venta_pr_data['Mes'] = pd.to_datetime(venta_pr_data['Semana'], format='%Y%U').dt.to_period('M')
         venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Mes', right_on='Mes', how='left')
@@ -163,9 +99,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
             name='Venta Perdida',
             x=comparacion['Semana' if view == "semanal" else 'Mes'],
             y=comparacion['VENTA_PERDIDA_PESOS'],
-            marker_color='red',
-            text=comparacion['% Venta Perdida'].apply(lambda x: f'{x:.0f}%'),
-            textposition='inside'
+            marker_color='red'
         ),
         go.Bar(
             name='Venta No Perdida',
@@ -292,6 +226,7 @@ def plot_venta_perdida_proveedor(data, selected_proveedor=None):
     fig.update_traces(
         hoverinfo='label+percent', 
         textinfo='value', 
+        texttemplate='$%{value:,.0f}', 
         textfont_size=20, 
         marker=dict(colors=colors, line=dict(color='#000000', width=2))
     )
@@ -344,25 +279,18 @@ def plot_venta_perdida_mercado(data, view):
     )
     return fig
 
-# Fetch all CSV files and their hash
-all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-files_hash = get_files_hash(all_files)
-
-# Procesar archivos en la carpeta especificada
-data = process_data(repo_owner, repo_name, folder_path, files_hash)
-
 # Show dashboard if data is available
-if data is not None:
+if not venta_pr_data.empty:
     st.sidebar.title('📈📉 Dashboard de Venta Perdida')
     articulo = st.sidebar.text_input("Buscar artículo o familia de artículos 🚬")
-    proveedores = st.sidebar.selectbox("Selecciona un proveedor 🏳️🏴🚩", options=[None] + data['PROVEEDOR'].unique().tolist())
-    division = st.sidebar.selectbox("Selecciona una división 🗺️", options=[None] + data['DIVISIÓN'].unique().tolist())
-    plaza = st.sidebar.selectbox("Selecciona una plaza 🏙️", options=[None] + data['PLAZA'].unique().tolist())
-    categoria = st.sidebar.selectbox("Selecciona una categoría 🗃️", options=[None] + data['CATEGORIA'].unique().tolist())
-    semana_opciones = [None] + sorted(data['Semana'].unique())
+    proveedores = st.sidebar.selectbox("Selecciona un proveedor 🏳️🏴🚩", options=[None] + venta_pr_data['PROVEEDOR'].unique().tolist())
+    division = st.sidebar.selectbox("Selecciona una división 🗺️", options=[None] + venta_pr_data['DIVISION'].unique().tolist())
+    plaza = st.sidebar.selectbox("Selecciona una plaza 🏙️", options=[None] + venta_pr_data['PLAZA'].unique().tolist())
+    categoria = st.sidebar.selectbox("Selecciona una categoría 🗃️", options=[None] + venta_pr_data['CATEGORIA'].unique().tolist())
+    semana_opciones = [None] + sorted(venta_pr_data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana 🗓️", options=semana_opciones)
     view = st.sidebar.radio("Selecciona la vista:", ("semanal", "mensual"))
-    filtered_data = apply_filters(data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
+    filtered_data = apply_filters(venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
     if view == "semanal":
         filtered_data = apply_weekly_view(filtered_data)
     else:
@@ -370,7 +298,7 @@ if data is not None:
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
-        total_venta_perdida = data['VENTA_PERDIDA_PESOS'].sum()
+        total_venta_perdida = venta_pr_data['Venta Neta Total'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
         st.metric(label="Total Venta Perdida (21/6/2024-Presente)", value=f"${total_venta_perdida_filtrada:,.0f}")
@@ -402,6 +330,7 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
 
 
 
