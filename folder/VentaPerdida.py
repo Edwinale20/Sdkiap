@@ -21,6 +21,7 @@ except KeyError:
 # GitHub repository details
 repo_owner = "Edwinale20"
 repo_name = "317B"
+folder_path = "venta"
 
 # File paths
 venta_pr_path = "venta/Venta PR.xlsx"
@@ -48,46 +49,54 @@ def load_venta_pr(file_path):
         'Proveedor': 'PROVEEDOR'
     })
 
-    # Verificar las columnas disponibles
-    st.write("Columnas disponibles en 'Venta PR':", df.columns.tolist())
-
     return df
 
 # Cargar datos
 venta_pr_data = load_venta_pr(venta_pr_path)
 
-# Function to load venta perdida data
-@st.cache_data
-def load_venta_perdida_data():
-    all_files = [
-        # Aquí debes listar los nombres de tus archivos CSV de venta perdida
-        "ruta/archivo1.csv",
-        "ruta/archivo2.csv",
-        # Agrega más rutas si es necesario
-    ]
-    all_data = []
-    for file in all_files:
-        try:
-            df = pd.read_csv(file)
-            all_data.append(df)
-        except Exception as e:
-            st.warning(f"Error al cargar {file}: {e}")
-    if all_data:
-        return pd.concat(all_data)
-    else:
-        return pd.DataFrame()
+# Function to fetch CSV files from GitHub
+def fetch_csv_files(repo_owner, repo_name, path=""):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    contents = response.json()
+    return [file for file in contents if file["name"].endswith(".csv")]
 
-venta_perdida_data = load_venta_perdida_data()
+# Function to read a CSV file from GitHub
+def read_csv_from_github(repo_owner, repo_name, file_path):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3.raw"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
 
-# Verificar si las columnas necesarias existen en ambos DataFrames antes del merge
-required_columns = ["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"]
+# Cargar datos de venta perdida de todos los archivos CSV en la carpeta 'venta'
+csv_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}") for file in csv_files])
 
-if all(col in venta_pr_data.columns for col in required_columns) and all(col in venta_perdida_data.columns for col in required_columns):
-    # Combinar datos de venta perdida con venta pr
-    combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=required_columns, how="left")
-else:
-    st.error(f"Algunas de las columnas requeridas no se encontraron en 'venta_pr_data' o 'venta_perdida_data'. Columnas requeridas: {required_columns}")
-    st.stop()
+# Renombrar columnas de venta perdida para hacer el match con Venta PR
+venta_perdida_data = venta_perdida_data.rename(columns={
+    'PROVEEDOR': 'PROVEEDOR',
+    'CATEGORIA': 'CATEGORIA',
+    'ID_ARTICULO': 'ID_ARTICULO',
+    'DIVISION': 'DIVISION',
+    'PLAZA': 'PLAZA',
+    'VENTA_PERDIDA_PESOS': 'VENTA_PERDIDA_PESOS',
+})
+
+# Asegurar que las columnas numéricas tengan el mismo formato para poder hacer el match
+venta_perdida_data['PLAZA'] = venta_perdida_data['PLAZA'].astype(str)
+venta_pr_data['PLAZA'] = venta_pr_data['PLAZA'].astype(str)
+
+# Hacer el match entre Venta PR y venta perdida
+combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR"], how="left")
 
 # Function to apply filters
 def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
@@ -107,14 +116,12 @@ def apply_weekly_view(data):
     weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
-# Function to apply monthly view
-def apply_monthly_view(data):
-    data['Mes'] = pd.to_datetime(data['Semana'], format='%Y%U').dt.to_period('M')
-    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
-    return monthly_data
-
 # Function to plot venta perdida vs venta neta total
-def plot_comparacion_venta_perdida_vs_neta(data, view):
+def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
+    if venta_pr_data.empty:
+        st.warning("No hay datos disponibles para 'Venta PR'")
+        return go.Figure()
+
     if view == "semanal":
         venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -324,7 +331,7 @@ if not venta_pr_data.empty:
     semana_opciones = [None] + sorted(venta_pr_data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana 🗓️", options=semana_opciones)
     view = st.sidebar.radio("Selecciona la vista:", ("semanal", "mensual"))
-    filtered_data = apply_filters(venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
+    filtered_data = apply_filters(combined_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
     if view == "semanal":
         filtered_data = apply_weekly_view(filtered_data)
     else:
@@ -332,7 +339,7 @@ if not venta_pr_data.empty:
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
-        total_venta_perdida = venta_pr_data['Venta Neta Total'].sum()
+        total_venta_perdida = combined_data['Venta Neta Total'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
         st.metric(label="Total Venta Perdida (21/6/2024-Presente)", value=f"${total_venta_perdida_filtrada:,.0f}")
@@ -359,12 +366,9 @@ if not venta_pr_data.empty:
         st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data, view), use_container_width=True)
     with col8:
         st.markdown('#### 📶 Venta Perdida vs Venta Neta Total ')
-        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, view), use_container_width=True)
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, view), use_container_width=True)
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
-
-    st.warning("No se encontraron datos en la carpeta especificada.")
-
 
