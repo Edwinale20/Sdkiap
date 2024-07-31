@@ -145,7 +145,7 @@ proveedores_renombrados = {
     "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
 }
 combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
-c# Después de esta línea
+# Después de esta línea
 combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
 
 # Agrega la función apply_filters aquí
