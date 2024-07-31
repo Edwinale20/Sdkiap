@@ -37,8 +37,8 @@ def load_venta_pr(file_path):
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
 
-    # Verificar las columnas cargadas
-    st.write("Columnas cargadas desde 'Venta PR':", df.columns.tolist())
+    # Eliminar columnas innecesarias como "Unnamed"
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
     # Renombrar las columnas según se requiera
     df = df.rename(columns={
@@ -60,9 +60,15 @@ def load_venta_pr(file_path):
 # Cargar datos
 venta_pr_data = load_venta_pr(venta_pr_path)
 
-# Verifica el contenido de las columnas cargadas
+# Verifica si los datos se cargaron correctamente antes de continuar
 if not venta_pr_data.empty:
+    # Aquí puedes continuar con el resto del código, asumiendo que las columnas están correctas
     st.write("Datos cargados correctamente desde 'Venta PR.xlsx'")
+else:
+    st.stop()
+
+# El resto del código para el procesamiento y visualización de datos sigue aquí...
+
 
 # Function to apply filters
 def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
