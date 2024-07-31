@@ -78,29 +78,32 @@ def load_venta_pr(file_path):
 
     return df
 
-# Function to apply filters
-def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
-    if proveedor: data = data[data['PROVEEDOR'] == proveedor]
-    if plaza: data = data[data['PLAZA'] == plaza]
-    if categoria: data = data[data['CATEGORIA'] == categoria]
-    if semana: data = data[data['Semana'] == semana]
-    if division: data = data[data['DIVISION'] == division]
-    if articulo: data = data[data['ID_ARTICULO'].str.contains(articulo, case=False, na=False)]
-    return data
+# Función para convertir nombre del archivo en semana del año
+def filename_to_week(filename):
+    # Extraer la fecha del nombre del archivo
+    date_str = filename[:8]  # Tomar los primeros 8 caracteres del nombre del archivo (ej. 01072024.csv)
+    # Convertir a fecha
+    date_obj = pd.to_datetime(date_str, format='%d%m%Y')
+    # Obtener la semana del año
+    week_number = date_obj.strftime('%Y%U')
+    return int(week_number)
 
-# Function to apply weekly view
-def apply_weekly_view(data):
-    if 'VENTA_PERDIDA_PESOS' not in data.columns:
-        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
-        return pd.DataFrame()
-    weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
-    return weekly_data
+# Function to load and combine lost sales data from the folder
+@st.cache_data(show_spinner=True)
+def load_venta_perdida_data(repo_owner, repo_name, folder_path):
+    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+    venta_perdida_data = pd.concat([
+        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
+        for file in all_files
+    ])
+    return venta_perdida_data
 
 # Cargar datos de Venta PR con caché
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Cargar y combinar datos de venta perdida con caché
 venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
+
 
 
 # Cargar y combinar datos de venta perdida de la carpeta
