@@ -147,7 +147,7 @@ proveedores_renombrados = {
 combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
 combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
 
-# Agrega la función apply_filters aquí
+# Función para aplicar filtros
 def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
     if proveedor: 
         data = data[data['PROVEEDOR'] == proveedor]
@@ -162,6 +162,25 @@ def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo)
     if articulo: 
         data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
     return data
+
+# Función para aplicar vista semanal
+def apply_weekly_view(data):
+    if 'VENTA_PERDIDA_PESOS' not in data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
+        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
+
+    weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    return weekly_data
+
+# Función para aplicar vista mensual
+def apply_monthly_view(data):
+    if 'VENTA_PERDIDA_PESOS' not in data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
+        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
+
+    data['Mes'] = pd.to_datetime(data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
+    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    return monthly_data
     
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
