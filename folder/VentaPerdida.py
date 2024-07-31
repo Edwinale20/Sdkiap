@@ -9,7 +9,7 @@ st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_
 
 # Título de la aplicación
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
-st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta perdida")
+st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
 # Fetch GitHub token from secrets
 try:
@@ -48,7 +48,9 @@ def load_venta_pr(file_path):
         'Proveedor': 'PROVEEDOR'
     })
 
-    # Asegurarse de que los nombres de las columnas coinciden
+    # Verificar las columnas disponibles
+    st.write("Columnas disponibles en 'Venta PR':", df.columns.tolist())
+
     return df
 
 # Cargar datos
@@ -66,6 +68,10 @@ def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo)
 
 # Function to apply weekly view
 def apply_weekly_view(data):
+    # Verificar si 'VENTA_PERDIDA_PESOS' existe en las columnas
+    if 'VENTA_PERDIDA_PESOS' not in data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
+        return pd.DataFrame()  # Retorna un DataFrame vacío en caso de error
     weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
