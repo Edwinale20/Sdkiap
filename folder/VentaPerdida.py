@@ -98,14 +98,30 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
 venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}") for file in all_files])
 
+# Función para convertir nombre del archivo en semana del año
+def filename_to_week(filename):
+    # Extraer la fecha del nombre del archivo
+    date_str = filename[:8]  # Tomar los primeros 8 caracteres del nombre del archivo (ej. 01072024.csv)
+    # Convertir a fecha
+    date_obj = pd.to_datetime(date_str, format='%d%m%Y')
+    # Obtener la semana del año
+    week_number = date_obj.strftime('%Y%U')
+    return int(week_number)
+
+# Cargar y combinar datos de venta perdida de la carpeta
+all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+venta_perdida_data = pd.concat([
+    read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
+    for file in all_files
+])
+
 # Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
 venta_perdida_data = venta_perdida_data.rename(columns={
     'PLAZA': 'PLAZA',
     'DIVISION': 'DIVISION',
     'CATEGORIA': 'CATEGORIA',
     'ID_ARTICULO': 'ID_ARTICULO',
-    'PROVEEDOR': 'PROVEEDOR',
-    'Semana': 'Semana'
+    'PROVEEDOR': 'PROVEEDOR'
 })
 
 # Convertir tipos de datos antes de hacer el merge
