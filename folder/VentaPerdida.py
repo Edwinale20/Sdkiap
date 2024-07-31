@@ -145,7 +145,27 @@ proveedores_renombrados = {
     "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
 }
 combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
+c# Después de esta línea
 combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
+
+# Agrega la función apply_filters aquí
+def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
+    if proveedor: 
+        data = data[data['PROVEEDOR'] == proveedor]
+    if plaza: 
+        data = data[data['PLAZA'] == plaza]
+    if categoria: 
+        data = data[data['CATEGORIA'] == categoria]
+    if semana: 
+        data = data[data['Semana'] == semana]
+    if division: 
+        data = data[data['DIVISION'] == division]
+    if articulo: 
+        data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+    return data
+
+# Luego sigue con esta línea
+
 
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
