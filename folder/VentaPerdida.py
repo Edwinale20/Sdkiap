@@ -1,10 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from datetime import datetime
-from io import StringIO, BytesIO
+from io import BytesIO
 import requests
-import hashlib
 
 # Configuración de la página
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
@@ -25,75 +23,7 @@ repo_owner = "Edwinale20"
 repo_name = "317B"
 
 # File paths
-folder_path = "venta"
 venta_pr_path = "venta/Venta PR.xlsx"
-
-# Function to fetch contents from GitHub
-def fetch_contents(repo_owner, repo_name, path=""):
-    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
-    headers = {
-        "Authorization": f"token {github_token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-# Function to fetch CSV files from GitHub
-def fetch_csv_files(repo_owner, repo_name, path=""):
-    contents = fetch_contents(repo_owner, repo_name, path)
-    return [file for file in contents if file["name"].endswith(".csv")]
-
-# Function to read a CSV file from GitHub
-def read_csv_from_github(repo_owner, repo_name, file_path):
-    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
-    headers = {
-        "Authorization": f"token {github_token}",
-        "Accept": "application/vnd.github.v3.raw"
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return pd.read_csv(StringIO(response.text), encoding='ISO-8859-1')
-
-# Function to get the current hash of the files in the folder
-def get_files_hash(files):
-    files_str = ''.join(sorted([file['name'] for file in files]))
-    return hashlib.md5(files_str.encode()).hexdigest()
-
-# Function to process CSV files
-@st.cache_data
-def process_data(repo_owner, repo_name, folder_path, files_hash):
-    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-    all_data = []
-    for file in all_files:
-        try:
-            date_str = file['name'].split('.')[0]
-            date = datetime.strptime(date_str, '%d%m%Y')
-            df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file['name']}")
-            df['Fecha'] = date
-            all_data.append(df)
-        except Exception as e:
-            st.write(f"Error leyendo el archivo {file['name']}: {e}")
-    if not all_data:
-        return None
-    data = pd.concat(all_data)
-    data['Fecha'] = pd.to_datetime(data['Fecha'])
-    data['Semana'] = data['Fecha'].dt.isocalendar().week
-    data['Mes'] = data['Fecha'].dt.to_period('M')
-    data.loc[data['DESC_ARTICULO'].str.contains('VUSE', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
-    # Renombrar proveedores y eliminar proveedor dummy
-    proveedores_renombrados = {
-        "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
-        "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
-        "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
-        "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
-        "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
-        "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
-        "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
-    }
-    data['PROVEEDOR'] = data['PROVEEDOR'].replace(proveedores_renombrados)
-    data = data[data['PROVEEDOR'] != "Eliminar"]
-    return data
 
 # Function to process Venta PR file
 def load_venta_pr(file_path):
@@ -106,7 +36,11 @@ def load_venta_pr(file_path):
     response.raise_for_status()
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
-    # Ajustando los nombres de columnas a los proporcionados
+
+    # Verificar las columnas cargadas
+    st.write("Columnas cargadas desde 'Venta PR':", df.columns.tolist())
+
+    # Renombrar las columnas según se requiera
     df = df.rename(columns={
         'Plaza': 'PLAZA',
         'División': 'DIVISIÓN',
@@ -116,13 +50,19 @@ def load_venta_pr(file_path):
         'Venta Neta Total': 'Venta Neta Total',
         'Proveedor': 'PROVEEDOR'
     })
+
+    # Verificar si las columnas clave están presentes
     if 'Semana Contable' not in df.columns or 'Venta Neta Total' not in df.columns:
         st.error("Las columnas 'Semana Contable' o 'Venta Neta Total' no se encontraron en los datos de 'Venta PR'")
         return pd.DataFrame()  # Retorna un DataFrame vacío en caso de error
     return df
 
-# Load Venta PR data
+# Cargar datos
 venta_pr_data = load_venta_pr(venta_pr_path)
+
+# Verifica el contenido de las columnas cargadas
+if not venta_pr_data.empty:
+    st.write("Datos cargados correctamente desde 'Venta PR.xlsx'")
 
 # Function to apply filters
 def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
