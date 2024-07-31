@@ -211,9 +211,12 @@ def plot_venta_perdida_plaza(data):
 
 # Function to plot top 10 artículos con mayor venta perdida
 def plot_articulos_venta_perdida(data):
-    fig = go.Figure()
+    if 'DESC_ARTICULO' not in data.columns:
+        st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
+        return go.Figure()  # Retorna una figura vacía en caso de que la columna no exista
     grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
     grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
+    fig = go.Figure()
     fig.add_trace(go.Bar(
         x=grouped_data['DESC_ARTICULO'], 
         y=grouped_data['VENTA_PERDIDA_PESOS'], 
@@ -226,6 +229,7 @@ def plot_articulos_venta_perdida(data):
         yaxis=dict(tickformat="$,d")
     )
     return fig
+
 
 # Function to plot venta perdida por semana/mes
 def plot_venta_perdida(data, view):
