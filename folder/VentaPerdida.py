@@ -226,7 +226,7 @@ def plot_venta_perdida_plaza(data):
 def plot_articulos_venta_perdida(data):
     if 'DESC_ARTICULO' not in data.columns:
         st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
-        return go.Figure()
+        return go.Figure()  # Retorna una figura vacía si la columna no está presente
 
     fig = go.Figure()
     grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -243,6 +243,7 @@ def plot_articulos_venta_perdida(data):
         yaxis=dict(tickformat="$,d")
     )
     return fig
+
 
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
@@ -275,6 +276,7 @@ def plot_venta_perdida_mercado(data, view):
         yaxis=dict(tickformat="$,d")
     )
     return fig
+
 
 # Function to plot venta perdida por semana/mes
 def plot_venta_perdida(data, view):
