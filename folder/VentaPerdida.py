@@ -417,11 +417,13 @@ if not combined_data.empty:
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
-        total_venta_perdida = combined_data['Venta Neta Total'].sum()
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
+        total_venta_pr_filtrada = filtered_data['Venta Neta Total'].sum()
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
-        st.metric(label="Total Venta Perdida (21/6/2024-Presente)", value=f"${total_venta_perdida_filtrada:,.0f}")
-        st.metric(label="Proporción de la Venta Perdida Filtrada al Total", value=f"{porcentaje_acumulado:.2f}%")
+        porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
+        
+        st.metric(label="Proporción de la Venta Perdida Filtrada al Total", value=f"{porcentaje_acumulado:.0f}%")
+        st.metric(label="Proporción de Venta Perdida respecto a la Venta Neta Total", value=f"{porcentaje_venta_perdida_dia:.0f}%")
         st.markdown(f'#### 🕰️ Venta Perdida {view} ')
         st.plotly_chart(plot_venta_perdida(filtered_data, view), use_container_width=True)
     with col2:
@@ -446,6 +448,6 @@ if not combined_data.empty:
         st.markdown('#### 📶 Venta Perdida vs Venta Neta Total ')
         st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, view), use_container_width=True)
     st.markdown(f'#### Venta Perdida {view} por Mercado')
-    st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
+    st.plotly_chart(plot_venta_perdida_mercado(venta_perdida_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
