@@ -1,7 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from io import BytesIO
+import hashlib
+from io import StringIO
 import requests
 
 # Configuración de la página
@@ -27,6 +28,7 @@ venta_pr_path = "venta/Venta PR.xlsx"
 folder_path = "venta"  # Folder path for daily loss files
 
 # Function to fetch CSV files from GitHub
+@st.cache_data(show_spinner=True)
 def fetch_csv_files(repo_owner, repo_name, path=""):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
     headers = {
@@ -38,6 +40,7 @@ def fetch_csv_files(repo_owner, repo_name, path=""):
     return [file['name'] for file in response.json() if file['name'].endswith('.csv')]
 
 # Function to read a CSV file from GitHub
+@st.cache_data(show_spinner=True)
 def read_csv_from_github(repo_owner, repo_name, file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -49,6 +52,7 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
 
 # Function to process Venta PR file
+@st.cache_data(show_spinner=True)
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -92,12 +96,22 @@ def apply_weekly_view(data):
     weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
-# Cargar datos de Venta PR
+# Cargar datos de Venta PR con caché
 venta_pr_data = load_venta_pr(venta_pr_path)
 
+# Cargar y combinar datos de venta perdida con caché
+venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
+
+
 # Cargar y combinar datos de venta perdida de la carpeta
-all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}") for file in all_files])
+@st.cache_data(show_spinner=True)
+def load_venta_perdida_data(repo_owner, repo_name, folder_path):
+    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+    venta_perdida_data = pd.concat([
+        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
+        for file in all_files
+    ])
+    return venta_perdida_data
 
 # Función para convertir nombre del archivo en semana del año
 def filename_to_week(filename):
