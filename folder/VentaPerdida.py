@@ -96,20 +96,26 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Cargar y combinar datos de venta perdida de la carpeta
 all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}") for file in all_files])
+venta_perdida_data = pd.concat([read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=get_week_number_from_filename(file)) for file in all_files])
 
 # Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
 venta_perdida_data = venta_perdida_data.rename(columns={
-    'PLAZA': 'PLAZA',
-    'DIVISION': 'DIVISION',
+    'PROVEEDOR': 'PROVEEDOR',
     'CATEGORIA': 'CATEGORIA',
     'ID_ARTICULO': 'ID_ARTICULO',
-    'PROVEEDOR': 'PROVEEDOR',
-    'Semana': 'Semana'
+    'DIVISION': 'DIVISION',
+    'PLAZA': 'PLAZA',
+    'VENTA_PERDIDA_PESOS': 'VENTA_PERDIDA_PESOS'
+})
+
+# Verifica si 'Semana Contable' en venta_pr_data coincide con 'Semana' en venta_perdida_data
+venta_pr_data = venta_pr_data.rename(columns={
+    'Semana Contable': 'Semana'
 })
 
 # Combinar datos de venta perdida con venta pr
 combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"], how="left")
+
 
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
