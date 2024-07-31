@@ -146,6 +146,18 @@ venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
 # Combinar datos de venta perdida con venta pr
 combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"], how="left")
 
+# Renombrar proveedores y eliminar proveedor dummy
+proveedores_renombrados = {
+    "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
+    "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
+    "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
+    "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
+    "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
+    "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
+    "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
+}
+combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
+combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
 
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
@@ -326,32 +338,6 @@ def make_donut_chart(value, total, title, color):
         margin=dict(t=50, b=0, l=0, r=0),
         height=300,
         width=300
-    )
-    return fig
-
-# Function to plot venta perdida por mercado
-def plot_venta_perdida_mercado(data, view):
-    fig = go.Figure()
-    if view == "semanal":
-        grouped_data = data.groupby(['Semana', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'Semana'
-    else:
-        grouped_data = data.groupby(['Mes', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'Mes'
-    mercados = grouped_data['MERCADO'].unique()
-    for mercado in mercados:
-        mercado_data = grouped_data[grouped_data['MERCADO'] == mercado]
-        fig.add_trace(go.Scatter(
-            x=mercado_data[x_title], 
-            y=mercado_data['VENTA_PERDIDA_PESOS'], 
-            mode='lines+markers', 
-            name=mercado
-        ))
-    fig.update_layout(
-        title=f'Venta Perdida por {x_title} y por Mercado',
-        xaxis_title=x_title,
-        yaxis_title='Venta Perdida (Pesos)',
-        yaxis=dict(tickformat="$,d")
     )
     return fig
 
