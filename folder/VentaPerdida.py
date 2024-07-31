@@ -1,8 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-import hashlib
-from io import StringIO
+from io import BytesIO
 import requests
 
 # Configuración de la página
@@ -103,35 +102,6 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Cargar y combinar datos de venta perdida con caché
 venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
-
-
-
-# Cargar y combinar datos de venta perdida de la carpeta
-@st.cache_data(show_spinner=True)
-def load_venta_perdida_data(repo_owner, repo_name, folder_path):
-    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-    venta_perdida_data = pd.concat([
-        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
-        for file in all_files
-    ])
-    return venta_perdida_data
-
-# Función para convertir nombre del archivo en semana del año
-def filename_to_week(filename):
-    # Extraer la fecha del nombre del archivo
-    date_str = filename[:8]  # Tomar los primeros 8 caracteres del nombre del archivo (ej. 01072024.csv)
-    # Convertir a fecha
-    date_obj = pd.to_datetime(date_str, format='%d%m%Y')
-    # Obtener la semana del año
-    week_number = date_obj.strftime('%Y%U')
-    return int(week_number)
-
-# Cargar y combinar datos de venta perdida de la carpeta
-all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-venta_perdida_data = pd.concat([
-    read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
-    for file in all_files
-])
 
 # Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
 venta_perdida_data = venta_perdida_data.rename(columns={
