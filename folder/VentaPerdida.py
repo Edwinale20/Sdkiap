@@ -107,6 +107,9 @@ def load_venta_pr(file_path):
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
     df = df.rename(columns={'Plaza': 'PLAZA', 'División': 'DIVISIÓN', 'Categoría': 'CATEGORIA', 'PROVEEDOR': 'Proveedor', 'Artículo': 'ID_ARTICULO'})
+    if 'Semana' not in df.columns or 'Venta Neta Total' not in df.columns:
+        st.error("Las columnas 'Semana' o 'Venta Neta Total' no se encontraron en los datos de 'Venta PR'")
+        return pd.DataFrame()  # Retorna un DataFrame vacío en caso de error
     return df
 
 # Load Venta PR data
@@ -134,6 +137,10 @@ def apply_monthly_view(data):
 
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
+    if venta_pr_data.empty:
+        st.warning("No hay datos disponibles para 'Venta PR'")
+        return go.Figure()
+
     if view == "semanal":
         venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
         comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -408,4 +415,5 @@ if data is not None:
     st.plotly_chart(plot_venta_perdida_mercado(filtered_data, view), use_container_width=True)
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
+
 
