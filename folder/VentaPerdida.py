@@ -66,7 +66,7 @@ def load_venta_pr(file_path):
     # Renombrar las columnas para coincidir con las esperadas en el código
     df = df.rename(columns={
         'Plaza': 'PLAZA',
-        'División': 'DIVISION',
+        'DIVISION': 'DIVISION',
         'Categoría': 'CATEGORIA',
         'Artículo': 'ID_ARTICULO',
         'Semana Contable': 'Semana',
