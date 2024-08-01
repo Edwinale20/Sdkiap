@@ -135,6 +135,7 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
     # Retornar los conjuntos de datos filtrados
     return venta_perdida_data, venta_pr_data
 
+
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     venta_perdida_data,
     venta_pr_data,
@@ -221,32 +222,6 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
         xaxis_title='Semana' if view == "semanal" else 'Mes',
         yaxis=dict(tickformat="$,d", title='Monto (Pesos)'),
         xaxis=dict(title='Tipo de Venta')
-    )
-    return fig
-
-# Function to plot venta perdida por mercado (isolada)
-def plot_venta_perdida_mercado_isolada(data):
-    if 'MERCADO' not in data.columns:
-        st.warning("La columna 'MERCADO' no está en los datos.")
-        return go.Figure()
-
-    grouped_data = data.groupby('MERCADO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False)
-    
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=grouped_data['MERCADO'],
-        y=grouped_data['VENTA_PERDIDA_PESOS'],
-        marker_color='rgb(26, 118, 255)',
-        text=grouped_data['MERCADO'],
-        textposition='auto'
-    ))
-
-    fig.update_layout(
-        title='Venta Perdida por Mercado',
-        xaxis_title='Mercado',
-        yaxis_title='Venta Perdida (Pesos)',
-        yaxis=dict(tickformat="$,d")
     )
     return fig
 
@@ -392,28 +367,8 @@ def plot_venta_perdida(data, view):
     )
     return fig
 
-# Definir todas las funciones primero, incluidas las funciones de visualización
-def plot_articulos_venta_perdida(data):
-    if 'DESC_ARTICULO' not in data.columns:
-        st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
-        return go.Figure()  # Retorna una figura vacía si la columna no está presente
 
-    fig = go.Figure()
-    grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
-    fig.add_trace(go.Bar(
-        x=grouped_data['DESC_ARTICULO'], 
-        y=grouped_data['VENTA_PERDIDA_PESOS'], 
-        marker_color='rgb(55, 83, 109)'
-    ))
-    fig.update_layout(
-        title='Top 10 Artículos con mayor Venta Perdida',
-        xaxis_title='Artículo',
-        yaxis_title='Venta Perdida (Pesos)',
-        yaxis=dict(tickformat="$,d")
-    )
-    return fig
-# Function to plot venta perdida por familia
+# Sustituyendo la gráfica de "Top 10 Artículos con Mayor Venta Perdida" por "Venta Perdida por Familia"
 def plot_venta_perdida_familia(data):
     if 'FAMILIA' not in data.columns:
         st.warning("La columna 'FAMILIA' no está en los datos.")
@@ -435,6 +390,31 @@ def plot_venta_perdida_familia(data):
     )
     return fig
 
+# Modificando la gráfica de "Venta Perdida por Mercado" para que esté aislada
+def plot_venta_perdida_mercado_isolada(data):
+    if 'MERCADO' not in data.columns:
+        st.warning("La columna 'MERCADO' no está en los datos.")
+        return go.Figure()
+
+    grouped_data = data.groupby('MERCADO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False)
+    
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=grouped_data['MERCADO'],
+        y=grouped_data['VENTA_PERDIDA_PESOS'],
+        marker_color='rgb(26, 118, 255)',
+        text=grouped_data['MERCADO'],
+        textposition='auto'
+    ))
+
+    fig.update_layout(
+        title='Venta Perdida por Mercado',
+        xaxis_title='Mercado',
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d")
+    )
+    return fig
 
 
 # PAOS 7: VALIDACIÓN DE COLUMNAS---------------------------------------
