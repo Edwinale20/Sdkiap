@@ -268,6 +268,29 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     )
     return fig
 
+def plot_venta_perdida_mercado(data, view):
+    fig = go.Figure()
+    if view == "semanal":
+        grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'PLAZA'
+    else:
+        grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'PLAZA'
+    
+    fig.add_trace(go.Bar(
+        x=grouped_data[x_title], 
+        y=grouped_data['VENTA_PERDIDA_PESOS'], 
+        marker_color='rgb(26, 118, 255)'
+    ))
+    fig.update_layout(
+        title=f'Venta Perdida por {x_title}',
+        xaxis_title=x_title,
+        yaxis_title='Monto (Pesos)',
+        yaxis=dict(tickformat="$,d")
+    )
+    return fig
+
+
 # Function to plot tendencia de venta perdida
 def plot_venta_perdida_con_tendencia(data, view):
     fig = go.Figure()
