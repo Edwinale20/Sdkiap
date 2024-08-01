@@ -416,9 +416,14 @@ if not combined_data.empty:
         filtered_data = apply_monthly_view(filtered_data)
     col1, col2 = st.columns((1, 1))
     with col1:
+     # Verifica si la columna 'Venta Neta Total' existe en los datos combinados
+    if 'Venta Neta Total' not in combined_data.columns:
+        st.error("La columna 'Venta Neta Total' no está disponible en los datos. Asegúrate de que los datos cargados sean correctos.")
+    else:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
-        # Verifica si la columna 'Venta Neta Total' existe antes de hacer los cálculos
+    
+        # Verifica si la columna 'Venta Neta Total' existe en los datos filtrados antes de hacer los cálculos
         if 'Venta Neta Total' in filtered_data.columns:
             total_venta_pr_filtrada = filtered_data['Venta Neta Total'].sum()
             porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
@@ -426,7 +431,7 @@ if not combined_data.empty:
             st.error("La columna 'Venta Neta Total' no está disponible en los datos filtrados.")
             total_venta_pr_filtrada = 0
             porcentaje_venta_perdida_dia = 0
-        
+    
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
         porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
         st.metric(label="Proporción de la Venta Perdida Filtrada al Total", value=f"{porcentaje_acumulado:.0f}%")
