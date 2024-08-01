@@ -169,6 +169,18 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
         venta_pr_data = venta_pr_data[venta_pr_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
     return venta_perdida_data, venta_pr_data
 
+# Filtrar datos
+filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
+    venta_perdida_data,
+    venta_pr_data,
+    proveedor=None,  # Ajustar según los filtros deseados
+    plaza=None,
+    categoria=None,
+    semana=None,
+    division=None,
+    articulo=None
+)
+
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
     if 'VENTA_PERDIDA_PESOS' not in data.columns:
