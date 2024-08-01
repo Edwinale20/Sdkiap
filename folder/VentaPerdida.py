@@ -60,7 +60,7 @@ def load_venta_perdida_data(repo_owner, repo_name, folder_path):
 # Cargar los datos
 venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
 
-# PASO 3: LIMPIEZA DE DATOS Y RENOMBRE DE COLUMNAS---------------------------------------
+# PASO 3: LIMPIEZA DE DATOS---------------------------------------
 @st.cache_data(show_spinner=True) 
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
@@ -73,30 +73,21 @@ def load_venta_pr(file_path):
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
 
-    # Asegúrate de que las columnas están correctamente cargadas
     return df
 
-# Cargar los datos de Venta PR
+# Cargar los datos de venta_pr_data
 venta_pr_data = load_venta_pr(venta_pr_path)
 
-# Limpiar la columna CATEGORIA en venta_perdida_data para que coincida con venta_pr_data
-venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].str.replace(r'^00', '', regex=True)
-
-# Incluir todos los artículos "Vuse" en la categoría RRPS
-venta_perdida_data['CATEGORIA'] = venta_perdida_data.apply(
-    lambda row: 'RRPS' if 'Vuse' in row['DESC_ARTICULO'] else row['CATEGORIA'], axis=1
-)
-
-# Convertir tipos de datos antes de hacer el merge
-columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'PROVEEDOR', 'Semana']
+# Convertir columnas necesarias a string para evitar errores en el merge
+columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR', 'Semana']
 
 for col in columns_to_convert:
-    venta_perdida_data[col] = venta_perdida_data[col].astype(str)
-    venta_pr_data[col] = venta_pr_data[col].astype(str)
+    if col in venta_perdida_data.columns and col in venta_pr_data.columns:
+        venta_perdida_data[col] = venta_perdida_data[col].astype(str)
+        venta_pr_data[col] = venta_pr_data[col].astype(str)
 
-# Realizar merge incluyendo DESC_ARTICULO, FAMILIA y SEGMENTO
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert + ['DESC_ARTICULO', 'FAMILIA', 'SEGMENTO'], how="left")
-combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
+# Realizar el merge entre los dos DataFrames en función de las columnas comunes
+combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert, how='left')
 
 # PASO 4: SIDEBAR Y FILTROS---------------------------------------
 with st.sidebar:
@@ -139,6 +130,7 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
     # Retornar los conjuntos de datos filtrados
     return venta_perdida_data, venta_pr_data
 
+
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     venta_perdida_data,
     venta_pr_data,
@@ -147,7 +139,8 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     categoria,
     semana,
     division,
-    articulo
+    familia,
+    segmento
 )
 
 # PASO 5: TIPO DE VISTA DE LA PAGINA---------------------------------------
