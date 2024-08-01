@@ -131,58 +131,29 @@ venta_pr_data['PROVEEDOR'] = venta_pr_data['PROVEEDOR'].astype(str)
 venta_perdida_data['Semana'] = venta_perdida_data['Semana'].astype(int)
 venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
 
-# Combinar datos de venta perdida con venta pr
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"], how="left")
+# Sidebar para filtros
+st.sidebar.header("Filtros")
+proveedor = st.sidebar.selectbox("Proveedor", options=venta_perdida_data['PROVEEDOR'].unique())
+plaza = st.sidebar.selectbox("Plaza", options=venta_perdida_data['PLAZA'].unique())
+categoria = st.sidebar.selectbox("Categoría", options=venta_perdida_data['CATEGORIA'].unique())
+semana = st.sidebar.selectbox("Semana", options=venta_perdida_data['Semana'].unique())
+division = st.sidebar.selectbox("División", options=venta_perdida_data['DIVISION'].unique())
+articulo = st.sidebar.text_input("Artículo")
 
-# Renombrar proveedores y eliminar proveedor dummy
-proveedores_renombrados = {
-    "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
-    "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
-    "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
-    "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
-    "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
-    "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
-    "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
-}
-combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
-combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
-
-def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
-    # Aplicar los mismos filtros a ambos conjuntos de datos
-    if proveedor:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
-        venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] == proveedor]
-    if plaza:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['PLAZA'] == plaza]
-        venta_pr_data = venta_pr_data[venta_pr_data['PLAZA'] == plaza]
-    if categoria:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['CATEGORIA'] == categoria]
-        venta_pr_data = venta_pr_data[venta_pr_data['CATEGORIA'] == categoria]
-    if semana:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == semana]
-        venta_pr_data = venta_pr_data[venta_pr_data['Semana'] == semana]
-    if division:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
-        venta_pr_data = venta_pr_data[venta_pr_data['DIVISION'] == division]
-    if articulo:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
-        venta_pr_data = venta_pr_data[venta_pr_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
-    return venta_perdida_data, venta_pr_data
-
-# Filtrar datos
+# Aplicar filtros
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     venta_perdida_data,
     venta_pr_data,
-    proveedor=None,  # Ajustar según los filtros deseados
-    plaza=None,
-    categoria=None,
-    semana=None,
-    division=None,
-    articulo=None
+    proveedor=proveedor,
+    plaza=plaza,
+    categoria=categoria,
+    semana=semana,
+    division=division,
+    articulo=articulo
 )
 
 # Definir la variable view para controlar la visualización semanal o mensual
-view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
+view = st.sidebar.selectbox("Selecciona la vista", ["semanal", "mensual"])
 
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
@@ -492,4 +463,3 @@ else:
     
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_venta_perdida_data, view), use_container_width=True)
-
