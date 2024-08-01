@@ -164,7 +164,6 @@ with st.sidebar:
 
     # Selección de vista semanal o mensual
     view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
-
 def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
     # Aplicar los mismos filtros a ambos conjuntos de datos
     if proveedor and proveedor != "Todos":
