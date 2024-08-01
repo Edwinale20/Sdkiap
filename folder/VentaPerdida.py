@@ -1,13 +1,12 @@
+# Paso 1: Importar librerias---------------------------------------
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from io import BytesIO
 import requests
 
-# Configuración de la página
+# PASO 2: CONFIRGURACION DE LA PAGINA Y CARGA DE DATOS---------------------------------------
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
-
-# Título de la aplicación
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
 
@@ -18,11 +17,8 @@ except KeyError:
     st.error("GitHub token not found. Please add it to the secrets.")
     st.stop()
 
-# GitHub repository details
 repo_owner = "Edwinale20"
 repo_name = "317B"
-
-# File paths
 venta_pr_path = "venta/Venta PR.xlsx"
 folder_path = "venta"  # Folder path for daily loss files
 
@@ -50,7 +46,7 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     response.raise_for_status()
     return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
 
-# Function to process Venta PR file
+# PASO 3: LIMPIEZA DE DATOS Y RENOMBRE DE COLUMNAS---------------------------------------
 @st.cache_data(show_spinner=True) 
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
@@ -72,55 +68,12 @@ def load_venta_pr(file_path):
         'Semana Contable': 'Semana',
         'Venta Neta Total': 'Venta Neta Total',
         'DESC_ARTICULO': 'DESC_ARTICULO',
-        'Proveedor': 'PROVEEDOR'
+        'Proveedor': 'PROVEEDOR',
+        'Familia': 'FAMILIA',         # Agregado
+        'Segmento': 'SEGMENTO'        # Agregado
     })
 
     return df
-
-# Función para limpiar las columnas de PLAZA y DIVISION
-def clean_plaza_division(data):
-    data['PLAZA'] = data['PLAZA'].astype(str).str.extract('(\d+)').astype(str)
-    data['DIVISION'] = data['DIVISION'].astype(str).str.extract('(\d+)').astype(str)
-    return data
-
-# Función para convertir nombre del archivo en semana del año
-def filename_to_week(filename):
-    # Extraer la fecha del nombre del archivo
-    date_str = filename[:8]  # Tomar los primeros 8 caracteres del nombre del archivo (ej. 01072024.csv)
-    # Convertir a fecha
-    date_obj = pd.to_datetime(date_str, format='%d%m%Y')
-    # Obtener la semana del año (sin el año)
-    week_number = date_obj.strftime('%U')
-    return int(week_number)
-
-# Function to load and combine lost sales data from the folder
-@st.cache_data(show_spinner=True)
-def load_venta_perdida_data(repo_owner, repo_name, folder_path):
-    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
-    venta_perdida_data = pd.concat([
-        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
-        for file in all_files
-    ])
-    return venta_perdida_data
-
-# Cargar datos de Venta PR con caché
-venta_pr_data = load_venta_pr(venta_pr_path)
-
-# Limpiar las columnas PLAZA y DIVISION en ambos conjuntos de datos
-venta_pr_data = clean_plaza_division(venta_pr_data)
-
-# Cargar y combinar datos de venta perdida con caché
-venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
-venta_perdida_data = clean_plaza_division(venta_perdida_data)
-
-# Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
-venta_perdida_data = venta_perdida_data.rename(columns={
-    'PLAZA': 'PLAZA',
-    'DIVISION': 'DIVISION',
-    'CATEGORIA': 'CATEGORIA',
-    'ID_ARTICULO': 'ID_ARTICULO',
-    'PROVEEDOR': 'PROVEEDOR'
-})
 
 # Limpiar la columna CATEGORIA en venta_perdida_data para que coincida con venta_pr_data
 venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].str.replace(r'^00', '', regex=True)
@@ -137,23 +90,11 @@ for col in columns_to_convert:
     venta_perdida_data[col] = venta_perdida_data[col].astype(str)
     venta_pr_data[col] = venta_pr_data[col].astype(str)
 
-# Realizar merge incluyendo DESC_ARTICULO
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert + ['DESC_ARTICULO'], how="left")
-
-# Renombrar proveedores y eliminar proveedor dummy
-proveedores_renombrados = {
-    "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
-    "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
-    "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
-    "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
-    "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
-    "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
-    "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
-}
-combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
+# Realizar merge incluyendo DESC_ARTICULO, FAMILIA y SEGMENTO
+combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert + ['DESC_ARTICULO', 'FAMILIA', 'SEGMENTO'], how="left")
 combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
 
-# Sidebar para los filtros
+# PASO 4: SIDEBAR Y FILTROS---------------------------------------
 with st.sidebar:
     st.header("Filtros")
     proveedor = st.selectbox("Proveedor", ["Todos"] + list(combined_data['PROVEEDOR'].unique()))
@@ -161,12 +102,13 @@ with st.sidebar:
     categoria = st.selectbox("Categoría", ["Todas"] + list(combined_data['CATEGORIA'].unique()))
     semana = st.selectbox("Semana", ["Todas"] + list(combined_data['Semana'].unique()))
     division = st.selectbox("División", ["Todas"] + list(combined_data['DIVISION'].unique()))
-    articulo = st.text_input("Artículo")
+    familia = st.selectbox("Familia", ["Todas"] + list(combined_data['FAMILIA'].unique()))  # Agregado
+    segmento = st.selectbox("Segmento", ["Todos"] + list(combined_data['SEGMENTO'].unique()))  # Agregado
 
     # Selección de vista semanal o mensual
     view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
-    
-def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
+
+def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, familia, segmento):
     # Aplicar filtros acumulativamente
     if proveedor and proveedor != "Todos":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
@@ -183,16 +125,16 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
     if division and division != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
         venta_pr_data = venta_pr_data[venta_pr_data['DIVISION'] == division]
-    if articulo:
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
-        venta_pr_data = venta_pr_data[venta_pr_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
-    
+    if familia and familia != "Todas":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['FAMILIA'] == familia]
+        venta_pr_data = venta_pr_data[venta_pr_data['FAMILIA'] == familia]
+    if segmento and segmento != "Todos":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['SEGMENTO'] == segmento]
+        venta_pr_data = venta_pr_data[venta_pr_data['SEGMENTO'] == segmento]
+
     # Retornar los conjuntos de datos filtrados
     return venta_perdida_data, venta_pr_data
 
-
-
-# Aplicar filtros basados en la selección del usuario
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     venta_perdida_data,
     venta_pr_data,
@@ -204,8 +146,7 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     articulo
 )
 
-# Convertir 'Semana' a 'Mes' en los datos filtrados (esto debe hacerse antes de cualquier visualización)
-if 'Semana' in filtered_venta_perdida_data.columns:
+# PASO 5: TIPO DE VISTA DE LA PAGINA---------------------------------------
     filtered_venta_perdida_data['Mes'] = pd.to_datetime(filtered_venta_perdida_data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
 
 # Función para aplicar vista semanal
@@ -237,7 +178,7 @@ else:
     filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
 
 
-# Function to plot venta perdida vs venta neta total
+# PASO 6: CREACIÓN DE GRÁFICAS---------------------------------------
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):  
     if venta_pr_data.empty:
         st.warning("No hay datos disponibles para 'Venta PR'")
@@ -283,33 +224,27 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     )
     return fig
 
-# Function to plot venta perdida por mercado
-def plot_venta_perdida_mercado(data, view):
-    fig = go.Figure()
-
-    # Verificar si la columna 'MERCADO' existe en los datos
+# Function to plot venta perdida por mercado (isolada)
+def plot_venta_perdida_mercado_isolada(data):
     if 'MERCADO' not in data.columns:
         st.warning("La columna 'MERCADO' no está en los datos.")
-        return fig  # Retorna una figura vacía si la columna no está presente
+        return go.Figure()
 
-    if view == "semanal":
-        grouped_data = data.groupby(['Semana', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'Semana'
-    else:
-        grouped_data = data.groupby(['Mes', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'Mes'
-    mercados = grouped_data['MERCADO'].unique()
-    for mercado in mercados:
-        mercado_data = grouped_data[grouped_data['MERCADO'] == mercado]
-        fig.add_trace(go.Scatter(
-            x=mercado_data[x_title], 
-            y=mercado_data['VENTA_PERDIDA_PESOS'], 
-            mode='lines+markers', 
-            name=mercado
-        ))
+    grouped_data = data.groupby('MERCADO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False)
+    
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=grouped_data['MERCADO'],
+        y=grouped_data['VENTA_PERDIDA_PESOS'],
+        marker_color='rgb(26, 118, 255)',
+        text=grouped_data['MERCADO'],
+        textposition='auto'
+    ))
+
     fig.update_layout(
-        title=f'Venta Perdida por {x_title} y por Mercado',
-        xaxis_title=x_title,
+        title='Venta Perdida por Mercado',
+        xaxis_title='Mercado',
         yaxis_title='Venta Perdida (Pesos)',
         yaxis=dict(tickformat="$,d")
     )
@@ -357,7 +292,6 @@ def plot_venta_perdida_con_tendencia(data, view):
     )
 
     return fig
-
 
 # Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data): 
@@ -432,6 +366,7 @@ def make_donut_chart(value, total, title, color):
         width=300
     )
     return fig
+    
 def plot_venta_perdida(data, view):
     if view == "semanal":
         grouped_data = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
@@ -457,7 +392,6 @@ def plot_venta_perdida(data, view):
     )
     return fig
 
-
 # Definir todas las funciones primero, incluidas las funciones de visualización
 def plot_articulos_venta_perdida(data):
     if 'DESC_ARTICULO' not in data.columns:
@@ -479,8 +413,31 @@ def plot_articulos_venta_perdida(data):
         yaxis=dict(tickformat="$,d")
     )
     return fig
+# Function to plot venta perdida por familia
+def plot_venta_perdida_familia(data):
+    if 'FAMILIA' not in data.columns:
+        st.warning("La columna 'FAMILIA' no está en los datos.")
+        return go.Figure()  # Retorna una figura vacía si la columna no está presente
 
-# Validación de columnas necesarias
+    fig = go.Figure()
+    grouped_data = data.groupby('FAMILIA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False)
+    fig.add_trace(go.Bar(
+        x=grouped_data['FAMILIA'], 
+        y=grouped_data['VENTA_PERDIDA_PESOS'], 
+        marker_color='rgb(55, 83, 109)'
+    ))
+    fig.update_layout(
+        title='Venta Perdida por Familia',
+        xaxis_title='Familia',
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d")
+    )
+    return fig
+
+
+
+# PAOS 7: VALIDACIÓN DE COLUMNAS---------------------------------------
 if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
     st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos filtrados.")
 elif 'Venta Neta Total' not in filtered_venta_pr_data.columns:
@@ -505,7 +462,7 @@ else:
     else:
         porcentaje_acumulado = 0
 
-    # Visualización de KPIs
+# PASO 8: VISUALIZACIÒN Y CONFIGURACIÓN DE GRAFICAS---------------------------------------
     col1, col2 = st.columns((1, 1))
     with col1:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
