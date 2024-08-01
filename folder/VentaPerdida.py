@@ -286,26 +286,29 @@ def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data
         name='Venta Perdida',
         marker_color='rgb(219, 64, 82)',
         text=venta_perdida_sum['VENTA_PERDIDA_PESOS'],
-        textposition='auto'
+        textposition='auto',
+        yaxis='y1'
     ))
 
-    # Crear gráfico de barras para venta neta total (en otra traza)
+    # Crear gráfico de barras para venta neta total en un eje diferente
     fig.add_trace(go.Bar(
         x=venta_neta_sum['PLAZA'], 
         y=venta_neta_sum['Venta Neta Total'], 
         name='Venta Neta Total',
         marker_color='rgb(55, 83, 109)',
         text=venta_neta_sum['Venta Neta Total'],
-        textposition='auto'
+        textposition='auto',
+        yaxis='y2'
     ))
 
     fig.update_layout(
-        barmode='overlay',  # Cambia a 'group' si prefieres las barras una al lado de la otra
+        barmode='group',  # Cambia a 'overlay' si prefieres superponer las barras
         title='Comparación de Venta Perdida y Venta Neta Total por Plaza',
         xaxis_title='Plaza',
-        yaxis_title='Monto (Pesos)',
-        yaxis=dict(tickformat="$,d"),
-        legend_title_text='Tipo de Venta'
+        yaxis=dict(title='Venta Perdida (Pesos)', tickformat="$,d", titlefont=dict(color='rgb(219, 64, 82)'), side='left'),
+        yaxis2=dict(title='Venta Neta Total (Pesos)', tickformat="$,d", titlefont=dict(color='rgb(55, 83, 109)'), overlaying='y', side='right'),
+        legend_title_text='Tipo de Venta',
+        showlegend=True
     )
 
     return fig
