@@ -268,28 +268,37 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     )
     return fig
 
+# Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
     fig = go.Figure()
+
+    # Verificar si la columna 'MERCADO' existe en los datos
+    if 'MERCADO' not in data.columns:
+        st.warning("La columna 'MERCADO' no está en los datos.")
+        return fig  # Retorna una figura vacía si la columna no está presente
+
     if view == "semanal":
-        grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'PLAZA'
+        grouped_data = data.groupby(['Semana', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Semana'
     else:
-        grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        x_title = 'PLAZA'
-    
-    fig.add_trace(go.Bar(
-        x=grouped_data[x_title], 
-        y=grouped_data['VENTA_PERDIDA_PESOS'], 
-        marker_color='rgb(26, 118, 255)'
-    ))
+        grouped_data = data.groupby(['Mes', 'MERCADO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Mes'
+    mercados = grouped_data['MERCADO'].unique()
+    for mercado in mercados:
+        mercado_data = grouped_data[grouped_data['MERCADO'] == mercado]
+        fig.add_trace(go.Scatter(
+            x=mercado_data[x_title], 
+            y=mercado_data['VENTA_PERDIDA_PESOS'], 
+            mode='lines+markers', 
+            name=mercado
+        ))
     fig.update_layout(
-        title=f'Venta Perdida por {x_title}',
+        title=f'Venta Perdida por {x_title} y por Mercado',
         xaxis_title=x_title,
-        yaxis_title='Monto (Pesos)',
+        yaxis_title='Venta Perdida (Pesos)',
         yaxis=dict(tickformat="$,d")
     )
     return fig
-
 
 # Function to plot tendencia de venta perdida
 def plot_venta_perdida_con_tendencia(data, view):
