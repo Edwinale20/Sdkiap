@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from io import BytesIO
 import requests
 
-# PASO 2: CONFIRGURACION DE LA PAGINA Y CARGA DE DATOS---------------------------------------
+# PASO 2: CONFIGURACION DE LA PAGINA Y CARGA DE DATOS---------------------------------------
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
@@ -45,6 +45,19 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
+
+# Function to load and combine lost sales data from the folder
+@st.cache_data(show_spinner=True)
+def load_venta_perdida_data(repo_owner, repo_name, folder_path):
+    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+    venta_perdida_data = pd.concat([
+        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
+        for file in all_files
+    ])
+    return venta_perdida_data
+
+# Cargar los datos
+venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
 
 # PASO 3: LIMPIEZA DE DATOS Y RENOMBRE DE COLUMNAS---------------------------------------
 @st.cache_data(show_spinner=True) 
