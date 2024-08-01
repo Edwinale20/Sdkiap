@@ -1,11 +1,11 @@
-# Paso 1: Importar librerias---------------------------------------
+# Paso 1: Importar librerías---------------------------------------
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from io import BytesIO
 import requests
 
-# PASO 2: CONFIGURACION DE LA PAGINA Y CARGA DE DATOS---------------------------------------
+# PASO 2: CONFIGURACIÓN DE LA PÁGINA Y CARGA DE DATOS---------------------------------------
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
 st.markdown("En esta página podrás visualizar la venta pérdida día con día, por plaza, división, proveedor y otros datos que desees. Esto con el fin de dar acción y reducir la Venta pérdida")
@@ -22,19 +22,7 @@ repo_name = "317B"
 venta_pr_path = "venta/Venta PR.xlsx"
 folder_path = "venta"  # Folder path for daily loss files
 
-# Function to fetch CSV files from GitHub
-@st.cache_data(show_spinner=True)
-def fetch_csv_files(repo_owner, repo_name, path=""):
-    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{path}"
-    headers = {
-        "Authorization": f"token {github_token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return [file['name'] for file in response.json() if file['name'].endswith('.csv')]
-
-# Function to read a CSV file from GitHub
+# Función para leer un archivo CSV desde GitHub
 @st.cache_data(show_spinner=True)
 def read_csv_from_github(repo_owner, repo_name, file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
@@ -46,22 +34,30 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     response.raise_for_status()
     return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
 
-
-# Function to load and combine lost sales data from the folder
+# Función para cargar y combinar los datos de ventas perdidas desde la carpeta
 @st.cache_data(show_spinner=True)
 def load_venta_perdida_data(repo_owner, repo_name, folder_path):
-    all_files = fetch_csv_files(repo_owner, repo_name, folder_path)
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{folder_path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    all_files = [file['name'] for file in response.json() if file['name'].endswith('.csv')]
+    
     venta_perdida_data = pd.concat([
-        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}").assign(Semana=filename_to_week(file))
+        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}")
         for file in all_files
     ])
+    
     return venta_perdida_data
 
 # Cargar los datos
 venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
 
-# PASO 3: LIMPIEZA DE DATOS---------------------------------------
-@st.cache_data(show_spinner=True) 
+# Cargar los datos de Venta PR
+@st.cache_data(show_spinner=True)
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
@@ -72,27 +68,11 @@ def load_venta_pr(file_path):
     response.raise_for_status()
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
-
     return df
 
-# Cargar los datos de venta_pr_data
 venta_pr_data = load_venta_pr(venta_pr_path)
 
-# Convertir columnas necesarias a string para evitar errores en el merge
-columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR']
-
-# Convertir a string solo si la columna existe en ambos DataFrames
-for col in columns_to_convert:
-    if col in venta_perdida_data.columns and col in venta_pr_data.columns:
-        venta_perdida_data[col] = venta_perdida_data[col].astype(str)
-        venta_pr_data[col] = venta_pr_data[col].astype(str)
-
-# Verificar si 'FAMILIA' y 'SEGMENTO' están en ambos DataFrames
-common_columns = columns_to_convert
-if 'FAMILIA' in venta_perdida_data.columns and 'FAMILIA' in venta_pr_data.columns:
-    common_columns.append('FAMILIA')
-if 'SEGMENTO' in venta_perdida_data.columns and 'SEGMENTO' in venta_pr_data.columns:
-    common_columns.append('SEGMENTO')
+# PASO 3: LIMPIEZA Y PREPARACIÓN DE DATOS---------------------------------------
 
 # Asegurarse de que DESC_ARTICULO existe en ambos DataFrames
 if 'DESC_ARTICULO' not in venta_perdida_data.columns or 'DESC_ARTICULO' not in venta_pr_data.columns:
@@ -105,57 +85,11 @@ venta_perdida_data = pd.merge(venta_perdida_data,
                               on='DESC_ARTICULO', 
                               how='left')
 
-
-
-# Realizar el merge entre los dos DataFrames en función de las columnas comunes
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=common_columns, how='left')
-
-
-# PASO 4: SIDEBAR Y FILTROS---------------------------------------
-with st.sidebar:
-    st.header("Filtros")
-    proveedor = st.selectbox("Proveedor", ["Todos"] + list(combined_data['PROVEEDOR'].unique()))
-    plaza = st.selectbox("Plaza", ["Todas"] + list(combined_data['PLAZA'].unique()))
-    categoria = st.selectbox("Categoría", ["Todas"] + list(combined_data['CATEGORIA'].unique()))
-    semana = st.selectbox("Semana", ["Todas"] + list(combined_data['Semana'].unique()))
-    division = st.selectbox("División", ["Todas"] + list(combined_data['DIVISION'].unique()))
-    familia = st.selectbox("Familia", ["Todas"] + list(combined_data['FAMILIA'].unique()))
-    segmento = st.selectbox("Segmento", ["Todos"] + list(combined_data['SEGMENTO'].unique()))
-
-    # Selección de vista semanal o mensual
-    view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
-
-def apply_filters(venta_perdida_data, proveedor, plaza, categoria, semana, division, familia, segmento):
-    # Aplicar filtros acumulativamente
-    if proveedor and proveedor != "Todos":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
-    if plaza and plaza != "Todas":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['PLAZA'] == plaza]
-    if categoria and categoria != "Todas":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['CATEGORIA'] == categoria]
-    if semana and semana != "Todas":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == str(semana)]  # Convertir a str para asegurarse
-    if division and division != "Todas":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
-    if familia and familia != "Todas":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['FAMILIA'] == familia]
-    if segmento and segmento != "Todos":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['SEGMENTO'] == segmento]
-
-    return venta_perdida_data
-
-
-filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
-    venta_perdida_data,
-    venta_pr_data,
-    proveedor,
-    plaza,
-    categoria,
-    semana,
-    division,
-    familia,
-    segmento
-)
+# Convertir las columnas necesarias a string para evitar errores en el merge
+columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR']
+for col in columns_to_convert:
+    if col in venta_perdida_data.columns:
+        venta_perdida_data[col] = venta_perdida_data[col].astype(str)
 
 proveedores_renombrados = {
     "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
@@ -167,37 +101,62 @@ proveedores_renombrados = {
     "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
 }
 
+venta_perdida_data['PROVEEDOR'] = venta_perdida_data['PROVEEDOR'].replace(proveedores_renombrados)
+venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] != "Eliminar"]
 
-# PASO 5: TIPO DE VISTA DE LA PAGINA---------------------------------------
+# PASO 4: SIDEBAR Y FILTROS---------------------------------------
+with st.sidebar:
+    st.header("Filtros")
+    proveedor = st.selectbox("Proveedor", ["Todos"] + list(venta_perdida_data['PROVEEDOR'].unique()))
+    plaza = st.selectbox("Plaza", ["Todas"] + list(venta_perdida_data['PLAZA'].unique()))
+    categoria = st.selectbox("Categoría", ["Todas"] + list(venta_perdida_data['CATEGORIA'].unique()))
+    semana = st.selectbox("Semana", ["Todas"] + list(venta_perdida_data['Semana'].unique()))
+    division = st.selectbox("División", ["Todas"] + list(venta_perdida_data['DIVISION'].unique()))
+    familia = st.selectbox("Familia", ["Todas"] + list(venta_perdida_data['FAMILIA'].unique()))
+    segmento = st.selectbox("Segmento", ["Todos"] + list(venta_perdida_data['SEGMENTO'].unique()))
+    view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
+
+def apply_filters(data, proveedor, plaza, categoria, semana, division, familia, segmento):
+    # Aplicar filtros acumulativamente
+    if proveedor and proveedor != "Todos":
+        data = data[data['PROVEEDOR'] == proveedor]
+    if plaza and plaza != "Todas":
+        data = data[data['PLAZA'] == plaza]
+    if categoria and categoria != "Todas":
+        data = data[data['CATEGORIA'] == categoria]
+    if semana and semana != "Todas":
+        data = data[data['Semana'] == str(semana)]
+    if division and division != "Todas":
+        data = data[data['DIVISION'] == division]
+    if familia and familia != "Todas":
+        data = data[data['FAMILIA'] == familia]
+    if segmento and segmento != "Todos":
+        data = data[data['SEGMENTO'] == segmento]
+    return data
+
+filtered_venta_perdida_data = apply_filters(
+    venta_perdida_data,
+    proveedor,
+    plaza,
+    categoria,
+    semana,
+    division,
+    familia,
+    segmento
+)
+
+# PASO 5: TIPO DE VISTA DE LA PÁGINA---------------------------------------
 filtered_venta_perdida_data['Mes'] = pd.to_datetime(filtered_venta_perdida_data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
 
-# Función para aplicar vista semanal
 def apply_weekly_view(data):
-    if 'VENTA_PERDIDA_PESOS' not in data.columns:
-        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
-        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
-
     weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return weekly_data
 
-# Función para aplicar vista mensual
 def apply_monthly_view(data):
-    if 'VENTA_PERDIDA_PESOS' not in data.columns:
-        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
-        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
-
-    if 'Mes' not in data.columns:
-        st.error("La columna 'Mes' no se ha creado correctamente.")
-        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
-
     monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     return monthly_data
 
-# Aplicar la vista semanal o mensual según la selección
-if view == "mensual":
-    filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data)
-else:
-    filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
+filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data) if view == "mensual" else apply_weekly_view(filtered_venta_perdida_data)
 
 
 # PASO 6: CREACIÓN DE GRÁFICAS---------------------------------------
