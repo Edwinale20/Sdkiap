@@ -225,7 +225,7 @@ def apply_monthly_view(data):
     return monthly_data
     
 # Function to plot venta perdida vs venta neta total
-def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view): 
+def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):  
     if venta_pr_data.empty:
         st.warning("No hay datos disponibles para 'Venta PR'")
         return go.Figure()
