@@ -203,6 +203,7 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     division,
     articulo
 )
+data['Mes'] = pd.to_datetime(data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
 
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
@@ -418,16 +419,16 @@ def make_donut_chart(value, total, title, color):
         width=300
     )
     return fig
-    
-# Function to plot venta perdida por semana/mes
 def plot_venta_perdida(data, view):
-    fig = go.Figure()
     if view == "semanal":
         grouped_data = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         x_title = 'Semana'
     else:
+        # Añadir esta línea para verificar si 'Mes' existe
+        st.write(data.head())
         grouped_data = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         x_title = 'Mes'
+    fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=grouped_data[x_title], 
         y=grouped_data['VENTA_PERDIDA_PESOS'], 
