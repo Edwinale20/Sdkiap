@@ -271,7 +271,7 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     return fig
 
 # Function to plot venta perdida por plaza
-def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data):
+def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data): 
     fig = go.Figure()
 
     # Sumar la venta perdida y la venta neta total por plaza
