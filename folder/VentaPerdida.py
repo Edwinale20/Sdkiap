@@ -144,6 +144,17 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     segmento
 )
 
+proveedores_renombrados = {
+    "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
+    "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
+    "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
+    "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
+    "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
+    "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
+    "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
+}
+
+
 # PASO 5: TIPO DE VISTA DE LA PAGINA---------------------------------------
 filtered_venta_perdida_data['Mes'] = pd.to_datetime(filtered_venta_perdida_data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
 
