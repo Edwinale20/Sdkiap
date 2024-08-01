@@ -300,9 +300,8 @@ def plot_venta_perdida_mercado(data, view):
     )
     return fig
 
-# Function to plot tendencia de venta perdida
+# Function to plot venta perdida con tendencia
 def plot_venta_perdida_con_tendencia(data, view):
-    fig = go.Figure()
     if view == "semanal":
         grouped_data = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         x_title = 'Semana'
@@ -310,24 +309,36 @@ def plot_venta_perdida_con_tendencia(data, view):
         grouped_data = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
         x_title = 'Mes'
 
-    # Calcula el cambio porcentual en la venta perdida semana a semana o mes a mes
-    grouped_data['Cambio %'] = grouped_data['VENTA_PERDIDA_PESOS'].pct_change() * 100
+    grouped_data['Cambio (%)'] = grouped_data['VENTA_PERDIDA_PESOS'].pct_change() * 100
 
-    # Graficar la tendencia de la venta perdida
-    fig.add_trace(go.Scatter(
+    fig = go.Figure()
+
+    # Agregar barras de venta perdida
+    fig.add_trace(go.Bar(
         x=grouped_data[x_title], 
-        y=grouped_data['Cambio %'], 
-        mode='lines+markers', 
-        name='Cambio % Venta Perdida',
-        line=dict(color='rgb(255, 165, 0)')
+        y=grouped_data['VENTA_PERDIDA_PESOS'], 
+        name='Venta Perdida', 
+        marker_color='rgb(219, 64, 82)'
     ))
 
+    # Agregar línea de cambio porcentual
+    fig.add_trace(go.Scatter(
+        x=grouped_data[x_title], 
+        y=grouped_data['Cambio (%)'], 
+        mode='lines+markers', 
+        name='Cambio Porcentual', 
+        line=dict(color='white'), 
+        yaxis='y2'
+    ))
+
+    # Configuración del layout del gráfico
     fig.update_layout(
-        title=f'Cambio porcentual de Venta Perdida por {x_title}',
+        title=f'Venta Perdida por {x_title} y Cambio Porcentual',
         xaxis_title=x_title,
-        yaxis_title='Cambio %',
-        yaxis=dict(tickformat=".2f%"),
-        xaxis=dict(title=x_title)
+        yaxis=dict(title='Monto (Pesos)', tickformat="$,d"),
+        yaxis2=dict(title='Cambio Porcentual (%)', overlaying='y', side='right', tickformat=".2f", showgrid=False),
+        legend=dict(x=0, y=1.1, orientation='h'),
+        barmode='group'
     )
 
     return fig
