@@ -191,164 +191,129 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
     return venta_perdida_data, venta_pr_data
 
 
-    # Aplicar filtros basados en la selección del usuario
-    filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
-        venta_perdida_data,
-        venta_pr_data,
-        proveedor,
-        plaza,
-        categoria,
-        semana,
-        division,
-        articulo
+ # Aplicar filtros basados en la selección del usuario
+filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
+    venta_perdida_data,
+    venta_pr_data,
+    proveedor,
+    plaza,
+    categoria,
+    semana,
+    division,
+    articulo
+)
+
+# Asegurarse que 'CATEGORIA' en 'filtered_venta_perdida_data' no tenga ceros iniciales
+if 'CATEGORIA' in filtered_venta_perdida_data.columns:
+    filtered_venta_perdida_data['CATEGORIA'] = filtered_venta_perdida_data['CATEGORIA'].str.lstrip('0')
+
+# Aplicar vista semanal o mensual según selección
+if view == "mensual":
+    filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data)
+    filtered_venta_pr_data = apply_monthly_view(filtered_venta_pr_data)
+else:
+    filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
+    filtered_venta_pr_data = apply_weekly_view(filtered_venta_pr_data)
+
+# Function to plot venta perdida vs venta neta total
+def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):  
+    if venta_pr_data.empty:
+        st.warning("No hay datos disponibles para 'Venta PR'")
+        return go.Figure()
+
+    if view == "semanal":
+        venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
+        comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana', how='left')
+    else:
+        venta_pr_data['Mes'] = pd.to_datetime(venta_pr_data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
+        venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
+        comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Mes', right_on='Mes', how='left')
+
+    comparacion['Venta No Perdida'] = comparacion['Venta Neta Total'] - comparacion['VENTA_PERDIDA_PESOS']
+    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
+
+    fig = go.Figure(data=[
+        go.Bar(
+            name='Venta Perdida',
+            x=comparacion['Semana' if view == "semanal" else 'Mes'],
+            y=comparacion['VENTA_PERDIDA_PESOS'],
+            marker_color='red',
+            text=comparacion['Semana' if view == "semanal" else 'Mes'],
+            textposition='auto'
+        ),
+        go.Bar(
+            name='Venta No Perdida',
+            x=comparacion['Semana' if view == "semanal" else 'Mes'],
+            y=comparacion['Venta No Perdida'],
+            marker_color='blue',
+            text=comparacion['Semana' if view == "semanal" else 'Mes'],
+            textposition='auto'
+        )
+    ])
+    fig.update_layout(
+        barmode='stack',
+        title='Venta Perdida vs Venta Neta Total',
+        xaxis_title='Semana' if view == "semanal" else 'Mes',
+        yaxis=dict(tickformat="$,d", title='Monto (Pesos)'),
+        xaxis=dict(title='Tipo de Venta')
+    )
+    return fig
+
+# Function to plot venta perdida por plaza
+def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data): 
+    fig = go.Figure()
+
+    # Sumar la venta perdida y la venta neta total por plaza
+    venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
+
+    # Unir los DataFrames por plaza
+    comparacion = pd.merge(venta_perdida_sum, venta_neta_sum, on='PLAZA')
+
+    # Calcular el porcentaje de venta perdida
+    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
+
+    # Crear gráfico de barras con tooltip que incluye el porcentaje
+    fig.add_trace(go.Bar(
+        x=comparacion['PLAZA'], 
+        y=comparacion['VENTA_PERDIDA_PESOS'], 
+        text=[f"{x:.2f}%" for x in comparacion['% Venta Perdida']],
+        hovertemplate='<b>%{x}</b><br>Venta Perdida: %{y:$,.2f}<br>% Venta Perdida: %{text}<extra></extra>',
+        marker_color='rgb(26, 118, 255)'
+    ))
+
+    fig.update_layout(
+        title='Venta Perdida por Plaza',
+        xaxis_title='Plaza',
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d")
     )
 
-    # Aplicar vista semanal o mensual según selección
-    if view == "mensual":
-        filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data)
-        filtered_venta_pr_data = apply_monthly_view(filtered_venta_pr_data)
-    else:
-        filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
-        filtered_venta_pr_data = apply_weekly_view(filtered_venta_pr_data)
+    return fig
 
-    # Función para aplicar vista semanal
-    def apply_weekly_view(data):
-        if 'VENTA_PERDIDA_PESOS' not in data.columns:
-            st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
-            return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
-
-        weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
-        return weekly_data
-
-    # Función para aplicar vista mensual
-    def apply_monthly_view(data):
-        if 'VENTA_PERDIDA_PESOS' not in data.columns:
-            st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
-            return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
-
-        data['Mes'] = pd.to_datetime(data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
-        monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
-        return monthly_data
-
-    # Function to plot venta perdida vs venta neta total
-    def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):  
-        if venta_pr_data.empty:
-            st.warning("No hay datos disponibles para 'Venta PR'")
-            return go.Figure()
-
-        if view == "semanal":
-            venta_pr_data_grouped = venta_pr_data.groupby('Semana')['Venta Neta Total'].sum().reset_index()
-            comparacion = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-            comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Semana', right_on='Semana', how='left')
-        else:
-            venta_pr_data['Mes'] = pd.to_datetime(venta_pr_data['Semana'], format='%Y%U').dt.to_period('M')
-            venta_pr_data_grouped = venta_pr_data.groupby('Mes')['Venta Neta Total'].sum().reset_index()
-            comparacion = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-            comparacion = comparacion.merge(venta_pr_data_grouped, left_on='Mes', right_on='Mes', how='left')
-
-        comparacion['Venta No Perdida'] = comparacion['Venta Neta Total'] - comparacion['VENTA_PERDIDA_PESOS']
-        comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
-
-        fig = go.Figure(data=[
-            go.Bar(
-                name='Venta Perdida',
-                x=comparacion['Semana' if view == "semanal" else 'Mes'],
-                y=comparacion['VENTA_PERDIDA_PESOS'],
-                marker_color='red',
-                text=comparacion['Semana' if view == "semanal" else 'Mes'],
-                textposition='auto'
-            ),
-            go.Bar(
-                name='Venta No Perdida',
-                x=comparacion['Semana' if view == "semanal" else 'Mes'],
-                y=comparacion['Venta No Perdida'],
-                marker_color='blue',
-                text=comparacion['Semana' if view == "semanal" else 'Mes'],
-                textposition='auto'
-            )
-        ])
-        fig.update_layout(
-            barmode='stack',
-            title='Venta Perdida vs Venta Neta Total',
-            xaxis_title='Semana' if view == "semanal" else 'Mes',
-            yaxis=dict(tickformat="$,d", title='Monto (Pesos)'),
-            xaxis=dict(title='Tipo de Venta')
-        )
-        return fig
-
-    # Function to plot venta perdida por plaza
-    def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data): 
-        fig = go.Figure()
-
-        # Sumar la venta perdida y la venta neta total por plaza
-        venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
-
-        # Unir los DataFrames por plaza
-        comparacion = pd.merge(venta_perdida_sum, venta_neta_sum, on='PLAZA')
-
-        # Calcular el porcentaje de venta perdida
-        comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
-
-        # Crear gráfico de barras con tooltip que incluye el porcentaje
-        fig.add_trace(go.Bar(
-            x=comparacion['PLAZA'], 
-            y=comparacion['VENTA_PERDIDA_PESOS'], 
-            text=[f"{x:.2f}%" for x in comparacion['% Venta Perdida']],
-            hovertemplate='<b>%{x}</b><br>Venta Perdida: %{y:$,.2f}<br>% Venta Perdida: %{text}<extra></extra>',
-            marker_color='rgb(26, 118, 255)'
-        ))
-
-        fig.update_layout(
-            title='Venta Perdida por Plaza',
-            xaxis_title='Plaza',
-            yaxis_title='Venta Perdida (Pesos)',
-            yaxis=dict(tickformat="$,d")
-        )
-
-        return fig
-
-    # Function to plot top 10 artículos con mayor venta perdida
-    def plot_articulos_venta_perdida(data):
-        if 'DESC_ARTICULO' not in data.columns:
-            st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
-            return go.Figure()  # Retorna una figura vacía si la columna no está presente
-
-        fig = go.Figure()
-        grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
-        fig.add_trace(go.Bar(
-            x=grouped_data['DESC_ARTICULO'], 
-            y=grouped_data['VENTA_PERDIDA_PESOS'], 
-            marker_color='rgb(55, 83, 109)'
-        ))
-        fig.update_layout(
-            title='Top 10 Artículos con mayor Venta Perdida',
-            xaxis_title='Artículo',
-            yaxis_title='Venta Perdida (Pesos)',
-            yaxis=dict(tickformat="$,d")
-        )
-        return fig
-
-    # Function to plot venta perdida por proveedor
-    def plot_venta_perdida_proveedor(data, selected_proveedor=None):
-        grouped_data = data.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-        colors = ['gold', 'mediumturquoise', 'darkorange', 'lightgreen', 'lightblue', 'pink', 'red', 'purple', 'brown', 'gray']
-        pull = [0.2 if proveedor == selected_proveedor else 0 for proveedor in grouped_data['PROVEEDOR']]
-        fig = go.Figure(data=[go.Pie(
-            labels=grouped_data['PROVEEDOR'], 
-            values=grouped_data['VENTA_PERDIDA_PESOS'], 
-            pull=pull
-        )])
-        fig.update_traces(
-            hoverinfo='label+percent', 
-            textinfo='value', 
-            texttemplate='$%{value:,.0f}', 
-            textfont_size=20, 
-            marker=dict(colors=colors, line=dict(color='#000000', width=2))
-        )
-        fig.update_layout(title='Venta Perdida por Proveedor')
-        return fig
+# Function to plot venta perdida por proveedor
+def plot_venta_perdida_proveedor(data, selected_proveedor=None):
+    # Aplicar nombres cortos a los proveedores si es necesario
+    proveedor_labels = data['PROVEEDOR'].replace(proveedores_renombrados)
+    grouped_data = data.groupby(proveedor_labels)['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    colors = ['gold', 'mediumturquoise', 'darkorange', 'lightgreen', 'lightblue', 'pink', 'red', 'purple', 'brown', 'gray']
+    pull = [0.2 if proveedor == selected_proveedor else 0 for proveedor in grouped_data['PROVEEDOR']]
+    fig = go.Figure(data=[go.Pie(
+        labels=grouped_data['PROVEEDOR'], 
+        values=grouped_data['VENTA_PERDIDA_PESOS'], 
+        pull=pull
+    )])
+    fig.update_traces(
+        hoverinfo='label+percent', 
+        textinfo='value', 
+        texttemplate='$%{value:,.0f}', 
+        textfont_size=20, 
+        marker=dict(colors=colors, line=dict(color='#000000', width=2))
+    )
+    fig.update_layout(title='Venta Perdida por Proveedor')
+    return fig
 
 # Function to make a donut chart
 def make_donut_chart(value, total, title, color):
@@ -379,7 +344,7 @@ else:
     # Calcula total_venta_perdida sin filtros aplicados
     total_venta_perdida = venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()  # Sumar sin filtros aplicados
 
-    # Calcula las métricas con los datos filtrados
+# Calcula las métricas con los datos filtrados
     total_venta_perdida_filtrada = filtered_venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()
     total_venta_pr_filtrada = filtered_venta_pr_data['Venta Neta Total'].sum()
 
