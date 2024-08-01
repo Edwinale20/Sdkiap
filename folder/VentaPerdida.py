@@ -148,7 +148,7 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
 )
 
 # PASO 5: TIPO DE VISTA DE LA PAGINA---------------------------------------
-    filtered_venta_perdida_data['Mes'] = pd.to_datetime(filtered_venta_perdida_data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
+filtered_venta_perdida_data['Mes'] = pd.to_datetime(filtered_venta_perdida_data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
 
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
