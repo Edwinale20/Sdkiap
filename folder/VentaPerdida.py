@@ -461,7 +461,7 @@ if not combined_data.empty:
     with col7:
         st.markdown('#### 🎢 Cambio porcentual de venta perdida ')
         st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_venta_perdida_data, view), use_container_width=True)
-    with col8: 
+    with col8:  
         st.markdown('#### 📶 Venta Perdida vs Venta Neta Total ')
         st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_venta_perdida_data, filtered_venta_pr_data, view), use_container_width=True)
     
