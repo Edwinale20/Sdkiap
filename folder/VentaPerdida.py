@@ -131,7 +131,6 @@ venta_perdida_data['CATEGORIA'] = venta_perdida_data.apply(
     lambda row: 'RRPS' if 'Vuse' in row['DESC_ARTICULO'] else row['CATEGORIA'], axis=1
 )
 
-
 # Convertir tipos de datos antes de hacer el merge
 columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'PROVEEDOR', 'Semana']
 
