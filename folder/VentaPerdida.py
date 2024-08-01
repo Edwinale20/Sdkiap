@@ -418,10 +418,17 @@ if not combined_data.empty:
     with col1:
         st.markdown('#### 🧮 KPI´s de Venta Perdida ')
         total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
-        total_venta_pr_filtrada = filtered_data['Venta Neta Total'].sum()
+        # Verifica si la columna 'Venta Neta Total' existe antes de hacer los cálculos
+        if 'Venta Neta Total' in filtered_data.columns:
+            total_venta_pr_filtrada = filtered_data['Venta Neta Total'].sum()
+            porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
+        else:
+            st.error("La columna 'Venta Neta Total' no está disponible en los datos filtrados.")
+            total_venta_pr_filtrada = 0
+            porcentaje_venta_perdida_dia = 0
+        
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
         porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
-        
         st.metric(label="Proporción de la Venta Perdida Filtrada al Total", value=f"{porcentaje_acumulado:.0f}%")
         st.metric(label="Proporción de Venta Perdida respecto a la Venta Neta Total", value=f"{porcentaje_venta_perdida_dia:.0f}%")
         st.markdown(f'#### 🕰️ Venta Perdida {view} ')
