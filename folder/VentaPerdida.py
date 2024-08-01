@@ -270,39 +270,37 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     )
     return fig
 
-# Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data):
     fig = go.Figure()
 
-    # Sumar la venta perdida y la venta neta total por plaza
+    # Sumar la venta perdida por plaza
     venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
 
-    # Unir los DataFrames por plaza
-    comparacion = pd.merge(venta_perdida_sum, venta_neta_sum, on='PLAZA')
+    # Sumar la venta neta total por plaza
+    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
 
     # Crear gráfico de barras para venta perdida
     fig.add_trace(go.Bar(
-        x=comparacion['PLAZA'], 
-        y=comparacion['VENTA_PERDIDA_PESOS'], 
+        x=venta_perdida_sum['PLAZA'], 
+        y=venta_perdida_sum['VENTA_PERDIDA_PESOS'], 
         name='Venta Perdida',
         marker_color='rgb(219, 64, 82)',
-        text=comparacion['VENTA_PERDIDA_PESOS'],
+        text=venta_perdida_sum['VENTA_PERDIDA_PESOS'],
         textposition='auto'
     ))
 
-    # Crear gráfico de barras para venta neta total
+    # Crear gráfico de barras para venta neta total (en otra traza)
     fig.add_trace(go.Bar(
-        x=comparacion['PLAZA'], 
-        y=comparacion['Venta Neta Total'], 
+        x=venta_neta_sum['PLAZA'], 
+        y=venta_neta_sum['Venta Neta Total'], 
         name='Venta Neta Total',
         marker_color='rgb(55, 83, 109)',
-        text=comparacion['Venta Neta Total'],
+        text=venta_neta_sum['Venta Neta Total'],
         textposition='auto'
     ))
 
     fig.update_layout(
-        barmode='group',
+        barmode='overlay',  # Cambia a 'group' si prefieres las barras una al lado de la otra
         title='Comparación de Venta Perdida y Venta Neta Total por Plaza',
         xaxis_title='Plaza',
         yaxis_title='Monto (Pesos)',
