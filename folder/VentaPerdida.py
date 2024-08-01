@@ -274,15 +274,22 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
 def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data):
     fig = go.Figure()
 
-    # Sumar la venta perdida por plaza
+    # Sumar la venta perdida y la venta neta total por plaza
     venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
 
-    # Crear gráfico de barras simple
+    # Unir los DataFrames por plaza
+    comparacion = pd.merge(venta_perdida_sum, venta_neta_sum, on='PLAZA')
+
+    # Calcular el porcentaje de venta perdida
+    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
+
+    # Crear gráfico de barras con tooltip que incluye el porcentaje
     fig.add_trace(go.Bar(
-        x=venta_perdida_sum['PLAZA'], 
-        y=venta_perdida_sum['VENTA_PERDIDA_PESOS'], 
-        text=venta_perdida_sum['VENTA_PERDIDA_PESOS'],
-        textposition='auto',
+        x=comparacion['PLAZA'], 
+        y=comparacion['VENTA_PERDIDA_PESOS'], 
+        text=[f"{x:.2f}%" for x in comparacion['% Venta Perdida']],
+        hovertemplate='<b>%{x}</b><br>Venta Perdida: %{y:$,.2f}<br>% Venta Perdida: %{text}<extra></extra>',
         marker_color='rgb(26, 118, 255)'
     ))
 
@@ -294,30 +301,6 @@ def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data
     )
 
     return fig
-
-
-# Function to plot top 10 artículos con mayor venta perdida
-def plot_articulos_venta_perdida(data):
-    if 'DESC_ARTICULO' not in data.columns:
-        st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
-        return go.Figure()  # Retorna una figura vacía si la columna no está presente
-
-    fig = go.Figure()
-    grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
-    fig.add_trace(go.Bar(
-        x=grouped_data['DESC_ARTICULO'], 
-        y=grouped_data['VENTA_PERDIDA_PESOS'], 
-        marker_color='rgb(55, 83, 109)'
-    ))
-    fig.update_layout(
-        title='Top 10 Artículos con mayor Venta Perdida',
-        xaxis_title='Artículo',
-        yaxis_title='Venta Perdida (Pesos)',
-        yaxis=dict(tickformat="$,d")
-    )
-    return fig
-
 
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
