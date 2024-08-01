@@ -131,8 +131,17 @@ venta_perdida_data['CATEGORIA'] = venta_perdida_data.apply(
     lambda row: 'RRPS' if 'Vuse' in row['DESC_ARTICULO'] else row['CATEGORIA'], axis=1
 )
 
+
+# Convertir tipos de datos antes de hacer el merge
+columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'PROVEEDOR', 'Semana']
+
+for col in columns_to_convert:
+    venta_perdida_data[col] = venta_perdida_data[col].astype(str)
+    venta_pr_data[col] = venta_pr_data[col].astype(str)
+
 # Combinar datos de venta perdida con venta pr
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"], how="left")
+combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert, how="left")
+
 
 # Renombrar proveedores y eliminar proveedor dummy
 proveedores_renombrados = {
