@@ -366,6 +366,31 @@ def plot_venta_perdida(data, view):
     )
     return fig
 
+st.plotly_chart(plot_articulos_venta_perdida(filtered_venta_perdida_data), use_container_width=True)
+
+# Function to plot top 10 artículos con mayor venta perdida
+def plot_articulos_venta_perdida(data):
+    if 'DESC_ARTICULO' not in data.columns:
+        st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
+        return go.Figure()  # Retorna una figura vacía si la columna no está presente
+
+    fig = go.Figure()
+    grouped_data = data.groupby('DESC_ARTICULO')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    grouped_data = grouped_data.sort_values(by='VENTA_PERDIDA_PESOS', ascending=False).head(10)
+    fig.add_trace(go.Bar(
+        x=grouped_data['DESC_ARTICULO'], 
+        y=grouped_data['VENTA_PERDIDA_PESOS'], 
+        marker_color='rgb(55, 83, 109)'
+    ))
+    fig.update_layout(
+        title='Top 10 Artículos con mayor Venta Perdida',
+        xaxis_title='Artículo',
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d")
+    )
+    return fig
+
+
 # Validación de columnas necesarias
 if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
     st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos filtrados.")
