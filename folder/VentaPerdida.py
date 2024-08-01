@@ -366,9 +366,8 @@ def plot_venta_perdida(data, view):
     )
     return fig
 
-st.plotly_chart(plot_articulos_venta_perdida(filtered_venta_perdida_data), use_container_width=True)
 
-# Function to plot top 10 artículos con mayor venta perdida
+# Definir todas las funciones primero, incluidas las funciones de visualización
 def plot_articulos_venta_perdida(data):
     if 'DESC_ARTICULO' not in data.columns:
         st.warning("La columna 'DESC_ARTICULO' no está en los datos.")
@@ -389,7 +388,6 @@ def plot_articulos_venta_perdida(data):
         yaxis=dict(tickformat="$,d")
     )
     return fig
-
 
 # Validación de columnas necesarias
 if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
