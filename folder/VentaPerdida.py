@@ -230,24 +230,37 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     return fig
 
 # Function to plot venta perdida por plaza
-def plot_venta_perdida_plaza(data):
+def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data):
     fig = go.Figure()
-    grouped_data = data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    
+
+    # Sumar la venta perdida y la venta neta total por plaza
+    venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
+
+    # Unir los DataFrames por plaza
+    comparacion = pd.merge(venta_perdida_sum, venta_neta_sum, on='PLAZA')
+
+    # Calcular el porcentaje de venta perdida
+    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
+
+    # Crear gráfico de barras con tooltip que incluye el porcentaje
     fig.add_trace(go.Bar(
-        x=grouped_data['PLAZA'], 
-        y=grouped_data['VENTA_PERDIDA_PESOS'], 
+        x=comparacion['PLAZA'], 
+        y=comparacion['VENTA_PERDIDA_PESOS'], 
+        text=[f"{x:.2f}%" for x in comparacion['% Venta Perdida']],
+        hovertemplate='<b>%{x}</b><br>Venta Perdida: %{y:$,.2f}<br>% Venta Perdida: %{text}<extra></extra>',
         marker_color='rgb(26, 118, 255)'
     ))
-    
+
     fig.update_layout(
         title='Venta Perdida por Plaza',
         xaxis_title='Plaza',
         yaxis_title='Venta Perdida (Pesos)',
         yaxis=dict(tickformat="$,d")
     )
-    
+
     return fig
+
 
 # Function to plot top 10 artículos con mayor venta perdida
 def plot_articulos_venta_perdida(data):
@@ -417,16 +430,12 @@ if not combined_data.empty:
 
     # Aplica los filtros a ambos conjuntos de datos
     filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(venta_perdida_data, venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
-
-    # Validación de existencia de columnas necesarias
-    if filtered_venta_perdida_data.empty:
-        st.error("No se encontraron datos de venta perdida después de aplicar los filtros. Verifica los filtros aplicados.")
-    elif filtered_venta_pr_data.empty:
-        st.error("No se encontraron datos de venta neta total después de aplicar los filtros. Verifica los filtros aplicados.")
-    elif 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
-        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos filtrados. Verifica los datos cargados.")
+    
+    # Validación de columnas necesarias
+    if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos filtrados.")
     elif 'Venta Neta Total' not in filtered_venta_pr_data.columns:
-        st.error("La columna 'Venta Neta Total' no se encontró en los datos filtrados. Verifica los datos cargados.")
+        st.error("La columna 'Venta Neta Total' no se encontró en los datos filtrados.")
     else:
         if view == "semanal":
             filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
