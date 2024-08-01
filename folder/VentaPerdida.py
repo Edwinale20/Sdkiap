@@ -203,17 +203,24 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     articulo
 )
 
-# Asegurarse que 'CATEGORIA' en 'filtered_venta_perdida_data' no tenga ceros iniciales
-if 'CATEGORIA' in filtered_venta_perdida_data.columns:
-    filtered_venta_perdida_data['CATEGORIA'] = filtered_venta_perdida_data['CATEGORIA'].str.lstrip('0')
+# Función para aplicar vista semanal
+def apply_weekly_view(data):
+    if 'VENTA_PERDIDA_PESOS' not in data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
+        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
 
-# Aplicar vista semanal o mensual según selección
-if view == "mensual":
-    filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data)
-    filtered_venta_pr_data = apply_monthly_view(filtered_venta_pr_data)
-else:
-    filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
-    filtered_venta_pr_data = apply_weekly_view(filtered_venta_pr_data)
+    weekly_data = data.groupby(['Semana', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    return weekly_data
+
+# Función para aplicar vista mensual
+def apply_monthly_view(data):
+    if 'VENTA_PERDIDA_PESOS' not in data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
+        return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
+
+    data['Mes'] = pd.to_datetime(data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
+    monthly_data = data.groupby(['Mes', 'PROVEEDOR', 'PLAZA', 'CATEGORIA', 'DIVISION', 'ID_ARTICULO']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    return monthly_data
 
 # Function to plot venta perdida vs venta neta total
 def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):  
