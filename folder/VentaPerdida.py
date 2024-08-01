@@ -274,22 +274,15 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
 def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data):
     fig = go.Figure()
 
-    # Sumar la venta perdida y la venta neta total por plaza
+    # Sumar la venta perdida por plaza
     venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
 
-    # Unir los DataFrames por plaza
-    comparacion = pd.merge(venta_perdida_sum, venta_neta_sum, on='PLAZA')
-
-    # Calcular el porcentaje de venta perdida
-    comparacion['% Venta Perdida'] = (comparacion['VENTA_PERDIDA_PESOS'] / comparacion['Venta Neta Total']) * 100
-
-    # Crear gráfico de barras con tooltip que incluye el porcentaje
+    # Crear gráfico de barras simple
     fig.add_trace(go.Bar(
-        x=comparacion['PLAZA'], 
-        y=comparacion['VENTA_PERDIDA_PESOS'], 
-        text=[f"{x:.2f}%" for x in comparacion['% Venta Perdida']],
-        hovertemplate='<b>%{x}</b><br>Venta Perdida: %{y:$,.2f}<br>% Venta Perdida: %{text}<extra></extra>',
+        x=venta_perdida_sum['PLAZA'], 
+        y=venta_perdida_sum['VENTA_PERDIDA_PESOS'], 
+        text=venta_perdida_sum['VENTA_PERDIDA_PESOS'],
+        textposition='auto',
         marker_color='rgb(26, 118, 255)'
     ))
 
