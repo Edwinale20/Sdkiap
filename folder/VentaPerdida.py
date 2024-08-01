@@ -341,6 +341,30 @@ def make_donut_chart(value, total, title, color):
         width=300
     )
     return fig
+    
+# Function to plot venta perdida por semana/mes
+def plot_venta_perdida(data, view):
+    fig = go.Figure()
+    if view == "semanal":
+        grouped_data = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Semana'
+    else:
+        grouped_data = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Mes'
+    fig.add_trace(go.Scatter(
+        x=grouped_data[x_title], 
+        y=grouped_data['VENTA_PERDIDA_PESOS'], 
+        mode='lines+markers', 
+        name='Venta Perdida',
+        line=dict(color='rgb(219, 64, 82)')
+    ))
+    fig.update_layout(
+        title=f'Venta Perdida por {x_title}',
+        xaxis_title=x_title,
+        yaxis_title='Monto (Pesos)',
+        yaxis=dict(tickformat="$,d")
+    )
+    return fig
 
 # Validación de columnas necesarias
 if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
