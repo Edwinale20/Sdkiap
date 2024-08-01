@@ -181,15 +181,18 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
         venta_perdida_data = venta_perdida_data[venta_perdida_data['CATEGORIA'] == categoria]
         venta_pr_data = venta_pr_data[venta_pr_data['CATEGORIA'] == categoria]
     if semana and semana != "Todas":
-        venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == int(semana)]
-        venta_pr_data = venta_pr_data[venta_pr_data['Semana'] == int(semana)]
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == str(semana)]  # Convertir a str para asegurarse
+        venta_pr_data = venta_pr_data[venta_pr_data['Semana'] == str(semana)]  # Convertir a str para asegurarse
     if division and division != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
         venta_pr_data = venta_pr_data[venta_pr_data['DIVISION'] == division]
     if articulo:
         venta_perdida_data = venta_perdida_data[venta_perdida_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
         venta_pr_data = venta_pr_data[venta_pr_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+    
+    # Retornar los conjuntos de datos filtrados
     return venta_perdida_data, venta_pr_data
+
 
 # Filtrar datos
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
