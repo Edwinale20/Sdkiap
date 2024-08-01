@@ -268,6 +268,39 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     )
     return fig
 
+# Function to plot tendencia de venta perdida
+def plot_venta_perdida_con_tendencia(data, view):
+    fig = go.Figure()
+    if view == "semanal":
+        grouped_data = data.groupby('Semana')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Semana'
+    else:
+        grouped_data = data.groupby('Mes')['VENTA_PERDIDA_PESOS'].sum().reset_index()
+        x_title = 'Mes'
+
+    # Calcula el cambio porcentual en la venta perdida semana a semana o mes a mes
+    grouped_data['Cambio %'] = grouped_data['VENTA_PERDIDA_PESOS'].pct_change() * 100
+
+    # Graficar la tendencia de la venta perdida
+    fig.add_trace(go.Scatter(
+        x=grouped_data[x_title], 
+        y=grouped_data['Cambio %'], 
+        mode='lines+markers', 
+        name='Cambio % Venta Perdida',
+        line=dict(color='rgb(255, 165, 0)')
+    ))
+
+    fig.update_layout(
+        title=f'Cambio porcentual de Venta Perdida por {x_title}',
+        xaxis_title=x_title,
+        yaxis_title='Cambio %',
+        yaxis=dict(tickformat=".2f%"),
+        xaxis=dict(title=x_title)
+    )
+
+    return fig
+
+
 # Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data): 
     fig = go.Figure()
