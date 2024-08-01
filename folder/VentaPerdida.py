@@ -167,7 +167,7 @@ with st.sidebar:
     view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
     
 def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
-    # Aplicar los mismos filtros a ambos conjuntos de datos
+    # Aplicar filtros acumulativamente
     if proveedor and proveedor != "Todos":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
         venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] == proveedor]
@@ -189,6 +189,7 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
     
     # Retornar los conjuntos de datos filtrados
     return venta_perdida_data, venta_pr_data
+
 
 
  # Aplicar filtros basados en la selección del usuario
