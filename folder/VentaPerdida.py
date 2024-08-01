@@ -4,7 +4,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from io import BytesIO
 import requests
-
+st.set_option('client.showErrorDetails', True)
 # PASO 2: CONFIGURACIÓN DE LA PÁGINA Y CARGA DE DATOS---------------------------------------
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
