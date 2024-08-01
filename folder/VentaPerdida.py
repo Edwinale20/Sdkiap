@@ -404,7 +404,7 @@ def plot_venta_perdida_familia(data):
     return fig
 
 # Modificando la gráfica de "Venta Perdida por Mercado" para que esté aislada
-def plot_venta_perdida_mercado_isolada(data):
+def plot_venta_perdida_mercado(data):
     if 'MERCADO' not in data.columns:
         st.warning("La columna 'MERCADO' no está en los datos.")
         return go.Figure()
@@ -474,8 +474,8 @@ else:
         st.markdown('#### 🏝️ Venta Perdida por Plaza ')
         st.plotly_chart(plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data), use_container_width=True)
     with col4:
-        st.markdown('#### 🔝 Top 10 Artículos con Mayor Venta Perdida ')
-        st.plotly_chart(plot_articulos_venta_perdida(filtered_venta_perdida_data), use_container_width=True)
+        st.markdown('#### 🔝 Venta perdida por familia ')
+        st.plotly_chart(plot_venta_perdida_familia(filtered_venta_perdida_data), use_container_width=True)
     
     col5, col6 = st.columns((1, 1))
     with col5:
