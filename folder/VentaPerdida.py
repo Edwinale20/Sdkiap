@@ -79,11 +79,8 @@ def load_venta_pr(file_path):
 
 # Función para convertir nombre del archivo en semana del año
 def filename_to_week(filename):
-    # Extraer la fecha del nombre del archivo
     date_str = filename[:8]  # Tomar los primeros 8 caracteres del nombre del archivo (ej. 01072024.csv)
-    # Convertir a fecha
     date_obj = pd.to_datetime(date_str, format='%d%m%Y')
-    # Obtener la semana del año
     week_number = date_obj.strftime('%Y%U')
     return int(week_number)
 
@@ -103,44 +100,68 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 # Cargar y combinar datos de venta perdida con caché
 venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
 
-# Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
-venta_perdida_data = venta_perdida_data.rename(columns={
-    'PLAZA': 'PLAZA',
-    'DIVISION': 'DIVISION',
-    'CATEGORIA': 'CATEGORIA',
-    'ID_ARTICULO': 'ID_ARTICULO',
-    'PROVEEDOR': 'PROVEEDOR'
-})
+# Renombrar proveedores y eliminar proveedor dummy
+proveedores_renombrados = {
+    "1822 PHILIP MORRIS MEXICO, S.A. DE C.V.": "PMI",
+    "1852 BRITISH AMERICAN TOBACCO MEXICO COMERCIAL, S.A. DE C.V.": "BAT",
+    "6247 MAS BODEGA Y LOGISTICA, S.A. DE C.V.": "JTI",
+    "21864 ARTICUN DISTRIBUIDORA S.A. DE C.V.": "Articun",
+    "2216 NUEVA DISTABAC, S.A. DE C.V.": "Nueva Distabac",
+    "8976 DRUGS EXPRESS, S.A DE C.V.": "Drugs Express",
+    "1 PROVEEDOR DUMMY MIGRACION": "Eliminar"
+}
+venta_perdida_data['PROVEEDOR'] = venta_perdida_data['PROVEEDOR'].replace(proveedores_renombrados)
+venta_pr_data['PROVEEDOR'] = venta_pr_data['PROVEEDOR'].replace(proveedores_renombrados)
+venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] != "Eliminar"]
+venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] != "Eliminar"]
 
 # Convertir tipos de datos antes de hacer el merge
 venta_perdida_data['PLAZA'] = venta_perdida_data['PLAZA'].astype(str)
 venta_pr_data['PLAZA'] = venta_pr_data['PLAZA'].astype(str)
-
 venta_perdida_data['DIVISION'] = venta_perdida_data['DIVISION'].astype(str)
 venta_pr_data['DIVISION'] = venta_pr_data['DIVISION'].astype(str)
-
 venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].astype(str)
 venta_pr_data['CATEGORIA'] = venta_pr_data['CATEGORIA'].astype(str)
-
 venta_perdida_data['ID_ARTICULO'] = venta_perdida_data['ID_ARTICULO'].astype(str)
 venta_pr_data['ID_ARTICULO'] = venta_pr_data['ID_ARTICULO'].astype(str)
-
 venta_perdida_data['PROVEEDOR'] = venta_perdida_data['PROVEEDOR'].astype(str)
 venta_pr_data['PROVEEDOR'] = venta_pr_data['PROVEEDOR'].astype(str)
-
 venta_perdida_data['Semana'] = venta_perdida_data['Semana'].astype(int)
 venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
 
 # Sidebar para filtros
-st.sidebar.header("Filtros")
-proveedor = st.sidebar.selectbox("Proveedor", options=venta_perdida_data['PROVEEDOR'].unique())
-plaza = st.sidebar.selectbox("Plaza", options=venta_perdida_data['PLAZA'].unique())
-categoria = st.sidebar.selectbox("Categoría", options=venta_perdida_data['CATEGORIA'].unique())
-semana = st.sidebar.selectbox("Semana", options=venta_perdida_data['Semana'].unique())
-division = st.sidebar.selectbox("División", options=venta_perdida_data['DIVISION'].unique())
-articulo = st.sidebar.text_input("Artículo")
+with st.sidebar:
+    proveedor = st.selectbox("Selecciona Proveedor", options=["Todos"] + list(venta_pr_data['PROVEEDOR'].unique()), index=0)
+    plaza = st.selectbox("Selecciona Plaza", options=["Todos"] + list(venta_pr_data['PLAZA'].unique()), index=0)
+    categoria = st.selectbox("Selecciona Categoría", options=["Todos"] + list(venta_pr_data['CATEGORIA'].unique()), index=0)
+    semana = st.selectbox("Selecciona Semana", options=["Todos"] + list(venta_pr_data['Semana'].unique()), index=0)
+    division = st.selectbox("Selecciona División", options=["Todos"] + list(venta_pr_data['DIVISION'].unique()), index=0)
+    articulo = st.text_input("Buscar Artículo", value="")
 
-# Aplicar filtros
+# Función para aplicar los filtros
+def apply_filters(venta_perdida_data, venta_pr_data, proveedor=None, plaza=None, categoria=None, semana=None, division=None, articulo=None):
+    if proveedor and proveedor != "Todos":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
+        venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] == proveedor]
+    if plaza and plaza != "Todos":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['PLAZA'] == plaza]
+        venta_pr_data = venta_pr_data[venta_pr_data['PLAZA'] == plaza]
+    if categoria and categoria != "Todos":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['CATEGORIA'] == categoria]
+        venta_pr_data = venta_pr_data[venta_pr_data['CATEGORIA'] == categoria]
+    if semana and semana != "Todos":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == semana]
+        venta_pr_data = venta_pr_data[venta_pr_data['Semana'] == semana]
+    if division and division != "Todos":
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
+        venta_pr_data = venta_pr_data[venta_pr_data['DIVISION'] == division]
+    if articulo:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+        venta_pr_data = venta_pr_data[venta_pr_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+
+    return venta_perdida_data, venta_pr_data
+
+# Filtrar datos
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     venta_perdida_data,
     venta_pr_data,
@@ -153,7 +174,7 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
 )
 
 # Definir la variable view para controlar la visualización semanal o mensual
-view = st.sidebar.selectbox("Selecciona la vista", ["semanal", "mensual"])
+view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
 
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
@@ -248,7 +269,6 @@ def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data
 
     return fig
 
-
 # Function to plot top 10 artículos con mayor venta perdida
 def plot_articulos_venta_perdida(data):
     if 'DESC_ARTICULO' not in data.columns:
@@ -270,7 +290,6 @@ def plot_articulos_venta_perdida(data):
         yaxis=dict(tickformat="$,d")
     )
     return fig
-
 
 # Function to plot venta perdida por mercado
 def plot_venta_perdida_mercado(data, view):
@@ -303,7 +322,6 @@ def plot_venta_perdida_mercado(data, view):
         yaxis=dict(tickformat="$,d")
     )
     return fig
-
 
 # Function to plot venta perdida por semana/mes
 def plot_venta_perdida(data, view):
@@ -410,7 +428,7 @@ elif 'Venta Neta Total' not in filtered_venta_pr_data.columns:
     st.error("La columna 'Venta Neta Total' no se encontró en los datos filtrados.")
 else:
     # Calcula total_venta_perdida sin filtros aplicados
-    total_venta_perdida = venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()  # Sumar sin filtros aplicados
+    total_venta_perdida = venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()
 
     # Calcula las métricas con los datos filtrados
     total_venta_perdida_filtrada = filtered_venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()
@@ -452,7 +470,7 @@ else:
     col5, col6 = st.columns((1, 1))
     with col5:
         st.markdown('#### 🚩 Venta Perdida por Proveedor ')
-        st.plotly_chart(plot_venta_perdida_proveedor(filtered_venta_perdida_data), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_proveedor(filtered_venta_perdida_data, proveedor if proveedor != "Todos" else None), use_container_width=True)
     col7, col8 = st.columns((1, 1))
     with col7:
         st.markdown('#### 🎢 Cambio porcentual de venta perdida ')
@@ -463,3 +481,4 @@ else:
     
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_venta_perdida_data, view), use_container_width=True)
+
