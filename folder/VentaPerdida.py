@@ -82,13 +82,20 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR']
 
 # Convertir a string solo si la columna existe en ambos DataFrames
-for col in columns_to_convert + ['FAMILIA', 'SEGMENTO']:
+for col in columns_to_convert:
     if col in venta_perdida_data.columns and col in venta_pr_data.columns:
         venta_perdida_data[col] = venta_perdida_data[col].astype(str)
         venta_pr_data[col] = venta_pr_data[col].astype(str)
 
-# Realizar el merge entre los dos DataFrames en función de las columnas comunes incluyendo FAMILIA y SEGMENTO
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert + ['FAMILIA', 'SEGMENTO'], how='left')
+# Verificar si 'FAMILIA' y 'SEGMENTO' están en ambos DataFrames
+common_columns = columns_to_convert
+if 'FAMILIA' in venta_perdida_data.columns and 'FAMILIA' in venta_pr_data.columns:
+    common_columns.append('FAMILIA')
+if 'SEGMENTO' in venta_perdida_data.columns and 'SEGMENTO' in venta_pr_data.columns:
+    common_columns.append('SEGMENTO')
+
+# Realizar el merge entre los dos DataFrames en función de las columnas comunes
+combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=common_columns, how='left')
 
 
 # PASO 4: SIDEBAR Y FILTROS---------------------------------------
