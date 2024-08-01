@@ -94,6 +94,19 @@ if 'FAMILIA' in venta_perdida_data.columns and 'FAMILIA' in venta_pr_data.column
 if 'SEGMENTO' in venta_perdida_data.columns and 'SEGMENTO' in venta_pr_data.columns:
     common_columns.append('SEGMENTO')
 
+# Asegurarse de que DESC_ARTICULO existe en ambos DataFrames
+if 'DESC_ARTICULO' not in venta_perdida_data.columns or 'DESC_ARTICULO' not in venta_pr_data.columns:
+    st.error("La columna 'DESC_ARTICULO' es necesaria en ambos DataFrames para realizar la operación.")
+    st.stop()
+
+# Realizar el merge para traer FAMILIA y SEGMENTO a venta_perdida_data basado en DESC_ARTICULO
+venta_perdida_data = pd.merge(venta_perdida_data, 
+                              venta_pr_data[['DESC_ARTICULO', 'FAMILIA', 'SEGMENTO']], 
+                              on='DESC_ARTICULO', 
+                              how='left')
+
+
+
 # Realizar el merge entre los dos DataFrames en función de las columnas comunes
 combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=common_columns, how='left')
 
@@ -112,32 +125,24 @@ with st.sidebar:
     # Selección de vista semanal o mensual
     view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
 
-def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, familia, segmento):
+def apply_filters(venta_perdida_data, proveedor, plaza, categoria, semana, division, familia, segmento):
     # Aplicar filtros acumulativamente
     if proveedor and proveedor != "Todos":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
-        venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] == proveedor]
     if plaza and plaza != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['PLAZA'] == plaza]
-        venta_pr_data = venta_pr_data[venta_pr_data['PLAZA'] == plaza]
     if categoria and categoria != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['CATEGORIA'] == categoria]
-        venta_pr_data = venta_pr_data[venta_pr_data['CATEGORIA'] == categoria]
     if semana and semana != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == str(semana)]  # Convertir a str para asegurarse
-        venta_pr_data = venta_pr_data[venta_pr_data['Semana'] == str(semana)]  # Convertir a str para asegurarse
     if division and division != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
-        venta_pr_data = venta_pr_data[venta_pr_data['DIVISION'] == division]
     if familia and familia != "Todas":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['FAMILIA'] == familia]
-        venta_pr_data = venta_pr_data[venta_pr_data['FAMILIA'] == familia]
     if segmento and segmento != "Todos":
         venta_perdida_data = venta_perdida_data[venta_perdida_data['SEGMENTO'] == segmento]
-        venta_pr_data = venta_pr_data[venta_pr_data['SEGMENTO'] == segmento]
 
-    # Retornar los conjuntos de datos filtrados
-    return venta_perdida_data, venta_pr_data
+    return venta_perdida_data
 
 
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
