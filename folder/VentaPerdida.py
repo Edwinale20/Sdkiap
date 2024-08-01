@@ -77,6 +77,12 @@ def load_venta_pr(file_path):
 
     return df
 
+# Función para limpiar las columnas de PLAZA y DIVISION
+def clean_plaza_division(data):
+    data['PLAZA'] = data['PLAZA'].str.extract('(\d+)').astype(str)
+    data['DIVISION'] = data['DIVISION'].str.extract('(\d+)').astype(str)
+    return data
+
 # Función para convertir nombre del archivo en semana del año
 def filename_to_week(filename):
     # Extraer la fecha del nombre del archivo
@@ -100,8 +106,12 @@ def load_venta_perdida_data(repo_owner, repo_name, folder_path):
 # Cargar datos de Venta PR con caché
 venta_pr_data = load_venta_pr(venta_pr_path)
 
+# Limpiar las columnas PLAZA y DIVISION en ambos conjuntos de datos
+venta_pr_data = clean_plaza_division(venta_pr_data)
+
 # Cargar y combinar datos de venta perdida con caché
 venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
+venta_perdida_data = clean_plaza_division(venta_perdida_data)
 
 # Renombrar columnas en 'venta_perdida_data' para que coincidan con 'venta_pr_data'
 venta_perdida_data = venta_perdida_data.rename(columns={
@@ -113,21 +123,6 @@ venta_perdida_data = venta_perdida_data.rename(columns={
 })
 
 # Convertir tipos de datos antes de hacer el merge
-venta_perdida_data['PLAZA'] = venta_perdida_data['PLAZA'].astype(str)
-venta_pr_data['PLAZA'] = venta_pr_data['PLAZA'].astype(str)
-
-venta_perdida_data['DIVISION'] = venta_perdida_data['DIVISION'].astype(str)
-venta_pr_data['DIVISION'] = venta_pr_data['DIVISION'].astype(str)
-
-venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].astype(str)
-venta_pr_data['CATEGORIA'] = venta_pr_data['CATEGORIA'].astype(str)
-
-venta_perdida_data['ID_ARTICULO'] = venta_perdida_data['ID_ARTICULO'].astype(str)
-venta_pr_data['ID_ARTICULO'] = venta_pr_data['ID_ARTICULO'].astype(str)
-
-venta_perdida_data['PROVEEDOR'] = venta_perdida_data['PROVEEDOR'].astype(str)
-venta_pr_data['PROVEEDOR'] = venta_pr_data['PROVEEDOR'].astype(str)
-
 venta_perdida_data['Semana'] = venta_perdida_data['Semana'].astype(int)
 venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
 
