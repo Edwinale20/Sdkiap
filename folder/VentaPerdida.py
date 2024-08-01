@@ -51,7 +51,7 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
 
 # Function to process Venta PR file
-@st.cache_data(show_spinner=True)
+@st.cache_data(show_spinner=True) 
 def load_venta_pr(file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
