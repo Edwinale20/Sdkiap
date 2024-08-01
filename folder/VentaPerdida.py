@@ -79,7 +79,7 @@ def load_venta_pr(file_path):
 venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Convertir columnas necesarias a string para evitar errores en el merge
-columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR', 'FAMILIA', 'SEGMENTO']
+columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR']
 
 # Convertir a string solo si la columna existe en ambos DataFrames
 for col in columns_to_convert:
