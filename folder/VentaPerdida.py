@@ -122,9 +122,8 @@ venta_perdida_data = venta_perdida_data.rename(columns={
     'PROVEEDOR': 'PROVEEDOR'
 })
 
-# Convertir tipos de datos antes de hacer el merge
-venta_perdida_data['Semana'] = venta_perdida_data['Semana'].astype(int)
-venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
+# Limpiar la columna CATEGORIA en venta_perdida_data para que coincida con venta_pr_data
+venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].str.replace(r'^00', '', regex=True)
 
 # Incluir todos los artículos "Vuse" en la categoría RRPS
 venta_perdida_data['CATEGORIA'] = venta_perdida_data.apply(
@@ -138,9 +137,8 @@ for col in columns_to_convert:
     venta_perdida_data[col] = venta_perdida_data[col].astype(str)
     venta_pr_data[col] = venta_pr_data[col].astype(str)
 
-# Combinar datos de venta perdida con venta pr
-combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert, how="left")
-
+# Realizar merge incluyendo DESC_ARTICULO
+combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert + ['DESC_ARTICULO'], how="left")
 
 # Renombrar proveedores y eliminar proveedor dummy
 proveedores_renombrados = {
@@ -218,6 +216,10 @@ def apply_monthly_view(data):
     if 'VENTA_PERDIDA_PESOS' not in data.columns:
         st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos.")
         return pd.DataFrame()  # Retorna un DataFrame vacío si no se encuentra la columna
+
+    if 'Mes' not in data.columns:
+    st.error("La columna 'Mes' no se creó correctamente.")
+    return pd.DataFrame()  # Retorna un DataFrame vacío si no se crea la column
 
     # Asegúrate de que la columna 'Mes' se esté creando correctamente
     data['Mes'] = pd.to_datetime(data['Semana'].astype(str) + '0', format='%Y%U%w').dt.to_period('M')
