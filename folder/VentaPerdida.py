@@ -131,6 +131,11 @@ venta_pr_data['PROVEEDOR'] = venta_pr_data['PROVEEDOR'].astype(str)
 venta_perdida_data['Semana'] = venta_perdida_data['Semana'].astype(int)
 venta_pr_data['Semana'] = venta_pr_data['Semana'].astype(int)
 
+# Incluir todos los artículos "Vuse" en la categoría RRPS
+venta_perdida_data['CATEGORIA'] = venta_perdida_data.apply(
+    lambda row: 'RRPS' if 'Vuse' in row['DESC_ARTICULO'] else row['CATEGORIA'], axis=1
+)
+
 # Combinar datos de venta perdida con venta pr
 combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=["PLAZA", "DIVISION", "CATEGORIA", "ID_ARTICULO", "PROVEEDOR", "Semana"], how="left")
 
@@ -507,4 +512,3 @@ else:
     
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_venta_perdida_data, view), use_container_width=True)
-
