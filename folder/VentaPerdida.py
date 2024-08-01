@@ -418,13 +418,13 @@ if not combined_data.empty:
     # Aplica los filtros a ambos conjuntos de datos
     filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(venta_perdida_data, venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
 
-    # Depuración: Mostrar las primeras filas del DataFrame filtrado
-    st.write("Datos filtrados de venta perdida:", filtered_venta_perdida_data.head())
-    st.write("Datos filtrados de venta pr:", filtered_venta_pr_data.head())
-
-    # Verificar la existencia de las columnas después de aplicar los filtros
-    if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
-        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos después de aplicar los filtros.")
+    # Validación de existencia de columnas necesarias
+    if filtered_venta_perdida_data.empty:
+        st.error("No se encontraron datos de venta perdida después de aplicar los filtros. Verifica los filtros aplicados.")
+    elif filtered_venta_pr_data.empty:
+        st.error("No se encontraron datos de venta neta total después de aplicar los filtros. Verifica los filtros aplicados.")
+    elif 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
+        st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos filtrados. Verifica los datos cargados.")
     elif 'Venta Neta Total' not in filtered_venta_pr_data.columns:
         st.error("La columna 'Venta Neta Total' no se encontró en los datos filtrados. Verifica los datos cargados.")
     else:
