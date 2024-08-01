@@ -46,8 +46,6 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
     response.raise_for_status()
     return pd.read_csv(BytesIO(response.content), encoding='ISO-8859-1')
 
-# Cargar los datos
-venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
 
 # Function to load and combine lost sales data from the folder
 @st.cache_data(show_spinner=True)
@@ -59,7 +57,8 @@ def load_venta_perdida_data(repo_owner, repo_name, folder_path):
     ])
     return venta_perdida_data
 
-
+# Cargar los datos
+venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
 
 # PASO 3: LIMPIEZA DE DATOS Y RENOMBRE DE COLUMNAS---------------------------------------
 @st.cache_data(show_spinner=True) 
@@ -74,21 +73,11 @@ def load_venta_pr(file_path):
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
 
-    # Renombrar las columnas para coincidir con las esperadas en el código
-    df = df.rename(columns={
-        'Plaza': 'PLAZA',
-        'DIVISION': 'DIVISION',
-        'Categoría': 'CATEGORIA',
-        'Artículo': 'ID_ARTICULO',
-        'Semana Contable': 'Semana',
-        'Venta Neta Total': 'Venta Neta Total',
-        'DESC_ARTICULO': 'DESC_ARTICULO',
-        'Proveedor': 'PROVEEDOR',
-        'Familia': 'FAMILIA',         # Agregado
-        'Segmento': 'SEGMENTO'        # Agregado
-    })
-
+    # Asegúrate de que las columnas están correctamente cargadas
     return df
+
+# Cargar los datos de Venta PR
+venta_pr_data = load_venta_pr(venta_pr_path)
 
 # Limpiar la columna CATEGORIA en venta_perdida_data para que coincida con venta_pr_data
 venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].str.replace(r'^00', '', regex=True)
@@ -149,7 +138,6 @@ def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria
 
     # Retornar los conjuntos de datos filtrados
     return venta_perdida_data, venta_pr_data
-
 
 filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     venta_perdida_data,
