@@ -270,49 +270,30 @@ def plot_comparacion_venta_perdida_vs_neta(data, venta_pr_data, view):
     )
     return fig
 
+# Function to plot venta perdida por plaza
 def plot_venta_perdida_plaza(filtered_venta_perdida_data, filtered_venta_pr_data):
     fig = go.Figure()
 
     # Sumar la venta perdida por plaza
     venta_perdida_sum = filtered_venta_perdida_data.groupby('PLAZA')['VENTA_PERDIDA_PESOS'].sum().reset_index()
 
-    # Sumar la venta neta total por plaza
-    venta_neta_sum = filtered_venta_pr_data.groupby('PLAZA')['Venta Neta Total'].sum().reset_index()
-
-    # Crear gráfico de barras para venta perdida
+    # Crear gráfico de barras simple
     fig.add_trace(go.Bar(
         x=venta_perdida_sum['PLAZA'], 
         y=venta_perdida_sum['VENTA_PERDIDA_PESOS'], 
-        name='Venta Perdida',
-        marker_color='rgb(219, 64, 82)',
         text=venta_perdida_sum['VENTA_PERDIDA_PESOS'],
         textposition='auto',
-        yaxis='y1'
-    ))
-
-    # Crear gráfico de barras para venta neta total en un eje diferente
-    fig.add_trace(go.Bar(
-        x=venta_neta_sum['PLAZA'], 
-        y=venta_neta_sum['Venta Neta Total'], 
-        name='Venta Neta Total',
-        marker_color='rgb(55, 83, 109)',
-        text=venta_neta_sum['Venta Neta Total'],
-        textposition='auto',
-        yaxis='y2'
+        marker_color='rgb(26, 118, 255)'
     ))
 
     fig.update_layout(
-        barmode='group',  # Cambia a 'overlay' si prefieres superponer las barras
-        title='Comparación de Venta Perdida y Venta Neta Total por Plaza',
+        title='Venta Perdida por Plaza',
         xaxis_title='Plaza',
-        yaxis=dict(title='Venta Perdida (Pesos)', tickformat="$,d", titlefont=dict(color='rgb(219, 64, 82)'), side='left'),
-        yaxis2=dict(title='Venta Neta Total (Pesos)', tickformat="$,d", titlefont=dict(color='rgb(55, 83, 109)'), overlaying='y', side='right'),
-        legend_title_text='Tipo de Venta',
-        showlegend=True
+        yaxis_title='Venta Perdida (Pesos)',
+        yaxis=dict(tickformat="$,d")
     )
 
     return fig
-
 
 
 # Function to plot top 10 artículos con mayor venta perdida
