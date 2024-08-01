@@ -181,6 +181,9 @@ filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(
     articulo=None
 )
 
+# Definir la variable view para controlar la visualización semanal o mensual
+view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
+
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
     if 'VENTA_PERDIDA_PESOS' not in data.columns:
