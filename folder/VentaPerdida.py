@@ -79,8 +79,8 @@ def load_venta_pr(file_path):
 
 # Función para limpiar las columnas de PLAZA y DIVISION
 def clean_plaza_division(data):
-    data['PLAZA'] = data['PLAZA'].str.extract('(\d+)').astype(str)
-    data['DIVISION'] = data['DIVISION'].str.extract('(\d+)').astype(str)
+    data['PLAZA'] = data['PLAZA'].astype(str).str.extract('(\d+)').astype(str)
+    data['DIVISION'] = data['DIVISION'].astype(str).str.extract('(\d+)').astype(str)
     return data
 
 # Función para convertir nombre del archivo en semana del año
@@ -159,6 +159,7 @@ with st.sidebar:
 
     # Selección de vista semanal o mensual
     view = st.selectbox("Selecciona la vista", ["semanal", "mensual"])
+    
 def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
     # Aplicar los mismos filtros a ambos conjuntos de datos
     if proveedor and proveedor != "Todos":
