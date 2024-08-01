@@ -81,10 +81,11 @@ venta_pr_data = load_venta_pr(venta_pr_path)
 # Convertir columnas necesarias a string para evitar errores en el merge
 columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR', 'FAMILIA', 'SEGMENTO']
 
-# Convertir a string para asegurarse que el merge funcione correctamente
+# Convertir a string solo si la columna existe en ambos DataFrames
 for col in columns_to_convert:
-    venta_perdida_data[col] = venta_perdida_data[col].astype(str)
-    venta_pr_data[col] = venta_pr_data[col].astype(str)
+    if col in venta_perdida_data.columns and col in venta_pr_data.columns:
+        venta_perdida_data[col] = venta_perdida_data[col].astype(str)
+        venta_pr_data[col] = venta_pr_data[col].astype(str)
 
 # Realizar el merge entre los dos DataFrames en función de las columnas comunes
 combined_data = pd.merge(venta_perdida_data, venta_pr_data, on=columns_to_convert, how='left')
