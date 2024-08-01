@@ -147,21 +147,26 @@ proveedores_renombrados = {
 combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_renombrados)
 combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
 
-# Función para aplicar filtros
-def apply_filters(data, proveedor, plaza, categoria, semana, division, articulo):
-    if proveedor: 
-        data = data[data['PROVEEDOR'] == proveedor]
-    if plaza: 
-        data = data[data['PLAZA'] == plaza]
-    if categoria: 
-        data = data[data['CATEGORIA'] == categoria]
-    if semana: 
-        data = data[data['Semana'] == semana]
-    if division: 
-        data = data[data['DIVISION'] == division]
-    if articulo: 
-        data = data[data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
-    return data
+def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
+    if proveedor:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
+        venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] == proveedor]
+    if plaza:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['PLAZA'] == plaza]
+        venta_pr_data = venta_pr_data[venta_pr_data['PLAZA'] == plaza]
+    if categoria:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['CATEGORIA'] == categoria]
+        venta_pr_data = venta_pr_data[venta_pr_data['CATEGORIA'] == categoria]
+    if semana:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['Semana'] == semana]
+        venta_pr_data = venta_pr_data[venta_pr_data['Semana'] == semana]
+    if division:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['DIVISION'] == division]
+        venta_pr_data = venta_pr_data[venta_pr_data['DIVISION'] == division]
+    if articulo:
+        venta_perdida_data = venta_perdida_data[venta_perdida_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+        venta_pr_data = venta_pr_data[venta_pr_data['DESC_ARTICULO'].str.contains(articulo, case=False, na=False)]
+    return venta_perdida_data, venta_pr_data
 
 # Función para aplicar vista semanal
 def apply_weekly_view(data):
@@ -409,27 +414,24 @@ if not combined_data.empty:
     semana_opciones = [None] + sorted(combined_data['Semana'].unique())
     semana_seleccionada = st.sidebar.selectbox("Selecciona una semana 🗓️", options=semana_opciones)
     view = st.sidebar.radio("Selecciona la vista:", ("semanal", "mensual"))
-    filtered_data = apply_filters(combined_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
-    
+
+    # Aplica los filtros a ambos conjuntos de datos
+    filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(venta_perdida_data, venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
+
     if view == "semanal":
-        filtered_data = apply_weekly_view(filtered_data)
+        filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
+        filtered_venta_pr_data = apply_weekly_view(filtered_venta_pr_data)
     else:
-        filtered_data = apply_monthly_view(filtered_data)
-    
-    # Calcula las métricas de KPIs
-    total_venta_perdida_filtrada = filtered_data['VENTA_PERDIDA_PESOS'].sum()
-    total_venta_perdida = combined_data['VENTA_PERDIDA_PESOS'].sum()  # Definir total_venta_perdida
-    
-    if 'Venta Neta Total' in filtered_data.columns:
-        total_venta_pr_filtrada = filtered_data['Venta Neta Total'].sum()
-        porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
-        porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
-    else:
-        st.error("La columna 'Venta Neta Total' no está disponible en los datos filtrados.")
-        total_venta_pr_filtrada = 0
-        porcentaje_venta_perdida_dia = 0
-        porcentaje_acumulado = 0
-    
+        filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data)
+        filtered_venta_pr_data = apply_monthly_view(filtered_venta_pr_data)
+
+    # Calcula las métricas con los datos filtrados
+    total_venta_perdida_filtrada = filtered_venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()
+    total_venta_perdida = venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()  # Sumar sin filtros aplicados
+    total_venta_pr_filtrada = filtered_venta_pr_data['Venta Neta Total'].sum()
+    porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
+    porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
+
     # Visualización de KPIs
     col1, col2 = st.columns((1, 1))
     with col1:
@@ -437,7 +439,7 @@ if not combined_data.empty:
         st.metric(label="Proporción de la Venta Perdida Filtrada al Total", value=f"{porcentaje_acumulado:.0f}%")
         st.metric(label="Proporción de Venta Perdida respecto a la Venta Neta Total", value=f"{porcentaje_venta_perdida_dia:.0f}%")
         st.markdown(f'#### 🕰️ Venta Perdida {view} ')
-        st.plotly_chart(plot_venta_perdida(filtered_data, view), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida(filtered_venta_perdida_data, view), use_container_width=True)
     with col2:
         st.markdown('#### 📅 Venta Perdida Acumulada ')
         st.plotly_chart(make_donut_chart(total_venta_perdida_filtrada, total_venta_perdida, 'Acumulada', 'orange'), use_container_width=True)
@@ -446,25 +448,25 @@ if not combined_data.empty:
     col3, col4 = st.columns((1, 1))
     with col3:
         st.markdown('#### 🏝️ Venta Perdida por Plaza ')
-        st.plotly_chart(plot_venta_perdida_plaza(filtered_data), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_plaza(filtered_venta_perdida_data), use_container_width=True)
     with col4:
         st.markdown('#### 🔝 Top 10 Artículos con Mayor Venta Perdida ')
-        st.plotly_chart(plot_articulos_venta_perdida(filtered_data), use_container_width=True)
+        st.plotly_chart(plot_articulos_venta_perdida(filtered_venta_perdida_data), use_container_width=True)
     
     col5, col6 = st.columns((1, 1))
     with col5:
         st.markdown('#### 🚩 Venta Perdida por Proveedor ')
-        st.plotly_chart(plot_venta_perdida_proveedor(filtered_data, proveedores), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_proveedor(filtered_venta_perdida_data, proveedores), use_container_width=True)
     col7, col8 = st.columns((1, 1))
     with col7:
         st.markdown('#### 🎢 Cambio porcentual de venta perdida ')
-        st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_data, view), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_con_tendencia(filtered_venta_perdida_data, view), use_container_width=True)
     with col8: 
         st.markdown('#### 📶 Venta Perdida vs Venta Neta Total ')
-        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_data, venta_pr_data, view), use_container_width=True)
+        st.plotly_chart(plot_comparacion_venta_perdida_vs_neta(filtered_venta_perdida_data, filtered_venta_pr_data, view), use_container_width=True)
     
     st.markdown(f'#### Venta Perdida {view} por Mercado')
-    st.plotly_chart(plot_venta_perdida_mercado(venta_perdida_data, view), use_container_width=True)
+    st.plotly_chart(plot_venta_perdida_mercado(filtered_venta_perdida_data, view), use_container_width=True)
     
 else:
     st.warning("No se encontraron datos en la carpeta especificada.")
