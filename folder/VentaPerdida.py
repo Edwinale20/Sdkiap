@@ -481,7 +481,7 @@ else:
     col5, col6 = st.columns((1, 1))
     with col5:
         st.markdown('#### 🚩 Venta Perdida por Proveedor ')
-        st.plotly_chart(plot_venta_perdida_proveedor(filtered_venta_perdida_data, proveedores), use_container_width=True)
+        st.plotly_chart(plot_venta_perdida_proveedor(filtered_venta_perdida_data), use_container_width=True)
     col7, col8 = st.columns((1, 1))
     with col7:
         st.markdown('#### 🎢 Cambio porcentual de venta perdida ')
@@ -492,3 +492,4 @@ else:
     
     st.markdown(f'#### Venta Perdida {view} por Mercado')
     st.plotly_chart(plot_venta_perdida_mercado(filtered_venta_perdida_data, view), use_container_width=True)
+
