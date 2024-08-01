@@ -148,6 +148,7 @@ combined_data['PROVEEDOR'] = combined_data['PROVEEDOR'].replace(proveedores_reno
 combined_data = combined_data[combined_data['PROVEEDOR'] != "Eliminar"]
 
 def apply_filters(venta_perdida_data, venta_pr_data, proveedor, plaza, categoria, semana, division, articulo):
+    # Aplicar los mismos filtros a ambos conjuntos de datos
     if proveedor:
         venta_perdida_data = venta_perdida_data[venta_perdida_data['PROVEEDOR'] == proveedor]
         venta_pr_data = venta_pr_data[venta_pr_data['PROVEEDOR'] == proveedor]
@@ -431,22 +432,18 @@ if not combined_data.empty:
     # Aplica los filtros a ambos conjuntos de datos
     filtered_venta_perdida_data, filtered_venta_pr_data = apply_filters(venta_perdida_data, venta_pr_data, proveedores, plaza, categoria, semana_seleccionada, division, articulo)
     
+    # Verifica las columnas disponibles después de aplicar los filtros
+    st.write("Columnas disponibles en 'filtered_venta_perdida_data':", filtered_venta_perdida_data.columns)
+    st.write("Columnas disponibles en 'filtered_venta_pr_data':", filtered_venta_pr_data.columns)
+    
     # Validación de columnas necesarias
     if 'VENTA_PERDIDA_PESOS' not in filtered_venta_perdida_data.columns:
         st.error("La columna 'VENTA_PERDIDA_PESOS' no se encontró en los datos filtrados.")
     elif 'Venta Neta Total' not in filtered_venta_pr_data.columns:
         st.error("La columna 'Venta Neta Total' no se encontró en los datos filtrados.")
     else:
-        if view == "semanal":
-            filtered_venta_perdida_data = apply_weekly_view(filtered_venta_perdida_data)
-            filtered_venta_pr_data = apply_weekly_view(filtered_venta_pr_data)
-        else:
-            filtered_venta_perdida_data = apply_monthly_view(filtered_venta_perdida_data)
-            filtered_venta_pr_data = apply_monthly_view(filtered_venta_pr_data)
-
         # Calcula las métricas con los datos filtrados
         total_venta_perdida_filtrada = filtered_venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()
-        total_venta_perdida = venta_perdida_data['VENTA_PERDIDA_PESOS'].sum()  # Sumar sin filtros aplicados
         total_venta_pr_filtrada = filtered_venta_pr_data['Venta Neta Total'].sum()
         porcentaje_venta_perdida_dia = (total_venta_perdida_filtrada / total_venta_pr_filtrada) * 100
         porcentaje_acumulado = (total_venta_perdida_filtrada / total_venta_perdida) * 100
