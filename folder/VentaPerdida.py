@@ -23,6 +23,7 @@ except KeyError:
 repo_owner = "Edwinale20"
 repo_name = "317B"
 venta_pr_path = "venta/Venta PR.xlsx"
+master_path = "venta/MASTER.xlsx"
 folder_path = "venta"  # Folder path for daily loss files
 
 # Función para leer un archivo CSV desde GitHub
@@ -80,7 +81,7 @@ def load_venta_pr(repo_owner, repo_name, file_path):
     df = pd.read_excel(excel_content)
 
     # Eliminar columnas no deseadas si están presentes
-    columns_to_drop = ['Unnamed: 3', 'Unnamed: 5']  # Ejemplo de columnas no deseadas
+    columns_to_drop = ['PROVEEDOR', 'FAMILIA', 'SEGMENTO']  # Eliminar estas columnas porque ahora están en el MASTER
     df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
 
     # Crear la columna de Mes a partir de la semana contable
@@ -90,6 +91,21 @@ def load_venta_pr(repo_owner, repo_name, file_path):
     return df
 
 venta_pr_data = load_venta_pr(repo_owner, repo_name, venta_pr_path)
+
+# Función para cargar los datos de MASTER desde un archivo Excel almacenado en GitHub
+@st.cache_data(show_spinner=True)
+def load_master_data(repo_owner, repo_name, file_path):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3.raw"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    excel_content = BytesIO(response.content)
+    return pd.read_excel(excel_content)
+
+master_data = load_master_data(repo_owner, repo_name, master_path)
 
 # Verificar las columnas del DataFrame cargado
 st.write("Columnas en venta_pr_data:", venta_pr_data.columns)
@@ -119,22 +135,19 @@ venta_perdida_data['CATEGORIA'] = venta_perdida_data['CATEGORIA'].replace({
 venta_perdida_data.loc[venta_perdida_data['DESC_ARTICULO'].str.contains('Vuse', case=False, na=False), 'CATEGORIA'] = "62"
 
 # Convertir las columnas necesarias a string para evitar errores en el merge
-columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'PROVEEDOR']
+columns_to_convert = ['PLAZA', 'DIVISION', 'CATEGORIA', 'ID_ARTICULO', 'DESC_ARTICULO', 'UPC']
 for col in columns_to_convert:
     if col in venta_perdida_data.columns and col in venta_pr_data.columns:
         venta_perdida_data[col] = venta_perdida_data[col].astype(str)
         venta_pr_data[col] = venta_pr_data[col].astype(str)
 
-# Realizar el merge para traer FAMILIA y SEGMENTO a venta perdida data basado en ID_ARTICULO
-if set(['ID_ARTICULO', 'FAMILIA', 'SEGMENTO']).issubset(venta_pr_data.columns):
-    venta_perdida_data = pd.merge(
-        venta_perdida_data, 
-        venta_pr_data[['ID_ARTICULO', 'FAMILIA', 'SEGMENTO', 'Semana', 'Mes']], 
-        on=['ID_ARTICULO', 'Semana', 'Mes'], 
-        how='left'
-    )
-else:
-    st.error("Las columnas necesarias para el merge no están presentes en el archivo de Venta PR")
+# Realizar el merge para traer FAMILIA y SEGMENTO a venta perdida data basado en UPC del archivo MASTER
+venta_perdida_data = pd.merge(
+    venta_perdida_data, 
+    master_data[['UPC', 'PROVEEDOR', 'FAMILIA', 'SEGMENTO']], 
+    on='UPC', 
+    how='left'
+)
 
 # Filtrar solo las columnas necesarias
 venta_perdida_data = venta_perdida_data[[
@@ -144,6 +157,7 @@ venta_perdida_data = venta_perdida_data[[
 
 # Mostrar un mensaje indicando que la limpieza y preparación de datos ha sido exitosa
 st.success("Limpieza, procesamiento y preparación de datos completada.")
+
 
 # PASO 5: APLICAR FILTROS Y SIDE BAR---------------------------------------
 # Asegurarse de que las columnas 'FAMILIA' y 'SEGMENTO' estén presentes y convertidas a string
