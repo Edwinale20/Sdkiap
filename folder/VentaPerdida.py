@@ -4,7 +4,10 @@ import streamlit as st
 import plotly.graph_objects as go
 from io import BytesIO
 import requests
+from datetime import datetime
+
 st.set_option('client.showErrorDetails', True)
+
 # PASO 2: CONFIGURACIÓN DE LA PÁGINA Y CARGA DE DATOS---------------------------------------
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS")
@@ -36,7 +39,7 @@ def read_csv_from_github(repo_owner, repo_name, file_path):
 
 # Función para cargar y combinar los datos de ventas perdidas desde la carpeta
 @st.cache_data(show_spinner=True)
-def load_venta_perdida_data(repo_owner, repo_name, folder_path):
+def load_and_process_venta_perdida_data(repo_owner, repo_name, folder_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{folder_path}"
     headers = {
         "Authorization": f"token {github_token}",
@@ -46,19 +49,26 @@ def load_venta_perdida_data(repo_owner, repo_name, folder_path):
     response.raise_for_status()
     all_files = [file['name'] for file in response.json() if file['name'].endswith('.csv')]
     
-    venta_perdida_data = pd.concat([
-        read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}")
-        for file in all_files
-    ])
+    all_data = []
+    for file in all_files:
+        date_str = file.split('.')[0]  # Obtener la fecha del nombre del archivo
+        date = datetime.strptime(date_str, '%d%m%Y')
+        df = read_csv_from_github(repo_owner, repo_name, f"{folder_path}/{file}")
+        df['Fecha'] = date
+        all_data.append(df)
+    
+    venta_perdida_data = pd.concat(all_data)
+    venta_perdida_data['Semana'] = venta_perdida_data['Fecha'].dt.isocalendar().week
+    venta_perdida_data['Mes'] = venta_perdida_data['Fecha'].dt.to_period('M')
     
     return venta_perdida_data
 
-# Cargar los datos
-venta_perdida_data = load_venta_perdida_data(repo_owner, repo_name, folder_path)
+# Cargar los datos de ventas perdidas
+venta_perdida_data = load_and_process_venta_perdida_data(repo_owner, repo_name, folder_path)
 
-# Cargar los datos de Venta PR
+# Función para cargar los datos de Venta PR desde un archivo Excel almacenado en GitHub
 @st.cache_data(show_spinner=True)
-def load_venta_pr(file_path):
+def load_venta_pr(repo_owner, repo_name, file_path):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
     headers = {
         "Authorization": f"token {github_token}",
@@ -68,11 +78,23 @@ def load_venta_pr(file_path):
     response.raise_for_status()
     excel_content = BytesIO(response.content)
     df = pd.read_excel(excel_content)
+
+    # Eliminar columnas no deseadas si están presentes
+    columns_to_drop = ['Unnamed: 3', 'Unnamed: 5']  # Ejemplo de columnas no deseadas
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
+
+    # Crear la columna de Mes a partir de la semana contable
+    df['Semana'] = df['Semana Contable'].apply(lambda x: int(str(x)[-2:]))  # Extraer el número de la semana
+    df['Mes'] = pd.to_datetime(df['Semana Contable'].astype(str) + '1', format='%G%V%u').dt.to_period('M')
+
     return df
 
-venta_pr_data = load_venta_pr(venta_pr_path)
+venta_pr_data = load_venta_pr(repo_owner, repo_name, venta_pr_path)
 
-#PASO 3: LIMPIEZA Y PREPARACION DE DATOS
+# Verificar las columnas del DataFrame cargado
+st.write("Columnas en venta_pr_data:", venta_pr_data.columns)
+
+# PASO 4: LIMPIEZA Y PREPARACIÓN DE DATOS---------------------------------------
 
 # Renombrar proveedores y eliminar proveedor dummy en venta perdida
 proveedores_renombrados = {
@@ -104,18 +126,90 @@ for col in columns_to_convert:
         venta_pr_data[col] = venta_pr_data[col].astype(str)
 
 # Realizar el merge para traer FAMILIA y SEGMENTO a venta perdida data basado en ID_ARTICULO
-venta_perdida_data = pd.merge(
-    venta_perdida_data, 
-    venta_pr_data[['ID_ARTICULO', 'FAMILIA', 'SEGMENTO']], 
-    on='ID_ARTICULO', 
-    how='left'
-)
+if set(['ID_ARTICULO', 'FAMILIA', 'SEGMENTO']).issubset(venta_pr_data.columns):
+    venta_perdida_data = pd.merge(
+        venta_perdida_data, 
+        venta_pr_data[['ID_ARTICULO', 'FAMILIA', 'SEGMENTO', 'Semana', 'Mes']], 
+        on=['ID_ARTICULO', 'Semana', 'Mes'], 
+        how='left'
+    )
+else:
+    st.error("Las columnas necesarias para el merge no están presentes en el archivo de Venta PR")
 
 # Filtrar solo las columnas necesarias
 venta_perdida_data = venta_perdida_data[[
     'PROVEEDOR', 'CATEGORIA', 'ID_ARTICULO', 'UPC', 'DESC_ARTICULO', 
-    'DIVISION', 'PLAZA', 'MERCADO', 'VENTA_PERDIDA_PESOS', 'FAMILIA', 'SEGMENTO'
+    'DIVISION', 'PLAZA', 'MERCADO', 'VENTA_PERDIDA_PESOS', 'FAMILIA', 'SEGMENTO', 'Fecha', 'Semana', 'Mes'
 ]]
 
 # Mostrar un mensaje indicando que la limpieza y preparación de datos ha sido exitosa
-st.success("Limpieza y preparación de datos completada.")
+st.success("Limpieza, procesamiento y preparación de datos completada.")
+
+# PASO 5: APLICAR FILTROS Y SIDE BAR---------------------------------------
+# Asegurarse de que las columnas 'FAMILIA' y 'SEGMENTO' estén presentes y convertidas a string
+venta_perdida_data['FAMILIA'] = venta_perdida_data['FAMILIA'].fillna('').astype(str)
+venta_perdida_data['SEGMENTO'] = venta_perdida_data['SEGMENTO'].fillna('').astype(str)
+venta_pr_data['FAMILIA'] = venta_pr_data['FAMILIA'].fillna('').astype(str)
+venta_pr_data['SEGMENTO'] = venta_pr_data['SEGMENTO'].fillna('').astype(str)
+
+# Aplicar los filtros en el sidebar
+with st.sidebar:
+    st.header("Filtros")
+    proveedor = st.selectbox("Proveedor", ["Todos"] + sorted(venta_perdida_data['PROVEEDOR'].unique().tolist()))
+    plaza = st.selectbox("Plaza", ["Todas"] + sorted(venta_perdida_data['PLAZA'].unique().tolist()))
+    division = st.selectbox("División
+
+                            # PASO 5: APLICAR FILTROS Y SIDE BAR---------------------------------------
+# Asegurarse de que las columnas 'FAMILIA' y 'SEGMENTO' estén presentes y convertidas a string
+venta_perdida_data['FAMILIA'] = venta_perdida_data['FAMILIA'].fillna('').astype(str)
+venta_perdida_data['SEGMENTO'] = venta_perdida_data['SEGMENTO'].fillna('').astype(str)
+venta_pr_data['FAMILIA'] = venta_pr_data['FAMILIA'].fillna('').astype(str)
+venta_pr_data['SEGMENTO'] = venta_pr_data['SEGMENTO'].fillna('').astype(str)
+
+# Aplicar los filtros en el sidebar
+with st.sidebar:
+    st.header("Filtros")
+    proveedor = st.selectbox("Proveedor", ["Todos"] + sorted(venta_perdida_data['PROVEEDOR'].unique().tolist()))
+    plaza = st.selectbox("Plaza", ["Todas"] + sorted(venta_perdida_data['PLAZA'].unique().tolist()))
+    division = st.selectbox("División", ["Todas"] + sorted(venta_perdida_data['DIVISION'].unique().tolist()))
+    familia = st.selectbox("Familia", ["Todas"] + sorted(venta_perdida_data['FAMILIA'].unique().tolist()))
+    segmento = st.selectbox("Segmento", ["Todos"] + sorted(venta_perdida_data['SEGMENTO'].unique().tolist()))
+    view = st.selectbox("Vista", ["semanal", "mensual"])
+
+# Función para aplicar filtros
+def apply_filters(data, proveedor, plaza, division, familia, segmento):
+    if proveedor != "Todos":
+        data = data[data['PROVEEDOR'] == proveedor]
+    if plaza != "Todas":
+        data = data[data['PLAZA'] == plaza]
+    if division != "Todas":
+        data = data[data['DIVISION'] == division]
+    if familia != "Todas":
+        data = data[data['FAMILIA'] == familia]
+    if segmento != "Todos":
+        data = data[data['SEGMENTO'] == segmento]
+    return data
+
+# Aplicar filtros a los datos de venta perdida y venta PR
+filtered_venta_perdida_data = apply_filters(venta_perdida_data, proveedor, plaza, division, familia, segmento)
+filtered_venta_pr_data = apply_filters(venta_pr_data, proveedor, plaza, division, familia, segmento)
+
+# Mostrar los datos filtrados en tablas para verificación
+st.write("Datos de Venta Perdida Filtrados:", filtered_venta_perdida_data)
+st.write("Datos de Venta PR Filtrados:", filtered_venta_pr_data)
+
+# PASO 6: CREACIÓN DE GRÁFICAS---------------------------------------
+# Ejemplo de gráfica de barras de venta perdida por proveedor
+
+def plot_venta_perdida_por_proveedor(data):
+    fig = go.Figure(data=[
+        go.Bar(name='Venta Perdida', x=data['PROVEEDOR'], y=data['VENTA_PERDIDA_PESOS'])
+    ])
+    fig.update_layout(title="Venta Perdida por Proveedor", xaxis_title="Proveedor", yaxis_title="Venta Perdida (Pesos)")
+    return fig
+
+# Graficar la venta perdida por proveedor
+st.plotly_chart(plot_venta_perdida_por_proveedor(filtered_venta_perdida_data))
+
+st.success("Filtros aplicados y visualización generada.")
+
