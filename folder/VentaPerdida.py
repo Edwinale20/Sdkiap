@@ -123,6 +123,10 @@ venta_perdida_data = pd.merge(
 # Verificar si las columnas están presentes después del merge
 st.write("Columnas en venta_perdida_data después del merge:", venta_perdida_data.columns)
 
+# Renombrar la columna 'PROVEEDOR_x' a 'PROVEEDOR' si existe
+if 'PROVEEDOR_x' in venta_perdida_data.columns:
+    venta_perdida_data = venta_perdida_data.rename(columns={'PROVEEDOR_x': 'PROVEEDOR'})
+
 # Filtrar solo las columnas necesarias
 try:
     venta_perdida_data = venta_perdida_data[[
@@ -154,6 +158,7 @@ if 'PROVEEDOR' in venta_perdida_data.columns:
 else:
     st.error("'PROVEEDOR' no se encuentra en el DataFrame después del merge.")
     st.stop()
+
 
 # Función para aplicar filtros
 def apply_filters(data, proveedor, plaza, division, familia, segmento):
