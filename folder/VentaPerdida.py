@@ -157,7 +157,10 @@ with st.sidebar:
     st.header("Filtros")
     proveedor = st.selectbox("Proveedor", ["Todos"] + sorted(venta_perdida_data['PROVEEDOR'].unique().tolist()))
     plaza = st.selectbox("Plaza", ["Todas"] + sorted(venta_perdida_data['PLAZA'].unique().tolist()))
-    division = st.selectbox("División
+    division = st.selectbox("División", ["Todas"] + sorted(venta_perdida_data['DIVISION'].unique().tolist()))
+    familia = st.selectbox("Familia", ["Todas"] + sorted(venta_perdida_data['FAMILIA'].unique().tolist()))
+    segmento = st.selectbox("Segmento", ["Todos"] + sorted(venta_perdida_data['SEGMENTO'].unique().tolist()))
+    view = st.selectbox("Vista", ["semanal", "mensual"])
 
                             # PASO 5: APLICAR FILTROS Y SIDE BAR---------------------------------------
 # Asegurarse de que las columnas 'FAMILIA' y 'SEGMENTO' estén presentes y convertidas a string
