@@ -125,6 +125,27 @@ venta_perdida_data = venta_perdida_data[[
     'DIVISION', 'PLAZA', 'MERCADO', 'VENTA_PERDIDA_PESOS', 'FAMILIA', 'SEGMENTO', 'Fecha', 'Semana', 'Mes'
 ]]
 
+# Realizar el merge para traer FAMILIA, SEGMENTO y PROVEEDOR a venta perdida data basado en UPC del archivo MASTER
+venta_perdida_data = pd.merge(
+    venta_perdida_data, 
+    master_data[['UPC', 'PROVEEDOR', 'FAMILIA', 'SEGMENTO']], 
+    on='UPC', 
+    how='left'
+)
+
+# Verificar si las columnas están presentes después del merge
+st.write("Columnas en venta_perdida_data después del merge:", venta_perdida_data.columns)
+
+# Filtrar solo las columnas necesarias
+try:
+    venta_perdida_data = venta_perdida_data[[
+        'PROVEEDOR', 'CATEGORIA', 'ID_ARTICULO', 'UPC', 'DESC_ARTICULO', 
+        'DIVISION', 'PLAZA', 'MERCADO', 'VENTA_PERDIDA_PESOS', 'FAMILIA', 'SEGMENTO', 'Fecha', 'Semana', 'Mes'
+    ]]
+except KeyError as e:
+    st.error(f"Error al filtrar las columnas: {e}")
+
+
 # Mostrar un mensaje indicando que la limpieza y preparación de datos ha sido exitosa
 st.success("Limpieza, procesamiento y preparación de datos completada.")
 
@@ -146,22 +167,6 @@ with st.sidebar:
     segmento = st.selectbox("Segmento", ["Todos"] + sorted(venta_perdida_data['SEGMENTO'].unique().tolist()))
     view = st.selectbox("Vista", ["semanal", "mensual"])
 
-                            # PASO 5: APLICAR FILTROS Y SIDE BAR---------------------------------------
-# Asegurarse de que las columnas 'FAMILIA' y 'SEGMENTO' estén presentes y convertidas a string
-venta_perdida_data['FAMILIA'] = venta_perdida_data['FAMILIA'].fillna('').astype(str)
-venta_perdida_data['SEGMENTO'] = venta_perdida_data['SEGMENTO'].fillna('').astype(str)
-venta_pr_data['FAMILIA'] = venta_pr_data['FAMILIA'].fillna('').astype(str)
-venta_pr_data['SEGMENTO'] = venta_pr_data['SEGMENTO'].fillna('').astype(str)
-
-# Aplicar los filtros en el sidebar
-with st.sidebar:
-    st.header("Filtros")
-    proveedor = st.selectbox("Proveedor", ["Todos"] + sorted(venta_perdida_data['PROVEEDOR'].unique().tolist()))
-    plaza = st.selectbox("Plaza", ["Todas"] + sorted(venta_perdida_data['PLAZA'].unique().tolist()))
-    division = st.selectbox("División", ["Todas"] + sorted(venta_perdida_data['DIVISION'].unique().tolist()))
-    familia = st.selectbox("Familia", ["Todas"] + sorted(venta_perdida_data['FAMILIA'].unique().tolist()))
-    segmento = st.selectbox("Segmento", ["Todos"] + sorted(venta_perdida_data['SEGMENTO'].unique().tolist()))
-    view = st.selectbox("Vista", ["semanal", "mensual"])
 
 # Función para aplicar filtros
 def apply_filters(data, proveedor, plaza, division, familia, segmento):
