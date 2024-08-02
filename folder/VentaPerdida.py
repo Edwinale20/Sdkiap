@@ -107,23 +107,10 @@ def load_master_data(repo_owner, repo_name, file_path):
 
 master_data = load_master_data(repo_owner, repo_name, master_path)
 
-# Convertir UPC a string en ambos DataFrames
+# Convertir UPC a string en ambos DataFrames para evitar problemas de tipo de datos en el merge
 venta_perdida_data['UPC'] = venta_perdida_data['UPC'].astype(str)
+venta_pr_data['UPC'] = venta_pr_data['UPC'].astype(str)
 master_data['UPC'] = master_data['UPC'].astype(str)
-
-# Realizar el merge para traer FAMILIA y SEGMENTO a venta perdida data basado en UPC del archivo MASTER
-venta_perdida_data = pd.merge(
-    venta_perdida_data, 
-    master_data[['UPC', 'PROVEEDOR', 'FAMILIA', 'SEGMENTO']], 
-    on='UPC', 
-    how='left'
-)
-
-# Filtrar solo las columnas necesarias
-venta_perdida_data = venta_perdida_data[[
-    'PROVEEDOR', 'CATEGORIA', 'ID_ARTICULO', 'UPC', 'DESC_ARTICULO', 
-    'DIVISION', 'PLAZA', 'MERCADO', 'VENTA_PERDIDA_PESOS', 'FAMILIA', 'SEGMENTO', 'Fecha', 'Semana', 'Mes'
-]]
 
 # Realizar el merge para traer FAMILIA, SEGMENTO y PROVEEDOR a venta perdida data basado en UPC del archivo MASTER
 venta_perdida_data = pd.merge(
@@ -132,9 +119,6 @@ venta_perdida_data = pd.merge(
     on='UPC', 
     how='left'
 )
-
-# Verificar si las columnas están presentes después del merge
-st.write("Columnas en venta_perdida_data después del merge:", venta_perdida_data.columns)
 
 # Filtrar solo las columnas necesarias
 try:
@@ -145,7 +129,6 @@ try:
 except KeyError as e:
     st.error(f"Error al filtrar las columnas: {e}")
 
-
 # Mostrar un mensaje indicando que la limpieza y preparación de datos ha sido exitosa
 st.success("Limpieza, procesamiento y preparación de datos completada.")
 
@@ -154,8 +137,6 @@ st.success("Limpieza, procesamiento y preparación de datos completada.")
 # Asegurarse de que las columnas 'FAMILIA' y 'SEGMENTO' estén presentes y convertidas a string
 venta_perdida_data['FAMILIA'] = venta_perdida_data['FAMILIA'].fillna('').astype(str)
 venta_perdida_data['SEGMENTO'] = venta_perdida_data['SEGMENTO'].fillna('').astype(str)
-venta_pr_data['FAMILIA'] = venta_pr_data['FAMILIA'].fillna('').astype(str)
-venta_pr_data['SEGMENTO'] = venta_pr_data['SEGMENTO'].fillna('').astype(str)
 
 # Aplicar los filtros en el sidebar
 with st.sidebar:
@@ -166,7 +147,6 @@ with st.sidebar:
     familia = st.selectbox("Familia", ["Todas"] + sorted(venta_perdida_data['FAMILIA'].unique().tolist()))
     segmento = st.selectbox("Segmento", ["Todos"] + sorted(venta_perdida_data['SEGMENTO'].unique().tolist()))
     view = st.selectbox("Vista", ["semanal", "mensual"])
-
 
 # Función para aplicar filtros
 def apply_filters(data, proveedor, plaza, division, familia, segmento):
