@@ -16,7 +16,7 @@ GITHUB_TOKEN = st.secrets["github"]["token"]
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
 # URL base del repositorio
-base_url = 'https://api.github.com/repos/Edwinale20/317B/contents/'
+base_url = 'https://github.com/Edwinale20/317B'
 
 # Función para obtener la lista de archivos en una carpeta desde GitHub
 def list_files_in_github_folder(folder_url, token):
