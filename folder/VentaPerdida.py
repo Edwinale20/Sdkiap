@@ -11,18 +11,14 @@ import requests
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
-
-# Obtén el token secreto de Streamlit
-GITHUB_TOKEN = st.secrets["github"]["token"]
-
 # URL base del repositorio
-base_url = 'https://github.com/Edwinale20/317B'
+base_url = 'https://api.github.com/repos/Edwinale20/317B/contents/'
 
 # Función para obtener la lista de archivos en una carpeta desde GitHub
 def list_files_in_github_folder(folder_url, token):
     headers = {'Authorization': f'token {token}'}
     response = requests.get(folder_url, headers=headers)
-    response.raise_for_status()
+    response.raise_for_status()  # Verifica si hubo un error en la solicitud
     files_info = response.json()
     return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
 
@@ -34,9 +30,9 @@ def download_file_from_github(file_url, token):
     return BytesIO(response.content)
 
 # URLs de las carpetas en GitHub
-csv_files_url = base_url + 'Venta Pérdida'
-venta_semanal_url = base_url + 'Venta semanal'
-excel_url = base_url + '317B/MASTER.xlsx'
+csv_files_url = base_url + 'Venta%20Pérdida'
+venta_semanal_url = base_url + 'Venta%20Semanal'
+excel_url = base_url + 'MASTER.xlsx'
 
 # Obtener las URLs de todos los archivos en las carpetas
 csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
