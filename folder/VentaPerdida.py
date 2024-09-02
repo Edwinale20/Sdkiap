@@ -52,12 +52,13 @@ st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 
 csv_dataframes = []
 for file_url in csv_files:
-    try:
-        file_content = download_file_from_github(file_url, GITHUB_TOKEN)
+    file_content = download_file_from_github(file_url, GITHUB_TOKEN)
+    if file_content.getbuffer().nbytes > 0:  # Verifica que el archivo no esté vacío
         df = pd.read_csv(file_content, encoding='ISO-8859-1')
         csv_dataframes.append(df)
-    except Exception as e:
-        st.error(f"Error al leer el archivo {file_url}: {e}")
+    else:
+        st.warning(f"El archivo {file_url} está vacío y no se ha cargado.")
+
 
 # Definir paleta de colores global 
 pio.templates["colors"] = pio.templates["plotly"]
