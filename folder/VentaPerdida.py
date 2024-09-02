@@ -80,7 +80,7 @@ def venta_perdida(csv_files):
 
     # Loop through each CSV file and append its contents to the combined dataframe
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file, encoding='ISO-8859-1')
+        df = pd.read_csv(csv_file, encoding='utf-8'')
         
         # Extraer el nombre del archivo sin la ruta completa y sin la extensión .csv
         file_name = os.path.splitext(os.path.basename(csv_file))[0]
