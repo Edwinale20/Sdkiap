@@ -5,20 +5,12 @@ import streamlit as st
 import plotly.express as px
 import numpy as np
 import plotly.graph_objects as go
-
-
-import requests
-import pandas as pd
-import streamlit as st
 from io import BytesIO
+import requests
 
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
-import requests
-import pandas as pd
-import streamlit as st
-from io import BytesIO
 
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
@@ -44,7 +36,7 @@ def download_file_from_github(file_url, token):
 # URLs de las carpetas en GitHub
 csv_files_url = base_url + 'Venta Pérdida'
 venta_semanal_url = base_url + 'Venta semanal'
-excel_url = base_url + 'VP317/MASTER.xlsx'
+excel_url = base_url + '317B/MASTER.xlsx'
 
 # Obtener las URLs de todos los archivos en las carpetas
 csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
