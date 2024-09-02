@@ -15,24 +15,48 @@ from io import BytesIO
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
-# URLs de los archivos en el repositorio de GitHub
-base_url = 'https://raw.githubusercontent.com/tu_usuario/tu_repositorio/main/'
-csv_files_url = base_url + 'Venta Pérdida/'
-venta_semanal_url = base_url + 'Venta semanal/'
-excel_url = base_url + 'VP317/MASTER.xlsx'
+import requests
+import pandas as pd
+import streamlit as st
+from io import BytesIO
+
+# Obtén el token secreto de Streamlit
+GITHUB_TOKEN = st.secrets["github"]["token"]
+
+# URL base del repositorio
+base_url = 'https://api.github.com/repos/Edwinale20/317B/contents/'
+
+# Función para obtener la lista de archivos en una carpeta desde GitHub
+def list_files_in_github_folder(folder_url, token):
+    headers = {'Authorization': f'token {token}'}
+    response = requests.get(folder_url, headers=headers)
+    response.raise_for_status()
+    files_info = response.json()
+    return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
 
 # Función para descargar archivos desde GitHub
-def download_file_from_github(url, token):
+def download_file_from_github(file_url, token):
     headers = {'Authorization': f'token {token}'}
-    response = requests.get(url, headers=headers)
+    response = requests.get(file_url, headers=headers)
     response.raise_for_status()
     return BytesIO(response.content)
 
-# Modifica estas líneas para acceder a los archivos en GitHub
-csv_files = [download_file_from_github(csv_files_url + file_name, GITHUB_TOKEN) for file_name in ['file1.csv', 'file2.csv']]  # Agrega los nombres de tus archivos CSV
-venta_semanal = [download_file_from_github(venta_semanal_url + file_name, GITHUB_TOKEN) for file_name in ['file1.xlsx', 'file2.xlsx']]  # Agrega los nombres de tus archivos Excel
-excel = download_file_from_github(excel_url, GITHUB_TOKEN)
-MASTER = pd.read_excel(excel)
+# URLs de las carpetas en GitHub
+csv_files_url = base_url + 'Venta Pérdida'
+venta_semanal_url = base_url + 'Venta semanal'
+excel_url = base_url + 'VP317/MASTER.xlsx'
+
+# Obtener las URLs de todos los archivos en las carpetas
+csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
+venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
+
+# Descargar y leer los archivos
+csv_dataframes = [pd.read_csv(download_file_from_github(file_url, GITHUB_TOKEN)) for file_url in csv_files]
+excel_dataframes = [pd.read_excel(download_file_from_github(file_url, GITHUB_TOKEN)) for file_url in venta_semanal]
+
+# Descargar y leer el archivo MASTER.xlsx
+master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
+MASTER = pd.read_excel(master_file)
 
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
