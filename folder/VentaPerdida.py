@@ -44,8 +44,12 @@ excel_dataframes = [pd.read_excel(download_file_from_github(file_url, GITHUB_TOK
 
 # Descargar y leer el archivo MASTER.xlsx
 master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
-MASTER = pd.read_excel(master_file)
 
+# Reiniciar el puntero del archivo a su posición inicial
+master_file.seek(0)
+
+# Ahora intentar leer el archivo Excel
+MASTER = pd.read_excel(master_file)
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
