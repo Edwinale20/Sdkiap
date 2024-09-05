@@ -29,7 +29,7 @@ def download_file_from_github(file_url, token):
     return BytesIO(response.content)
 
 # URLs de las carpetas en GitHub
-csv_files_url = base_url + 'Venta%20Pérdida'
+csv_files_url = base_url + 'Venta%20Perdida'
 venta_semanal_url = base_url + 'Venta%20Semanal'
 excel_url = base_url + 'MASTER.xlsx'
 
