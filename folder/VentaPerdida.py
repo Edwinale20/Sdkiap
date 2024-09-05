@@ -39,7 +39,7 @@ csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
 venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
 # Descargar y leer los archivos
-csv_dataframes = [pd.read_csv(download_file_from_github(file_url, GITHUB_TOKEN)) for file_url in csv_files]
+csv_dataframes = [pd.read_csv(download_file_from_github(file_url, GITHUB_TOKEN, encoding='ISO-8859-1')) for file_url in csv_files]
 excel_dataframes = [pd.read_excel(download_file_from_github(file_url, GITHUB_TOKEN)) for file_url in venta_semanal]
 
 # Descargar y leer el archivo MASTER.xlsx
