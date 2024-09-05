@@ -70,16 +70,6 @@ pio.templates.default = "colors"
 pio.templates.default2 = "colors2"
 
 
-try:
-    master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
-    MASTER = pd.read_excel(master_file)
-except ValueError as e:
-    st.error(f"Error al leer el archivo MASTER.xlsx: {e}")
-    st.stop()  # Detiene la ejecución si no se puede cargar el archivo Excel
-
-
-
-
 
 #---------------------------------------------------------------------
 @st.cache_data
