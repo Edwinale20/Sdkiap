@@ -43,13 +43,17 @@ csv_dataframes = [pd.read_csv(download_file_from_github(file_url, GITHUB_TOKEN),
 excel_dataframes = [pd.read_excel(download_file_from_github(file_url, GITHUB_TOKEN)) for file_url in venta_semanal]
 
 # Descargar y leer el archivo MASTER.xlsx
-master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
+try:
+    master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
+    master_file.seek(0)  # Reiniciar el puntero del archivo a su posición inicial
 
-# Reiniciar el puntero del archivo a su posición inicial
-master_file.seek(0)
+    # Opción 1: Intentar leer el archivo Excel usando el motor 'openpyxl'
+    MASTER = pd.read_excel(master_file, engine='openpyxl')
 
-# Ahora intentar leer el archivo Excel
-MASTER = pd.read_excel(master_file)
+except ValueError as e:
+    st.error(f"Error al leer el archivo MASTER.xlsx: {e}")
+    st.stop()
+
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
