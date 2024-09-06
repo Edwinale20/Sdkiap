@@ -67,8 +67,6 @@ for file_url in csv_files:
     else:
         st.warning(f"El archivo {file_url} está vacío y no se ha cargado.")
 
-import magic  # Librería para verificar el tipo MIME de un archivo
-from io import BytesIO
 
 # Función para verificar el tipo MIME del archivo
 def verify_file_type(file):
@@ -76,25 +74,7 @@ def verify_file_type(file):
     file_type = mime.from_buffer(file.getvalue())
     return file_type
 
-# Descargar y leer el archivo MASTER.xlsx
-try:
-    master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
-    master_file.seek(0)  # Reiniciar el puntero del archivo a su posición inicial
 
-    # Verificar el tipo de archivo descargado
-    file_type = verify_file_type(master_file)
-    st.write(f"Tipo de archivo descargado: {file_type}")
-    
-    # Solo proceder si el archivo es un Excel válido
-    if file_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-        MASTER = pd.read_excel(master_file, engine='openpyxl')
-    else:
-        st.error(f"El archivo descargado no es un archivo Excel válido. Es un {file_type}.")
-        st.stop()
-
-except ValueError as e:
-    st.error(f"Error al leer el archivo MASTER.xlsx: {e}")
-    st.stop()
 
 # Definir paleta de colores global 
 pio.templates["colors"] = pio.templates["plotly"]
