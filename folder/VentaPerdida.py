@@ -14,9 +14,16 @@ GITHUB_TOKEN = st.secrets["github"]["token"]
 # Función para descargar archivos desde GitHub
 def download_file_from_github(file_url, token=None):
     headers = {'Authorization': f'token {token}'} if token else {}
-    response = requests.get(file_url, headers=headers)
-    response.raise_for_status()
-    return BytesIO(response.content)
+    try:
+        response = requests.get(file_url, headers=headers)
+        response.raise_for_status()  # Verifica si la solicitud fue exitosa
+        return BytesIO(response.content)
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP error occurred: {http_err}")  # Muestra el error HTTP en Streamlit
+        st.stop()
+    except Exception as err:
+        st.error(f"Error occurred: {err}")  # Muestra otros errores
+        st.stop()
 
 # Cargar archivos locales o desde GitHub
 def load_file(local_path, github_url=None, file_type='csv'):
