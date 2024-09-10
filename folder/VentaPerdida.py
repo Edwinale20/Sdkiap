@@ -12,8 +12,8 @@ import requests
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
 # Función para descargar archivos desde GitHub
-def download_file_from_github(file_url, token):
-    headers = {'Authorization': f'token {token}'}
+def download_file_from_github(file_url, token=None):
+    headers = {'Authorization': f'token {token}'} if token else {}
     response = requests.get(file_url, headers=headers)
     response.raise_for_status()
     return BytesIO(response.content)
@@ -25,17 +25,17 @@ def load_file(local_path, github_url=None, file_type='csv'):
         if file_type == 'csv':
             return pd.read_csv(local_path, encoding='ISO-8859-1')
         elif file_type == 'excel':
-            return pd.read_excel(local_path)
+            return pd.read_excel(local_path, engine='openpyxl')  # Especificar el motor 'openpyxl' para archivos Excel
     except FileNotFoundError:
         if github_url:
             # Descargar desde GitHub si no está disponible localmente
-            file_content = download_file_from_github(github_url, GITHUB_TOKEN)
+            file_content = download_file_from_github(github_url)
             if file_content.getbuffer().nbytes > 0:
                 try:
                     if file_type == 'csv':
                         return pd.read_csv(file_content, encoding='ISO-8859-1')
                     elif file_type == 'excel':
-                        return pd.read_excel(file_content)
+                        return pd.read_excel(file_content, engine='openpyxl')  # Especificar el motor 'openpyxl' para archivos Excel
                 except ValueError as e:
                     st.error(f"Error al leer el archivo {file_type} desde {github_url}: {e}")
                     st.stop()
@@ -51,14 +51,14 @@ csv_files_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.cs
 venta_semanal_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta semanal/*.xlsx')
 master_local = "C:/Users/omen0/OneDrive/Documentos/VP317/MASTER.xlsx"
 
-csv_github_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
-venta_semanal_github_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
-master_github_url = 'https://api.github.com/repos/Edwinale20/317B/contents/MASTER.xlsx'
+# Enlace crudo de GitHub para MASTER.xlsx
+master_github_url = 'https://raw.githubusercontent.com/Edwinale20/317B/main/MASTER.xlsx'
 
 # Cargar archivos
-csv_dataframes = [load_file(f, csv_github_url) for f in csv_files_local]
-venta_semanal_dfs = [load_file(f, venta_semanal_github_url, 'excel') for f in venta_semanal_local]
+csv_dataframes = [load_file(f, None, 'csv') for f in csv_files_local]
+venta_semanal_dfs = [load_file(f, None, 'excel') for f in venta_semanal_local]
 MASTER = load_file(master_local, master_github_url, 'excel')
+
 
 # Definir paleta de colores global 
 pio.templates["colors"] = pio.templates["plotly"]
