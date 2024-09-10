@@ -11,17 +11,6 @@ import requests
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
-# URL base del repositorio
-base_url = 'https://api.github.com/repos/Edwinale20/317B/contents/'
-
-# Función para obtener la lista de archivos en una carpeta desde GitHub
-def list_files_in_github_folder(folder_url, token):
-    headers = {'Authorization': f'token {token}'}
-    response = requests.get(folder_url, headers=headers)
-    response.raise_for_status()  # Verifica si hubo un error en la solicitud
-    files_info = response.json()
-    return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
-
 # Función para descargar archivos desde GitHub
 def download_file_from_github(file_url, token):
     headers = {'Authorization': f'token {token}'}
@@ -29,52 +18,40 @@ def download_file_from_github(file_url, token):
     response.raise_for_status()
     return BytesIO(response.content)
 
-# URLs de las carpetas en GitHub
-csv_files_url = base_url + 'Venta%20Perdida'
-venta_semanal_url = base_url + 'Venta%20Semanal'
-excel_url = base_url + 'MASTER.xlsx'
+# Cargar archivos locales o desde GitHub
+def load_file(local_path, github_url=None, file_type='csv'):
+    try:
+        # Intentar cargar desde el sistema local
+        if file_type == 'csv':
+            return pd.read_csv(local_path, encoding='ISO-8859-1')
+        elif file_type == 'excel':
+            return pd.read_excel(local_path)
+    except FileNotFoundError:
+        if github_url:
+            # Descargar desde GitHub si no está disponible localmente
+            file_content = download_file_from_github(github_url, GITHUB_TOKEN)
+            if file_content.getbuffer().nbytes > 0:
+                if file_type == 'csv':
+                    return pd.read_csv(file_content, encoding='ISO-8859-1')
+                elif file_type == 'excel':
+                    return pd.read_excel(file_content)
+            else:
+                st.error(f"El archivo en {github_url} está vacío.")
+                st.stop()
 
-# Obtener las URLs de todos los archivos en las carpetas
-csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
-venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
+# Definir rutas locales y URLs de GitHub
+csv_files_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.csv')
+venta_semanal_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta semanal/*.xlsx')
+master_local = "C:/Users/omen0/OneDrive/Documentos/VP317/MASTER.xlsx"
 
-# Descargar y leer los archivos
-csv_dataframes = [pd.read_csv(download_file_from_github(file_url, GITHUB_TOKEN), encoding='ISO-8859-1') for file_url in csv_files]
-excel_dataframes = [pd.read_excel(download_file_from_github(file_url, GITHUB_TOKEN)) for file_url in venta_semanal]
+csv_github_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
+venta_semanal_github_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
+master_github_url = 'https://api.github.com/repos/Edwinale20/317B/contents/MASTER.xlsx'
 
-# Descargar y leer el archivo MASTER.xlsx
-try:
-    master_file = download_file_from_github(excel_url, GITHUB_TOKEN)
-    master_file.seek(0)  # Reiniciar el puntero del archivo a su posición inicial
-
-    # Opción 1: Intentar leer el archivo Excel usando el motor 'openpyxl'
-    MASTER = pd.read_excel(master_file, engine='openpyxl')
-
-except ValueError as e:
-    st.error(f"Error al leer el archivo MASTER.xlsx: {e}")
-    st.stop()
-
-
-st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
-st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
-
-csv_dataframes = []
-for file_url in csv_files:
-    file_content = download_file_from_github(file_url, GITHUB_TOKEN)
-    if file_content.getbuffer().nbytes > 0:  # Verifica que el archivo no esté vacío
-        df = pd.read_csv(file_content, encoding='ISO-8859-1')
-        csv_dataframes.append(df)
-    else:
-        st.warning(f"El archivo {file_url} está vacío y no se ha cargado.")
-
-
-# Función para verificar el tipo MIME del archivo
-def verify_file_type(file):
-    mime = magic.Magic(mime=True)
-    file_type = mime.from_buffer(file.getvalue())
-    return file_type
-
-
+# Cargar archivos
+csv_dataframes = [load_file(f, csv_github_url) for f in csv_files_local]
+venta_semanal_dfs = [load_file(f, venta_semanal_github_url, 'excel') for f in venta_semanal_local]
+MASTER = load_file(master_local, master_github_url, 'excel')
 
 # Definir paleta de colores global 
 pio.templates["colors"] = pio.templates["plotly"]
