@@ -31,13 +31,20 @@ def load_file(local_path, github_url=None, file_type='csv'):
             # Descargar desde GitHub si no está disponible localmente
             file_content = download_file_from_github(github_url, GITHUB_TOKEN)
             if file_content.getbuffer().nbytes > 0:
-                if file_type == 'csv':
-                    return pd.read_csv(file_content, encoding='ISO-8859-1')
-                elif file_type == 'excel':
-                    return pd.read_excel(file_content)
+                try:
+                    if file_type == 'csv':
+                        return pd.read_csv(file_content, encoding='ISO-8859-1')
+                    elif file_type == 'excel':
+                        return pd.read_excel(file_content)
+                except ValueError as e:
+                    st.error(f"Error al leer el archivo {file_type} desde {github_url}: {e}")
+                    st.stop()
             else:
                 st.error(f"El archivo en {github_url} está vacío.")
                 st.stop()
+        else:
+            st.error(f"No se encontró el archivo {local_path} y no se proporcionó una URL de GitHub.")
+            st.stop()
 
 # Definir rutas locales y URLs de GitHub
 csv_files_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.csv')
