@@ -58,13 +58,15 @@ csv_files_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.cs
 venta_semanal_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta semanal/*.xlsx')
 master_local = "C:/Users/omen0/OneDrive/Documentos/VP317/MASTER.xlsx"
 
-# Enlace crudo de GitHub para MASTER.xlsx
+# Enlace crudo correcto de GitHub para MASTER.xlsx
 master_github_url = 'https://raw.githubusercontent.com/Edwinale20/317B/main/MASTER.xlsx'
 
-# Cargar archivos
+# Cargar archivo MASTER desde la ubicación actualizada
+MASTER = load_file(master_local, master_github_url, 'excel')
+
+# Cargar otros archivos locales o desde GitHub
 csv_dataframes = [load_file(f, None, 'csv') for f in csv_files_local]
 venta_semanal_dfs = [load_file(f, None, 'excel') for f in venta_semanal_local]
-MASTER = load_file(master_local, master_github_url, 'excel')
 
 
 # Definir paleta de colores global 
