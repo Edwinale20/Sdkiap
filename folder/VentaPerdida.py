@@ -54,9 +54,9 @@ def load_file(github_url, file_type='csv'):
         st.stop()
 
 # URLs de las carpetas en GitHub
-venta_perdida_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
-venta_semanal_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
-master_github_url = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
+csv_files = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
+venta_semanal = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
+MASTER = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
 
 # Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
 venta_perdida_files = list_files_in_github_folder(venta_perdida_url, GITHUB_TOKEN)
