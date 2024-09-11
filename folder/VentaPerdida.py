@@ -7,6 +7,8 @@ import numpy as np
 import plotly.graph_objects as go
 from io import BytesIO
 import requests
+import plotly.io as pio
+
 
 
 # Obtén el token secreto de Streamlit
