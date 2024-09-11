@@ -8,65 +8,77 @@ import plotly.graph_objects as go
 from io import BytesIO
 import requests
 
+
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
 # Función para descargar archivos desde GitHub
-def download_file_from_github(file_url, token=None):
-    headers = {'Authorization': f'token {token}'} if token else {}
+def download_file_from_github(file_url, token):
+    headers = {'Authorization': f'token {token}'}
     try:
         response = requests.get(file_url, headers=headers)
         response.raise_for_status()  # Verifica si la solicitud fue exitosa
         return BytesIO(response.content)
     except requests.exceptions.HTTPError as http_err:
-        st.error(f"HTTP error occurred: {http_err}")  # Muestra el error HTTP en Streamlit
+        st.error(f"Error HTTP: {http_err}")
         st.stop()
     except Exception as err:
-        st.error(f"Error occurred: {err}")  # Muestra otros errores
+        st.error(f"Error: {err}")
         st.stop()
 
-# Cargar archivos locales o desde GitHub
-def load_file(local_path, github_url=None, file_type='csv'):
-    try:
-        # Intentar cargar desde el sistema local
-        if file_type == 'csv':
-            return pd.read_csv(local_path, encoding='ISO-8859-1')
-        elif file_type == 'excel':
-            return pd.read_excel(local_path, engine='openpyxl')  # Especificar el motor 'openpyxl' para archivos Excel
-    except FileNotFoundError:
-        if github_url:
-            # Descargar desde GitHub si no está disponible localmente
-            file_content = download_file_from_github(github_url)
-            if file_content.getbuffer().nbytes > 0:
-                try:
-                    if file_type == 'csv':
-                        return pd.read_csv(file_content, encoding='ISO-8859-1')
-                    elif file_type == 'excel':
-                        return pd.read_excel(file_content, engine='openpyxl')  # Especificar el motor 'openpyxl' para archivos Excel
-                except ValueError as e:
-                    st.error(f"Error al leer el archivo {file_type} desde {github_url}: {e}")
-                    st.stop()
-            else:
-                st.error(f"El archivo en {github_url} está vacío.")
-                st.stop()
-        else:
-            st.error(f"No se encontró el archivo {local_path} y no se proporcionó una URL de GitHub.")
+# Función para listar archivos en una carpeta de GitHub
+def list_files_in_github_folder(folder_url, token):
+    headers = {'Authorization': f'token {token}'}
+    response = requests.get(folder_url, headers=headers)
+    response.raise_for_status()  # Verifica si hubo un error en la solicitud
+    files_info = response.json()
+    return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
+
+# Cargar archivos desde GitHub
+def load_file(github_url, file_type='csv'):
+    # Descargar desde GitHub
+    file_content = download_file_from_github(github_url, GITHUB_TOKEN)
+    if file_content.getbuffer().nbytes > 0:
+        try:
+            if file_type == 'csv':
+                return pd.read_csv(file_content, encoding='ISO-8859-1')
+            elif file_type == 'excel':
+                return pd.read_excel(file_content, engine='openpyxl')
+        except ValueError as e:
+            st.error(f"Error al leer el archivo {file_type} desde {github_url}: {e}")
             st.stop()
+    else:
+        st.error(f"El archivo en {github_url} está vacío.")
+        st.stop()
 
-# Definir rutas locales y URLs de GitHub
-csv_files_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.csv')
-venta_semanal_local = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta semanal/*.xlsx')
-master_local = "C:/Users/omen0/OneDrive/Documentos/VP317/MASTER.xlsx"
+# URLs de las carpetas en GitHub
+venta_perdida_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
+venta_semanal_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
+master_github_url = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
 
-# Enlace crudo correcto de GitHub para MASTER.xlsx
-master_github_url = 'https://raw.githubusercontent.com/Edwinale20/317B/main/MASTER.xlsx'
+# Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
+venta_perdida_files = list_files_in_github_folder(venta_perdida_url, GITHUB_TOKEN)
+venta_semanal_files = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
-# Cargar archivo MASTER desde la ubicación actualizada
-MASTER = load_file(master_local, master_github_url, 'excel')
+# Cargar y procesar todos los archivos CSV de Venta Perdida
+csv_dataframes = [load_file(file_url, 'csv') for file_url in venta_perdida_files]
 
-# Cargar otros archivos locales o desde GitHub
-csv_dataframes = [load_file(f, None, 'csv') for f in csv_files_local]
-venta_semanal_dfs = [load_file(f, None, 'excel') for f in venta_semanal_local]
+# Cargar y procesar todos los archivos Excel de Venta Semanal
+venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal_files]
+
+# Cargar archivo MASTER desde la nueva ubicación en GitHub
+MASTER = load_file(master_github_url, 'excel')
+
+# Mostrar las primeras filas del archivo MASTER
+st.write(MASTER.head())
+
+# Opcional: mostrar los primeros datos de los CSVs y Excel de Venta Perdida y Venta Semanal
+for df in csv_dataframes:
+    st.write(df.head())
+
+for df in venta_semanal_dfs:
+    st.write(df.head())
+
 
 
 # Definir paleta de colores global 
