@@ -16,16 +16,9 @@ GITHUB_TOKEN = st.secrets["github"]["token"]
 # Función para descargar archivos desde GitHub
 def download_file_from_github(file_url, token):
     headers = {'Authorization': f'token {token}'}
-    try:
-        response = requests.get(file_url, headers=headers)
-        response.raise_for_status()  # Verifica si la solicitud fue exitosa
-        return BytesIO(response.content)
-    except requests.exceptions.HTTPError as http_err:
-        st.error(f"Error HTTP: {http_err}")
-        st.stop()
-    except Exception as err:
-        st.error(f"Error: {err}")
-        st.stop()
+    response = requests.get(file_url, headers=headers)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    return BytesIO(response.content)
 
 # Función para listar archivos en una carpeta de GitHub
 def list_files_in_github_folder(folder_url, token):
@@ -40,17 +33,10 @@ def load_file(github_url, file_type='csv'):
     # Descargar desde GitHub
     file_content = download_file_from_github(github_url, GITHUB_TOKEN)
     if file_content.getbuffer().nbytes > 0:
-        try:
-            if file_type == 'csv':
-                return pd.read_csv(file_content, encoding='ISO-8859-1')
-            elif file_type == 'excel':
-                return pd.read_excel(file_content, engine='openpyxl')
-        except ValueError as e:
-            st.error(f"Error al leer el archivo {file_type} desde {github_url}: {e}")
-            st.stop()
-    else:
-        st.error(f"El archivo en {github_url} está vacío.")
-        st.stop()
+        if file_type == 'csv':
+            return pd.read_csv(file_content, encoding='ISO-8859-1')
+        elif file_type == 'excel':
+            return pd.read_excel(file_content, engine='openpyxl')
 
 # URLs de las carpetas y archivos en GitHub
 csv_files_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
@@ -69,6 +55,7 @@ venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
 # Cargar archivo MASTER desde la nueva ubicación en GitHub
 MASTER = load_file(master_github_url, 'excel')
+
 
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
