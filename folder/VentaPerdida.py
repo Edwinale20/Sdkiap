@@ -52,20 +52,20 @@ def load_file(github_url, file_type='csv'):
         st.error(f"El archivo en {github_url} está vacío.")
         st.stop()
 
-# URLs de las carpetas en GitHub
+# URLs de las carpetas y archivos en GitHub
 csv_files_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
 venta_semanal_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
 master_github_url = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
 
 # Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
 csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
-venta_semanal_files = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
+venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
 # Cargar y procesar todos los archivos CSV de Venta Perdida
 csv_dataframes = [load_file(file_url, 'csv') for file_url in csv_files]
 
 # Cargar y procesar todos los archivos Excel de Venta Semanal
-venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal_files]
+venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
 # Cargar archivo MASTER desde la nueva ubicación en GitHub
 MASTER = load_file(master_github_url, 'excel')
@@ -79,7 +79,6 @@ for df in csv_dataframes:
 
 for df in venta_semanal_dfs:
     st.write(df.head())
-
 
 # Definir paleta de colores global 
 pio.templates["colors"] = pio.templates["plotly"]
