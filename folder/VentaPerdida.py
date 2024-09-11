@@ -188,7 +188,7 @@ def venta(venta_semanal):
 # Cargar los DataFrames por separado
 VENTA_PERDIDA = venta_perdida(csv_files)
 VENTA = venta(venta_semanal)
-MASTER['ID_ARTICULO'] = MASTER['ID_ARTICULO'].astype(str)
+MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
 
 
 familia_dict = MASTER.set_index('ARTICULO')['FAMILIA'].to_dict()
