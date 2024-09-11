@@ -80,6 +80,10 @@ for df in csv_dataframes:
 for df in venta_semanal_dfs:
     st.write(df.head())
 
+st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
+st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
+
+
 # Definir paleta de colores global 
 pio.templates["colors"] = pio.templates["plotly"]
 pio.templates["colors"].layout.colorway = ['#2C7865', '#EE2526', '#FF9800', '#000000']
@@ -88,8 +92,6 @@ pio.templates["colors2"].layout.colorway = ['#2C7865', '#EE2526', '#FF9800', '#0
 # Aplicar plantilla personalizada por defecto
 pio.templates.default = "colors"
 pio.templates.default2 = "colors2"
-
-
 
 #---------------------------------------------------------------------
 @st.cache_data
@@ -235,6 +237,8 @@ VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
 VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
 
 
+
+
 #---------------------------------------------------------------------
 
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
@@ -365,7 +369,7 @@ def graficar_venta_perdida_por_division(df_venta_perdida_filtrada, df_venta_filt
     df_venta_por_division = df_venta_filtrada.groupby('PROVEEDOR')['Venta Neta Total'].sum().reset_index()
 
     # Combinar los DataFrames para calcular el porcentaje
-    df_combined = pd.merge(df_venta_perdida_por_division, df_venta_por_division, on='PROVEEDOR', how='inner')
+    df_combined = pd.merge(df_venta_perdida_por_division, df_venta_por_division, on='PROVEEDOR', how='left')
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total'].replace(0, np.nan)) * 100
 
     # Crear la figura con el porcentaje de venta perdida
@@ -635,7 +639,7 @@ def graficar_venta_perdida_dinamica(df_venta_filtrada, df_venta_perdida_filtrada
                                  y=df_div['% Venta Perdida'], 
                                  mode='lines+markers+text',
                                  text=df_div['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
-                                 textposition='top left',
+                                 textposition='top right',
                                  name=f'División {division}'))
 
     # Configurar el layout
