@@ -10,7 +10,6 @@ import requests
 import plotly.io as pio
 
 
-
 # Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
@@ -54,16 +53,16 @@ def load_file(github_url, file_type='csv'):
         st.stop()
 
 # URLs de las carpetas en GitHub
-csv_files = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
-venta_semanal = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
-MASTER = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
+csv_files_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
+venta_semanal_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
+master_github_url = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
 
 # Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
-venta_perdida_files = list_files_in_github_folder(venta_perdida_url, GITHUB_TOKEN)
+csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
 venta_semanal_files = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
 # Cargar y procesar todos los archivos CSV de Venta Perdida
-csv_dataframes = [load_file(file_url, 'csv') for file_url in venta_perdida_files]
+csv_dataframes = [load_file(file_url, 'csv') for file_url in csv_files]
 
 # Cargar y procesar todos los archivos Excel de Venta Semanal
 venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal_files]
@@ -74,13 +73,12 @@ MASTER = load_file(master_github_url, 'excel')
 # Mostrar las primeras filas del archivo MASTER
 st.write(MASTER.head())
 
-# Opcional: mostrar los primeros datos de los CSVs y Excel de Venta Perdida y Venta Semanal
+# Mostrar los primeros datos de los CSVs y Excel de Venta Perdida y Venta Semanal
 for df in csv_dataframes:
     st.write(df.head())
 
 for df in venta_semanal_dfs:
     st.write(df.head())
-
 
 
 # Definir paleta de colores global 
