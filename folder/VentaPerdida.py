@@ -10,32 +10,25 @@ import requests
 import plotly.io as pio
 
 
-# Import necessary libraries
-import pandas as pd
-import glob
-import streamlit as st
-from io import BytesIO
-import requests
-
-# Define GitHub token (from Streamlit secrets)
+# Obtén el token secreto de Streamlit
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
-# Function to download files from GitHub
+# Función para descargar archivos desde GitHub
 def download_file_from_github(file_url, token):
     headers = {'Authorization': f'token {token}'}
     response = requests.get(file_url, headers=headers)
-    response.raise_for_status()  # Check if the request was successful
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
     return BytesIO(response.content)
 
-# Function to list files in a GitHub folder
+# Función para listar archivos en una carpeta de GitHub
 def list_files_in_github_folder(folder_url, token):
     headers = {'Authorization': f'token {token}'}
     response = requests.get(folder_url, headers=headers)
-    response.raise_for_status()  # Check if the request was successful
+    response.raise_for_status()  # Verifica si hubo un error en la solicitud
     files_info = response.json()
     return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
 
-# Function to load a file without showing it
+# Función para cargar archivos (sin mostrarlos)
 def load_file(github_url, file_type='csv'):
     file_content = download_file_from_github(github_url, GITHUB_TOKEN)
     if file_content.getbuffer().nbytes > 0:
@@ -43,25 +36,25 @@ def load_file(github_url, file_type='csv'):
             return pd.read_csv(file_content, encoding='ISO-8859-1')
         elif file_type == 'excel':
             return pd.read_excel(file_content, engine='openpyxl')
-    return pd.DataFrame()  # Return an empty DataFrame if unable to load
+    return pd.DataFrame()  # Retorna un DataFrame vacío si no se puede cargar el archivo
 
-# GitHub folder URLs for CSV and Excel files
+# URLs de las carpetas y archivos en GitHub
 csv_files_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
 venta_semanal_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
 master_github_url = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
 
-# Get the list of all CSV and Excel files from GitHub (no display)
+# Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
 csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
 venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
-# Load the files without displaying them
+# Cargar todos los archivos CSV y Excel (sin mostrarlos)
 csv_dataframes = [load_file(file_url, 'csv') for file_url in csv_files]
 venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
-# Load MASTER file without displaying it
+# Cargar el archivo MASTER desde GitHub (sin mostrarlo)
 MASTER = load_file(master_github_url, 'excel')
 
-# All the files are now loaded into the variables, but nothing is displayed unless you explicitly do so.
+
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
