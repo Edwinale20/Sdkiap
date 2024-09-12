@@ -28,16 +28,15 @@ def list_files_in_github_folder(folder_url, token):
     files_info = response.json()
     return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
 
-# Cargar archivos desde GitHub
+# Cargar archivos desde GitHub sin mostrar DataFrames
 def load_file(github_url, file_type='csv'):
-    # Descargar desde GitHub
     file_content = download_file_from_github(github_url, GITHUB_TOKEN)
     if file_content.getbuffer().nbytes > 0:
         if file_type == 'csv':
-            return pd.read_csv(file_content, encoding='ISO-8859-1')
+            return pd.read_csv(file_content, encoding='ISO-8859-1')  # Cargar archivo CSV
         elif file_type == 'excel':
-            return pd.read_excel(file_content, engine='openpyxl')
-    return pd.DataFrame()  # Retornar un DataFrame vacío si no se puede cargar el archivo
+            return pd.read_excel(file_content, engine='openpyxl')  # Cargar archivo Excel
+    return pd.DataFrame()  # Retornar DataFrame vacío si no se puede cargar el archivo
 
 # URLs de las carpetas y archivos en GitHub
 csv_files_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
@@ -56,8 +55,6 @@ venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
 # Cargar archivo MASTER desde la nueva ubicación en GitHub sin mostrarlo
 MASTER = load_file(master_github_url, 'excel')
-
-
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
