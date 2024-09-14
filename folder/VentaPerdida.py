@@ -168,11 +168,8 @@ def venta(venta_semanal):
 #---------------------------------------------------------------------
 
 # Cargar los DataFrames por separado
-@st.cache_data
 VENTA_PERDIDA = venta_perdida(csv_files)
-@st.cache_data
 VENTA = venta(venta_semanal)
-@st.cache_data
 MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
 
 
