@@ -42,13 +42,11 @@ def load_file(github_url, file_type='csv'):
     return pd.DataFrame()  # Retorna un DataFrame vacío si no se puede cargar el archivo
 
 # URLs de las carpetas y archivos en GitHub
-@st.cache_data
 csv_files_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Perdida'
 venta_semanal_url = 'https://api.github.com/repos/Edwinale20/317B/contents/Venta%20Semanal'
 master_github_url = 'https://raw.githubusercontent.com/Edwinale20/VentaPerdida/main/MASTER.xlsx'
 
 # Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
-@st.cache_data
 csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
 venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
