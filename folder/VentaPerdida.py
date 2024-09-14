@@ -14,7 +14,6 @@ import plotly.io as pio
 GITHUB_TOKEN = st.secrets["github"]["token"]
 
 # Función para descargar archivos desde GitHub
-@st.cache_data
 def download_file_from_github(file_url, token):
     headers = {'Authorization': f'token {token}'}
     response = requests.get(file_url, headers=headers)
@@ -22,7 +21,6 @@ def download_file_from_github(file_url, token):
     return BytesIO(response.content)
 
 # Función para listar archivos en una carpeta de GitHub
-@st.cache_data
 def list_files_in_github_folder(folder_url, token):
     headers = {'Authorization': f'token {token}'}
     response = requests.get(folder_url, headers=headers)
@@ -31,7 +29,6 @@ def list_files_in_github_folder(folder_url, token):
     return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
 
 # Función para cargar archivos (sin mostrarlos)
-@st.cache_data
 def load_file(github_url, file_type='csv'):
     file_content = download_file_from_github(github_url, GITHUB_TOKEN)
     if file_content.getbuffer().nbytes > 0:
@@ -52,12 +49,10 @@ venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
 # Cargar todos los archivos CSV y Excel (sin mostrarlos)
 csv_dataframes = [load_file(file_url, 'csv') for file_url in csv_files]
-
 venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
 # Cargar el archivo MASTER desde GitHub (sin mostrarlo)
 MASTER = load_file(master_github_url, 'excel')
-
 
 
 
