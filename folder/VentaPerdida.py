@@ -48,7 +48,7 @@ csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
 venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
 # Cargar todos los archivos CSV y Excel (sin mostrarlos)
-csv_dataframe = [load_file(file_url, 'csv') for file_url in csv_files]
+#csv_dataframe = [load_file(file_url, 'csv') for file_url in csv_files]
 venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
 # Cargar el archivo MASTER desde GitHub (sin mostrarlo)
