@@ -242,7 +242,6 @@ categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
 segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
-st.clear_cache()
 
 # Filtrar por Proveedor
 if proveedor == 'Ninguno':
