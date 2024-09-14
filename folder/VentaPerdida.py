@@ -59,6 +59,7 @@ MASTER = load_file(master_github_url, 'excel')
 
 
 
+
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 
