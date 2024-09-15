@@ -48,13 +48,11 @@ csv_files = list_files_in_github_folder(csv_files_url, GITHUB_TOKEN)
 venta_semanal = list_files_in_github_folder(venta_semanal_url, GITHUB_TOKEN)
 
 # Cargar todos los archivos CSV y Excel (sin mostrarlos)
-#csv_dataframes = [load_file(file_url, 'csv') for file_url in csv_files]
-#venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
+csv_dataframes = [load_file(file_url, 'csv') for file_url in csv_files]
+venta_semanal_dfs = [load_file(file_url, 'excel') for file_url in venta_semanal]
 
 # Cargar el archivo MASTER desde GitHub (sin mostrarlo)
 MASTER = load_file(master_github_url, 'excel')
-
-
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
@@ -241,7 +239,6 @@ categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 
 opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
 segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
-
 
 # Filtrar por Proveedor
 if proveedor == 'Ninguno':
@@ -693,6 +690,3 @@ with c7:
 
 with c8:    
     st.plotly_chart(figura8, use_container_width=True)
-
-
-
