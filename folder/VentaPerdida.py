@@ -43,6 +43,8 @@ venta_semanal_dataframes = [pd.read_excel(download_file_from_github(file_url)) f
 
 # Cargar el archivo MASTER desde GitHub
 MASTER = pd.read_excel(download_file_from_github(master_github_url))
+
+
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 
