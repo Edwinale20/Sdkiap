@@ -11,8 +11,8 @@ import plotly.io as pio
 
 
 # Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
-csv_files = glob.glob('C:/Users/OneDrive/Venta/*.csv')  # Cambia la ruta al lugar donde están tus archivos CSV
-venta_semanal = glob.glob('C:/Users/OneDrive/semanal/*.xlsx')  # Cambia la ruta al lugar donde están tus archivos Excel
+csv_files = glob.glob('https://github.com/Edwinale20/Sdkiap/tree/main/Venta%20P%C3%A9rdida')  # Cambia la ruta al lugar donde están tus archivos CSV
+venta_semanal = glob.glob('https://github.com/Edwinale20/Sdkiap/tree/main/Venta%20semanal')  # Cambia la ruta al lugar donde están tus archivos Excel
 excel = "C:/Users/OneDrive/Documentos/VP317/MASTER.xlsx"  # Cambia la ruta al archivo MASTER en tu local
 MASTER = pd.read_excel(excel)
 
