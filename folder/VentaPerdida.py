@@ -10,12 +10,23 @@ import requests
 import plotly.io as pio
 
 
-# Obtener las URLs de todos los archivos en las carpetas Venta Perdida y Venta Semanal
-csv_files = glob.glob('https://github.com/Edwinale20/Sdkiap/tree/main/Venta%20Perdida')  # Cambia la ruta al lugar donde están tus archivos CSV
-venta_semanal = glob.glob('https://github.com/Edwinale20/Sdkiap/tree/main/Venta%20semanal')  # Cambia la ruta al lugar donde están tus archivos Excel
-excel = "https://github.com/Edwinale20/Sdkiap/blob/main/MASTER.xlsx"  # Cambia la ruta al archivo MASTER en tu local
-MASTER = pd.read_excel(excel)
+# Función para descargar archivos desde GitHub
+def download_file_from_github(url):
+    response = requests.get(url)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    return BytesIO(response.content)
 
+# URLs de los archivos en GitHub (usa las URLs de los archivos RAW)
+csv_files_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/Venta%20Perdida/archivo1.csv'
+venta_semanal_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/Venta%20semanal/archivo2.xlsx'
+master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
+
+# Cargar archivos CSV
+csv_file = pd.read_csv(download_file_from_github(csv_files_url))
+venta_semanal_file = pd.read_excel(download_file_from_github(venta_semanal_url))
+
+# Cargar el archivo MASTER desde GitHub
+MASTER = pd.read_excel(download_file_from_github(master_github_url))
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
