@@ -10,26 +10,28 @@ import requests
 import plotly.io as pio
 
 
-# Función para obtener la lista de archivos en una carpeta de GitHub
+# Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
 def list_files_in_github_folder(folder_url):
-    headers = {'Authorization': 'token TU_GITHUB_TOKEN'}  # Reemplaza con tu token de GitHub si es necesario
-    response = requests.get(folder_url, headers=headers)
+    response = requests.get(folder_url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
     files_info = response.json()
-    return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
+    
+    # Obtener las raw URLs
+    raw_urls = [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
+    return raw_urls
 
-# Función para descargar y leer archivos
+# Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
 def download_file_from_github(url):
     response = requests.get(url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
     return BytesIO(response.content)
 
-# URLs de las carpetas en GitHub usando la API
+# URLs de las carpetas en GitHub usando la API (sin raw aún)
 csv_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20Perdida'
 venta_semanal_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20semanal'
 master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
 
-# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida"
+# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida" (usando la API)
 csv_files = list_files_in_github_folder(csv_folder_url)
 
 # Descargar y leer todos los archivos CSV en un solo DataFrame
