@@ -10,24 +10,39 @@ import requests
 import plotly.io as pio
 
 
-# Función para descargar archivos desde GitHub
+# Función para obtener la lista de archivos en una carpeta de GitHub
+def list_files_in_github_folder(folder_url):
+    headers = {'Authorization': 'token TU_GITHUB_TOKEN'}  # Reemplaza con tu token de GitHub si es necesario
+    response = requests.get(folder_url, headers=headers)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    files_info = response.json()
+    return [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
+
+# Función para descargar y leer archivos
 def download_file_from_github(url):
     response = requests.get(url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
     return BytesIO(response.content)
 
-# URLs de los archivos en GitHub (usa las URLs de los archivos RAW)
-csv_files_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/Venta%20Perdida/archivo1.csv'
-venta_semanal_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/Venta%20semanal/archivo2.xlsx'
+# URLs de las carpetas en GitHub usando la API
+csv_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20Perdida'
+venta_semanal_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20semanal'
 master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
 
-# Cargar archivos CSV
-csv_file = pd.read_csv(download_file_from_github(csv_files_url))
-venta_semanal_file = pd.read_excel(download_file_from_github(venta_semanal_url))
+# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida"
+csv_files = list_files_in_github_folder(csv_folder_url)
+
+# Descargar y leer todos los archivos CSV en un solo DataFrame
+csv_dataframes = [pd.read_csv(download_file_from_github(file_url)) for file_url in csv_files]
+
+# Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
+venta_semanal_files = list_files_in_github_folder(venta_semanal_folder_url)
+
+# Descargar y leer todos los archivos Excel en un solo DataFrame
+venta_semanal_dataframes = [pd.read_excel(download_file_from_github(file_url)) for file_url in venta_semanal_files]
 
 # Cargar el archivo MASTER desde GitHub
 MASTER = pd.read_excel(download_file_from_github(master_github_url))
-
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 
