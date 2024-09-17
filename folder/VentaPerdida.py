@@ -156,7 +156,7 @@ def venta(venta_semanal):
 VENTA_PERDIDA = venta_perdida(csv_files)
 VENTA = venta(venta_semanal)
 MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
-MASTER['PROVEEDOR'] = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
+MASTER['PROVEEDOR'] = MASTER[df_venta_perdida_filtrada['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
 
 familia_dict = MASTER.set_index('ARTICULO')['FAMILIA'].to_dict()
 segmento_dict = MASTER.set_index('ARTICULO')['SEGMENTO'].to_dict()
