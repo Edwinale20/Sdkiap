@@ -152,50 +152,33 @@ def venta(venta_semanal):
 
 #---------------------------------------------------------------------
 
-@st.cache_data
-def cargar_venta_perdida(csv_files, familia_dict, segmento_dict, subcategoria_dict, proveedor_dict, map_plaza):
-    VENTA_PERDIDA = venta_perdida(csv_files)
-
-    # Mapear las columnas de VENTA_PERDIDA
-    VENTA_PERDIDA['FAMILIA'] = VENTA_PERDIDA['ARTICULO'].map(familia_dict)
-    VENTA_PERDIDA['SEGMENTO'] = VENTA_PERDIDA['ARTICULO'].map(segmento_dict)
-    VENTA_PERDIDA['SUBCATEGORIA'] = VENTA_PERDIDA['ARTICULO'].map(subcategoria_dict)
-    VENTA_PERDIDA['PROVEEDOR'] = VENTA_PERDIDA['ARTICULO'].map(proveedor_dict)
-
-    # Filtrar los datos
-    VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
-    
-    # Mapear las plazas
-    VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
-
-    return VENTA_PERDIDA
+# Cargar los DataFrames por separado
+VENTA_PERDIDA = venta_perdida(csv_files)
+VENTA = venta(venta_semanal)
+MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
 
 
-@st.cache_data
-def cargar_venta(venta_semanal, familia_dict, segmento_dict, subcategoria_dict, proveedor_dict, map_plaza):
-    VENTA = venta(venta_semanal)
-
-    # Mapear las columnas de VENTA
-    VENTA['FAMILIA'] = VENTA['ARTICULO'].map(familia_dict)
-    VENTA['SEGMENTO'] = VENTA['ARTICULO'].map(segmento_dict)
-    VENTA['SUBCATEGORIA'] = VENTA['ARTICULO'].map(subcategoria_dict)
-    VENTA['PROVEEDOR'] = VENTA['ARTICULO'].map(proveedor_dict)
-
-    # Filtrar los datos
-    VENTA = VENTA.dropna(subset=['PROVEEDOR'])
-    
-    # Mapear las plazas
-    VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
-
-    return VENTA
-
-
-# Diccionarios de mapeo
 familia_dict = MASTER.set_index('ARTICULO')['FAMILIA'].to_dict()
 segmento_dict = MASTER.set_index('ARTICULO')['SEGMENTO'].to_dict()
 subcategoria_dict = MASTER.set_index('ARTICULO')['SUBCATEGORIA'].to_dict()
 proveedor_dict = MASTER.set_index('ARTICULO')['PROVEEDOR'].to_dict()
 
+VENTA_PERDIDA['FAMILIA'] = VENTA_PERDIDA['ARTICULO'].map(familia_dict)
+VENTA_PERDIDA['SEGMENTO'] = VENTA_PERDIDA['ARTICULO'].map(segmento_dict)
+VENTA_PERDIDA['SUBCATEGORIA'] = VENTA_PERDIDA['ARTICULO'].map(subcategoria_dict)
+VENTA_PERDIDA['PROVEEDOR'] = VENTA_PERDIDA['ARTICULO'].map(proveedor_dict)
+
+
+VENTA['FAMILIA'] = VENTA['ARTICULO'].map(familia_dict)
+VENTA['SEGMENTO'] = VENTA['ARTICULO'].map(segmento_dict)
+VENTA['SUBCATEGORIA'] = VENTA['ARTICULO'].map(subcategoria_dict)
+VENTA['PROVEEDOR'] = VENTA['ARTICULO'].map(proveedor_dict)
+
+VENTA = VENTA.dropna(subset=['PROVEEDOR'])
+VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
+
+
+# Diccionario de mapeo de códigos de plaza a nombres
 map_plaza = {
     "110": "Reynosa",
     "200": "México",
@@ -214,11 +197,9 @@ map_plaza = {
     # Agrega más mapeos según sea necesario
 }
 
-# Cargar los DataFrames utilizando las funciones con cache
-VENTA_PERDIDA = cargar_venta_perdida(csv_files, familia_dict, segmento_dict, subcategoria_dict, proveedor_dict, map_plaza)
-VENTA = cargar_venta(venta_semanal, familia_dict, segmento_dict, subcategoria_dict, proveedor_dict, map_plaza)
-
-
+# Aplicar el mapeo al DataFrame
+VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
+VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
 
 #---------------------------------------------------------------------
 
