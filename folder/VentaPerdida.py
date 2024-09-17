@@ -71,7 +71,7 @@ def venta_perdida(csv_files):
 
     # Loop through each CSV file and append its contents to the combined dataframe
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file, encoding='ISO-8859-1')
+        df = pd.read_csv(csv_file, encoding='ISO-8859-1',usecols=["PROVEEDOR",	"CATEGORIA",	"ID_ARTICULO",	"DESC_ARTICULO",	"DIVISION",	"PLAZA",	"MERCADO",	"VENTA_PERDIDA_PESOS"])
         
         # Extraer el nombre del archivo sin la ruta completa y sin la extensión .csv
         file_name = os.path.splitext(os.path.basename(csv_file))[0]
@@ -87,7 +87,7 @@ def venta_perdida(csv_files):
         combined_df = pd.concat([combined_df, df])
 
     # Eliminar las columnas no deseadas
-    combined_df = combined_df.drop(columns=['UPC','CAMPO', 'INVENTARIO_UDS','INVENTARIO_PESOS','VENTA_UDS_PTD','VENTA_PESOS_PTD','NUM_TIENDA','NOMBRE_TIENDA','ESTATUS', 'PROVEEDOR', 'Fecha', 'CATEGORIA'])
+    #combined_df = combined_df.drop(columns=['UPC','CAMPO', 'INVENTARIO_UDS','INVENTARIO_PESOS','VENTA_UDS_PTD','VENTA_PESOS_PTD','NUM_TIENDA','NOMBRE_TIENDA','ESTATUS', 'PROVEEDOR', 'Fecha', 'CATEGORIA'])
     #combined_df.loc[combined_df['DESC_ARTICULO'].str.contains('Vuse', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
     combined_df['DIVISION'] = combined_df['DIVISION'].astype(str).str[:2]
     combined_df['PLAZA'] = combined_df['PLAZA'].astype(str).str[:3]
