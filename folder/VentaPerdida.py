@@ -104,7 +104,7 @@ def venta_perdida(csv_files):
     return combined_df
 
 #---------------------------------------------------------------------
-@st.cache_data
+@st.cache_data(ttl=3600)
 def venta(venta_semanal):
     concat_venta = pd.DataFrame()
 
