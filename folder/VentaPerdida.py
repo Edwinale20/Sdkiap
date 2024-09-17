@@ -37,7 +37,7 @@ csv_files = list_files_in_github_folder(csv_folder_url)
 csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
 
 # Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
-venta_semanal_files = list_files_in_github_folder(venta_semanal_folder_url)
+venta_semanal = list_files_in_github_folder(venta_semanal_folder_url)
 
 # Cargar el archivo MASTER desde GitHub
 MASTER = pd.read_excel(download_file_from_github(master_github_url))
