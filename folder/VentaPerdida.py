@@ -10,7 +10,7 @@ import plotly.io as pio
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
-st.markdown("Datos a partir del 31 de julio del 2024,<br>A partir de la semana 35, los datos son venta pérdida y venta son de toda la semana (lunes-domingo)", unsafe_allow_html=True)
+st.markdown("Datos a partir del 31 de julio del 2024,<br>A partir de la semana 35, los datos son venta pérdida y venta son de toda la semana (lunes-domingo).", unsafe_allow_html=True)
 
 
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
@@ -390,7 +390,7 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
                  y='VENTA_PERDIDA_PESOS', 
                  color='SUBCATEGORIA', 
                  text='% Venta Perdida',
-                 title='% Venta Perdida por Categoria 📊',
+                 title='% Venta Perdida por subcategoria 📊',
                  labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos'},
                  hover_data={'% Venta Perdida': ':.2f'})
 
