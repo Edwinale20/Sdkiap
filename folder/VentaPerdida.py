@@ -543,7 +543,7 @@ figura6 = graficar_venta_perdida_por_segmento(df_venta_filtrada, df_venta_perdid
 
 
 @st.cache_data
-def graficar_donut_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrada):
+def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrada):
     # Sumar la venta perdida y venta neta total por plaza
     df_venta_perdida_por_plaza = df_venta_perdida_filtrada.groupby('PLAZA').agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
     df_venta_neta_por_plaza = df_venta_filtrada.groupby('PLAZA').agg({'Venta Neta Total': 'sum'}).reset_index()
@@ -558,27 +558,34 @@ def graficar_donut_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_f
     # Ordenar las plazas de mayor a menor porcentaje de venta perdida
     df_combined = df_combined.sort_values(by='% Venta Perdida', ascending=False)
 
-    # Crear gráfico de dona usando los valores de venta perdida y mostrar el % en las etiquetas
-    fig = px.pie(df_combined, 
-                 names='PLAZA', 
-                 values='VENTA_PERDIDA_PESOS',  # Usar el valor absoluto de la venta perdida para el tamaño del segmento
-                 title='% Venta Perdida por Plaza 🌄',
-                 hole=0.4,  # Hacer la dona
-                 color_discrete_sequence=px.colors.sequential.RdBu,
+    # Crear gráfico de barras usando los valores de venta perdida
+    fig = px.bar(df_combined, 
+                 x='PLAZA', 
+                 y='VENTA_PERDIDA_PESOS',  # Usar el valor absoluto de la venta perdida
+                 title='Venta Perdida por Plaza 🌄',
+                 color='% Venta Perdida',  # Utilizar el porcentaje como color
+                 labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'PLAZA': 'Plaza'},
+                 color_continuous_scale=px.colors.sequential.RdBu,
                  custom_data=['% Venta Perdida'])  # Incluir el % de venta perdida en los datos personalizados
 
-    # Ajustar layout para mostrar el porcentaje correcto de venta perdida en las etiquetas
-    fig.update_traces(textposition='inside', textinfo='label+text', 
-                      hovertemplate='%{label}: %{customdata[0]}%',
-                      texttemplate='%{label}<br>%{customdata[0]}%')  # Mostrar el % de venta perdida calculado
+    # Mostrar los valores en las barras y ajustar el formato
+    fig.update_traces(
+        texttemplate='$%{y:,.0f}',  # Mostrar la venta perdida sin decimales
+        textposition='inside',     # Colocar los textos dentro de las barras
+        hovertemplate='%{x}: $%{y:,.0f} pesos<br>% Venta Perdida: %{customdata[0]}%'  # Formato del hover sin decimales
+    )
 
-    fig.update_layout(title_font=dict(size=24), showlegend=True)  # Mostrar la leyenda
+    # Ajustar el diseño del gráfico
+    fig.update_layout(
+        title_font=dict(size=24),
+        template="colors2",  # Usar la plantilla colors2
+        showlegend=False  # Ocultar la leyenda
+    )
 
     return fig
 
 # Uso de la función
-figura7 = graficar_donut_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrada)
-
+figura7 = graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrada)
 
 
 
