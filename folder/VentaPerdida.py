@@ -579,7 +579,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     # Ajustar el diseño del gráfico
     fig.update_layout(
         title_font=dict(size=24),
-        template="colors2",  # Usar la plantilla colors2
+        template="colors",  # Usar la plantilla colors2
         showlegend=False  # Ocultar la leyenda
     )
 
