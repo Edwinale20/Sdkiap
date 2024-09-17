@@ -177,7 +177,8 @@ VENTA = VENTA.dropna(subset=['PROVEEDOR'])
 VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
 VENTA = VENTA[VENTA['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
 VENTA_PERDIDA = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
-
+VENTA = VENTA[VENTA['FAMILIA'] != 'CHESTERFIELD']
+VENTA_PERDIDA = VENTA_PERDIDA[VENTA_PERDIDA['FAMILIA'] != 'CHESTERFIELD']
 
 # Diccionario de mapeo de códigos de plaza a nombres
 map_plaza = {
@@ -283,9 +284,7 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, s
 
 # Llamar a la función de filtros
 df_venta_perdida_filtrada, df_venta_filtrada = aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento)
-# Modificar la columna 'Semana Contable' en ambos DataFrames
-df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'CHESTERFIELD']
-df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'CHESTERFIELD']
+
 
 #--------------------------------------------------------------------
 
