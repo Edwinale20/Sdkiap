@@ -285,7 +285,8 @@ df_venta_perdida_filtrada, df_venta_filtrada = aplicar_filtros(VENTA_PERDIDA, VE
 # Modificar la columna 'Semana Contable' en ambos DataFrames
 df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'CHESTERFIELD']
 df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'CHESTERFIELD']
-
+df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
+df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
 #--------------------------------------------------------------------
 
 # Aplicar plantilla personalizada por defecto
