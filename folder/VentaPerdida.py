@@ -8,6 +8,8 @@ from io import BytesIO
 import requests
 import plotly.io as pio
 
+st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
+st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
 @st.cache_data
@@ -45,8 +47,6 @@ venta_semanal = list_files_in_github_folder(venta_semanal_folder_url)
 MASTER = pd.read_excel(download_file_from_github(master_github_url))
 
 
-st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
-st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 
 
 # Definir paleta de colores global 
