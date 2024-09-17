@@ -323,7 +323,7 @@ def graficar_porcentaje_venta_perdida_por_semana(df_venta_filtrada, df_venta_per
     )
 
     fig.update_traces(
-    textposition="top right",
+    textposition="right",
     textfont=dict(size=13.8)  # Ajusta el valor de size según tus preferencias
     )
 
