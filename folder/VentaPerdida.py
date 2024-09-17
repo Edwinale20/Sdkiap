@@ -696,3 +696,9 @@ with c7:
 
 with c8:    
     st.plotly_chart(figura8, use_container_width=True)
+
+import psutil
+mem = psutil.virtual_memory()
+st.write(f"Memoria usada: {mem.percent}%")
+
+
