@@ -14,7 +14,7 @@ st.subheader("Datos a partir del 31 de julio del 2024")
 st.subheader("A partir de la semana 34, los datos son venta pérdida y venta son de toda la semana (lunes-domingo)")
 
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
-@st.cache_data
+@st.cache_data(ttl=3600)
 def list_files_in_github_folder(folder_url):
     response = requests.get(folder_url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
@@ -25,7 +25,7 @@ def list_files_in_github_folder(folder_url):
     return raw_urls
 
 # Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
-@st.cache_data
+@st.cache_data(ttl=3600)
 def download_file_from_github(url):
     response = requests.get(url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
@@ -61,7 +61,7 @@ pio.templates.default = "colors"
 pio.templates.default2 = "colors2"
 
 #---------------------------------------------------------------------
-@st.cache_data
+@st.cache_data(ttl=3600)
 def venta_perdida(csv_files):
     # Función para calcular la semana contable
     def calcular_dia(fecha):
