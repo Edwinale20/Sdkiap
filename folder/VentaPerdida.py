@@ -33,8 +33,8 @@ master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MA
 # Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida" (usando la API)
 csv_files = list_files_in_github_folder(csv_folder_url)
 
-# Descargar y leer todos los archivos CSV en un solo DataFrame
-csv_dataframes = [pd.read_csv(download_file_from_github(file_url)) for file_url in csv_files]
+# Descargar y leer todos los archivos CSV en un solo DataFrame con la codificación correcta
+csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
 
 # Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
 venta_semanal_files = list_files_in_github_folder(venta_semanal_folder_url)
