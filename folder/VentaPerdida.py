@@ -57,6 +57,7 @@ pio.templates.default = "colors"
 pio.templates.default2 = "colors2"
 
 #---------------------------------------------------------------------
+@st.cache_data
 def venta_perdida(csv_files):
     # Función para calcular la semana contable
     def calcular_dia(fecha):
@@ -101,6 +102,7 @@ def venta_perdida(csv_files):
     return combined_df
 
 #---------------------------------------------------------------------
+@st.cache_data
 def venta(venta_semanal):
     concat_venta = pd.DataFrame()
 
