@@ -648,8 +648,41 @@ figura8 = graficar_venta_perdida_dinamica(df_venta_filtrada, df_venta_perdida_fi
 
 
 #---------------------------------------------------------------------
-# Divisor y encabezado
 
+# Aplicar cache_data a las funciones que generan las gráficas
+@st.cache_data
+def graficar_figura():
+    return figura
+
+@st.cache_data
+def graficar_figura6():
+    return figura6
+
+@st.cache_data
+def graficar_figura3():
+    return figura3
+
+@st.cache_data
+def graficar_figura4():
+    return figura4
+
+@st.cache_data
+def graficar_figura5():
+    return figura5
+
+@st.cache_data
+def graficar_figura2():
+    return figura2
+
+@st.cache_data
+def graficar_figura7():
+    return figura7
+
+@st.cache_data
+def graficar_figura8():
+    return figura8
+
+# Divisor y encabezado
 st.divider()
 st.subheader(':orange[Comparación de Ventas por Semana y Categoria]')
 
@@ -658,11 +691,11 @@ c1, c6, c3 = st.columns([4, 3, 4])
 
 # Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
 with c1:
-    st.plotly_chart(figura, use_container_width=True)
+    st.plotly_chart(graficar_figura(), use_container_width=True)
 with c6:
-    st.plotly_chart(figura6, use_container_width=True)
+    st.plotly_chart(graficar_figura6(), use_container_width=True)
 with c3:
-    st.plotly_chart(figura3, use_container_width=True)
+    st.plotly_chart(graficar_figura3(), use_container_width=True)
 
 st.divider()
 st.subheader(':orange[Comparación de Ventas por Mercado y División]')
@@ -670,13 +703,12 @@ st.subheader(':orange[Comparación de Ventas por Mercado y División]')
 # Crear columnas
 c4, c5, c2 = st.columns([4, 3, 4])
 
-# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
 with c4:
-    st.plotly_chart(figura4, use_container_width=True)
+    st.plotly_chart(graficar_figura4(), use_container_width=True)
 with c5:
-    st.plotly_chart(figura5, use_container_width=True)
+    st.plotly_chart(graficar_figura5(), use_container_width=True)
 with c2:
-    st.plotly_chart(figura2, use_container_width=True)
+    st.plotly_chart(graficar_figura2(), use_container_width=True)
 
 st.divider()
 st.subheader(':orange[Revisión por División y Plaza]')
@@ -685,8 +717,7 @@ st.subheader(':orange[Revisión por División y Plaza]')
 c8, c7 = st.columns([4, 4])
 
 with c7:
-    st.plotly_chart(figura7, use_container_width=True)
-
+    st.plotly_chart(graficar_figura7(), use_container_width=True)
 
 with c8:    
-    st.plotly_chart(figura8, use_container_width=True)
+    st.plotly_chart(graficar_figura8(), use_container_width=True)
