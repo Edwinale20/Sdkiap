@@ -10,6 +10,8 @@ import plotly.io as pio
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
+st.subheader("Datos a partir del 31 de julio del 2024")
+st.subheader("A partir de la semana 34, los datos son venta pérdida y venta son de toda la semana (lunes-domingo)")
 
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
 @st.cache_data
