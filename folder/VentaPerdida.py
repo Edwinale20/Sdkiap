@@ -10,6 +10,7 @@ import plotly.io as pio
 
 
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
+@st.cache_data
 def list_files_in_github_folder(folder_url):
     response = requests.get(folder_url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
@@ -20,6 +21,7 @@ def list_files_in_github_folder(folder_url):
     return raw_urls
 
 # Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
+@st.cache_data
 def download_file_from_github(url):
     response = requests.get(url)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
@@ -229,52 +231,61 @@ categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
 segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
-# Filtrar por Proveedor
-if proveedor == 'Ninguno':
-    df_venta_perdida_filtrada = VENTA_PERDIDA
-    df_venta_filtrada = VENTA
-else:
-    df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] == proveedor]
-    df_venta_filtrada = VENTA[VENTA['PROVEEDOR'] == proveedor]
+# Función para aplicar filtros, ahora usando st.cache_data
+@st.cache_data
+def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento):
+    # Filtrar por Proveedor
+    if proveedor == 'Ninguno':
+        df_venta_perdida_filtrada = VENTA_PERDIDA
+        df_venta_filtrada = VENTA
+    else:
+        df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] == proveedor]
+        df_venta_filtrada = VENTA[VENTA['PROVEEDOR'] == proveedor]
 
-# Filtrar por División
-if division != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['DIVISION'] == division]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['DIVISION'] == division]
+    # Filtrar por División
+    if division != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['DIVISION'] == division]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['DIVISION'] == division]
 
-# Filtrar por Plaza
-if plaza != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
+    # Filtrar por Plaza
+    if plaza != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
-# Filtrar por Mercado
-if mercado != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['MERCADO'] == mercado]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['MERCADO'] == mercado]
+    # Filtrar por Mercado
+    if mercado != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['MERCADO'] == mercado]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['MERCADO'] == mercado]
 
-# Filtrar por Semana
-if semana != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'] == semana]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Semana Contable'] == semana]
+    # Filtrar por Semana
+    if semana != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'] == semana]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Semana Contable'] == semana]
 
-# Filtrar por Familia
-if familia != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] == familia]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] == familia]
+    # Filtrar por Familia
+    if familia != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] == familia]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] == familia]
 
-# Filtrar por Categoria
-if categoria != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SUBCATEGORIA'] == categoria]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SUBCATEGORIA'] == categoria]
+    # Filtrar por Categoria
+    if categoria != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SUBCATEGORIA'] == categoria]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SUBCATEGORIA'] == categoria]
 
-# Filtrar por Segmento
-if segmento != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SEGMENTO'] == segmento]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SEGMENTO'] == segmento]
+    # Filtrar por Segmento
+    if segmento != 'Ninguno':
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SEGMENTO'] == segmento]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SEGMENTO'] == segmento]
 
-# Modificar la columna 'Semana Contable' en ambos DataFrames
-df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
-df_venta_filtrada['Semana Contable'] = df_venta_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
+    # Modificar la columna 'Semana Contable' en ambos DataFrames
+    df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
+    df_venta_filtrada['Semana Contable'] = df_venta_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
+
+    return df_venta_perdida_filtrada, df_venta_filtrada
+
+# Llamar a la función de filtros
+df_venta_perdida_filtrada, df_venta_filtrada = aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento)
+
 
 
 #--------------------------------------------------------------------
