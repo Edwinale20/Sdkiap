@@ -231,7 +231,7 @@ opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
 segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
 opciones_articulo = ['Ninguno'] + list(VENTA_PERDIDA['ARTICULO'].unique())
-articulo = st.sidebar.selectbox('Seleccione el Articulo', opciones_articulo)
+articulo = st.sidebar.text_input('Seleccione el Articulo', opciones_articulo)
 
 # Función para aplicar filtros, ahora usando st.cache_data
 @st.cache_data
