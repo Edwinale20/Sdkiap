@@ -230,8 +230,8 @@ categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
 segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
-opciones_articulo = ['Ninguno'] + list(VENTA_PERDIDA['ARTICULO'].unique())
-articulo = st.sidebar.text_input('Seleccione el Articulo', opciones_articulo)
+#opciones_articulo = ['Ninguno'] + list(VENTA_PERDIDA['ARTICULO'].unique())
+#articulo = st.sidebar.text_input('Seleccione el Articulo', opciones_articulo)
 
 # Función para aplicar filtros, ahora usando st.cache_data
 @st.cache_data
@@ -280,9 +280,9 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, s
         df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SEGMENTO'] == segmento]
 
     # Filtrar por Segmento
-    if articulo != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['ARTICULO'] == articulo]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['ARTICULO'] == articulo]
+    #if articulo != 'Ninguno':
+        #df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['ARTICULO'] == articulo]
+        #df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['ARTICULO'] == articulo]
 
     # Modificar la columna 'Semana Contable' en ambos DataFrames
     df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
