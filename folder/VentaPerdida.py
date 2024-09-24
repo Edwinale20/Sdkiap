@@ -11,6 +11,8 @@ import plotly.io as pio
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 st.markdown("Datos a partir del 31 de julio del 2024,<br>A partir de la semana 35, los datos son venta pérdida y venta son de toda la semana (lunes-domingo).", unsafe_allow_html=True)
+st.sidebar.title("Filtros de Ventas")
+
 
 GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 
