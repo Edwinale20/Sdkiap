@@ -207,7 +207,7 @@ VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
 VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
 
 #---------------------------------------------------------------------
-st.sidebar.header("Filtros de Ventas")
+st.sidebar.header("Filtros de ")
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
 opciones_proveedor = ['Ninguno'] + list(VENTA_PERDIDA['PROVEEDOR'].unique())
 proveedor = st.sidebar.selectbox('Seleccione el Proveedor', opciones_proveedor)
