@@ -13,58 +13,42 @@ st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 st.markdown("Datos a partir del 31 de julio del 2024,<br>A partir de la semana 35, los datos son venta pérdida y venta son de toda la semana (lunes-domingo).", unsafe_allow_html=True)
 
 
-# Obtener el token de GitHub desde Streamlit secrets
 GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 
-# Función para obtener la lista de archivos en una carpeta del repositorio de GitHub usando la API
+# Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
 @st.cache_data(ttl=3600)
 def list_files_in_github_folder(folder_url):
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    response = requests.get(folder_url, headers=headers)
+    response = requests.get(folder_url)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    files_info = response.json()
     
-    # Verifica si la solicitud fue exitosa
-    if response.status_code == 200:
-        files_info = response.json()
-        # Obtener las URLs de descarga de los archivos
-        raw_urls = [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
-        return raw_urls
-    else:
-        st.error(f"Error al obtener los archivos: {response.status_code}")
-        return []
+    # Obtener las raw URLs
+    raw_urls = [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
+    return raw_urls
 
-# Función para descargar y leer archivos CSV o Excel desde GitHub
+# Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
 @st.cache_data(ttl=3600)
 def download_file_from_github(url):
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    response = requests.get(url, headers=headers)
-    
-    # Verifica si la solicitud fue exitosa
-    if response.status_code == 200:
-        return BytesIO(response.content)
-    else:
-        st.error(f"Error al descargar el archivo: {response.status_code}")
-        return None
+    response = requests.get(url)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    return BytesIO(response.content)
 
-# URLs de las carpetas en GitHub usando la API
+# URLs de las carpetas en GitHub usando la API (sin raw aún)
 csv_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20Perdida'
 venta_semanal_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20semanal'
-master_github_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/MASTER.xlsx'
+master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
 
-# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida"
+# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida" (usando la API)
 csv_files = list_files_in_github_folder(csv_folder_url)
 
 # Descargar y leer todos los archivos CSV en un solo DataFrame con la codificación correcta
-if csv_files:
-    csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
+csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
 
 # Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
 venta_semanal = list_files_in_github_folder(venta_semanal_folder_url)
 
-# Descargar y leer el archivo MASTER desde GitHub
-master_file = download_file_from_github(master_github_url)
-if master_file:
-    MASTER = pd.read_excel(master_file)
-
+# Cargar el archivo MASTER desde GitHub
+MASTER = pd.read_excel(download_file_from_github(master_github_url))
 
 
 # Definir paleta de colores global 
