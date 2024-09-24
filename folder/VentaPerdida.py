@@ -599,7 +599,7 @@ figura7 = graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_f
 
 
 @st.cache_data
-def graficar_venta_perdida_dinamica(df_venta_filtrada, df_venta_perdida_filtrada):
+def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
     # Filtrar semanas comunes
     semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
     df_venta_filtrada_suma = df_venta_filtrada[df_venta_filtrada['Semana Contable'].isin(semanas_comunes)]
@@ -613,11 +613,8 @@ def graficar_venta_perdida_dinamica(df_venta_filtrada, df_venta_perdida_filtrada
     df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'DIVISION'])
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total']) * 100
 
-
-
-    # Crear el gráfico dinámico
+    # Crear el gráfico estático
     fig = go.Figure()
-
 
     # Agregar líneas de base con puntos
     for division in df_combined['DIVISION'].unique():
@@ -631,33 +628,14 @@ def graficar_venta_perdida_dinamica(df_venta_filtrada, df_venta_perdida_filtrada
 
     # Configurar el layout
     fig.update_layout(title="Monitoreo de Venta Perdida semanal por División 🏴🏳️",
-                      #xaxis_title="Semana Contable",
                       yaxis_title="% Venta Perdida",
                       hovermode="closest")
-
-    # Crear los cuadros de animación
-    frames = [go.Frame(
-        data=[go.Scatter(x=df_combined[df_combined['DIVISION'] == division]['Semana Contable'].iloc[:k+1],
-                         y=df_combined[df_combined['DIVISION'] == division]['% Venta Perdida'].iloc[:k+1],
-                         mode="lines+markers",
-                         marker=dict(size=17))
-              for division in df_combined['DIVISION'].unique()])
-        for k in range(len(df_combined['Semana Contable'].unique()))
-    ]
-
-    fig.frames = frames
-
-    # Agregar botón de animación
-    fig.update_layout( title_font=dict(size=24), template="colors", updatemenus=[dict(type="buttons",
-                                        buttons=[dict(label="Play",
-                                                      method="animate",
-                                                      args=[None])])])
-    
 
     return fig
 
 # Uso de la función
-figura8 = graficar_venta_perdida_dinamica(df_venta_filtrada, df_venta_perdida_filtrada)
+figura8 = graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
+
 
 
 #---------------------------------------------------------------------
