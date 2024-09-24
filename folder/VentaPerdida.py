@@ -14,12 +14,19 @@ st.markdown("Datos a partir del 31 de julio del 2024,<br>A partir de la semana 3
 
 
 
+import requests
+import streamlit as st
+import pandas as pd
+from io import BytesIO
+
+# Obtener el token de GitHub desde Streamlit secrets
 GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 
-# Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
+# Función para obtener la lista de archivos en una carpeta de GitHub con URL de la API (repositorio privado)
 @st.cache_data(ttl=3600)
 def list_files_in_github_folder(folder_url):
-    response = requests.get(folder_url)
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    response = requests.get(folder_url, headers=headers)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
     files_info = response.json()
     
@@ -27,17 +34,18 @@ def list_files_in_github_folder(folder_url):
     raw_urls = [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
     return raw_urls
 
-# Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
+# Función para descargar y leer archivos CSV y Excel desde GitHub (usando URLs privadas)
 @st.cache_data(ttl=3600)
 def download_file_from_github(url):
-    response = requests.get(url)
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    response = requests.get(url, headers=headers)
     response.raise_for_status()  # Verifica si la solicitud fue exitosa
     return BytesIO(response.content)
 
 # URLs de las carpetas en GitHub usando la API (sin raw aún)
 csv_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20Perdida'
 venta_semanal_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20semanal'
-master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
+master_github_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/MASTER.xlsx'
 
 # Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida" (usando la API)
 csv_files = list_files_in_github_folder(csv_folder_url)
