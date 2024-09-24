@@ -665,6 +665,15 @@ st.subheader(':orange[Comparación de Ventas por Mercado y División]')
 # Crear columnas
 c4, c5, c2 = st.columns([4, 3, 4])
 
+
+# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
+with c4:
+    st.plotly_chart(figura4, use_container_width=True)
+with c5:
+    st.plotly_chart(figura5, use_container_width=True)
+with c2:
+    st.plotly_chart(figura2, use_container_width=True)
+
 st.divider()
 st.subheader(':orange[Revisión por División y Plaza]')
 
@@ -677,16 +686,6 @@ with c7:
 
 with c8:    
     st.plotly_chart(figura8, use_container_width=True)
-
-# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
-with c4:
-    st.plotly_chart(figura4, use_container_width=True)
-with c5:
-    st.plotly_chart(figura5, use_container_width=True)
-with c2:
-    st.plotly_chart(figura2, use_container_width=True)
-
-
 
 import psutil
 mem = psutil.virtual_memory()
