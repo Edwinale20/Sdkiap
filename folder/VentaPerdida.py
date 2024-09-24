@@ -683,7 +683,6 @@ c8, c7 = st.columns([4, 4])
 with c7:
     st.plotly_chart(figura7, use_container_width=True)
 
-
 with c8:    
     st.plotly_chart(figura8, use_container_width=True)
 
