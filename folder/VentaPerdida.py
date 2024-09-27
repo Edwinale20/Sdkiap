@@ -204,10 +204,12 @@ VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
 VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
 
 #---------------------------------------------------------------------
-st.sidebar.header("Filtros de ")
+st.sidebar.header("Selecciona un filtro")
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
 opciones_proveedor = ['Ninguno'] + list(VENTA_PERDIDA['PROVEEDOR'].unique())
 proveedor = st.sidebar.selectbox('Seleccione el Proveedor', opciones_proveedor)
+
+articulo_ingresado = st.sidebar.text_input('Ingrese el SKU del Artículo')
 
 opciones_division = ['Ninguno'] + list(VENTA_PERDIDA['DIVISION'].unique())
 division = st.sidebar.selectbox('Seleccione la División', opciones_division)
@@ -243,6 +245,15 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, s
     else:
         df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] == proveedor]
         df_venta_filtrada = VENTA[VENTA['PROVEEDOR'] == proveedor]
+
+    # Filtrar por Artículo
+    if articulo_ingresado == 'Ninguno' or articulo_ingresado == '':
+        df_venta_perdida_filtrada = VENTA_PERDIDA
+        df_venta_filtrada = VENTA
+    else:
+    # Filtra por el artículo ingresado
+        df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['ARTICULO'].astype(str) == str(articulo_ingresado)]
+        df_venta_filtrada = VENTA[VENTA['ARTICULO'].astype(str) == str(articulo_ingresado)]
 
     # Filtrar por División
     if division != 'Ninguno':
