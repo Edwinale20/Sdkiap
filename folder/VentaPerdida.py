@@ -235,7 +235,8 @@ segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 #opciones_articulo = ['Ninguno'] + list(VENTA_PERDIDA['ARTICULO'].unique())
 #articulo = st.sidebar.text_input('Seleccione el Articulo', opciones_articulo)
 
-def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento, articulo_ingresado):
+@st.cache_data
+def aplicar_filtros(VENTA_PERDIDA, VENTA, PROVEEDOR, DIVISION, PLAZA, MERCADO, SEMANA, FAMILIA, CATEGORIA, SEGMENTO, articulo_ingresado):
     # Filtrar por Proveedor
     if proveedor == 'Ninguno':
         df_venta_perdida_filtrada = VENTA_PERDIDA
@@ -251,6 +252,9 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, s
     else:
         df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['ARTICULO'].astype(str) == str(articulo_ingresado)]
         df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['ARTICULO'].astype(str) == str(articulo_ingresado)]
+
+    return df_venta_perdida_filtrada, df_venta_filtrada
+
         
     # Filtrar por División
     if division != 'Ninguno':
