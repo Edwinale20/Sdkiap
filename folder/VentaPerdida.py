@@ -237,7 +237,7 @@ segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
 # Función para aplicar filtros, ahora usando st.cache_data
 @st.cache_data
-def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento):
+def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento, articulo_ingresado):
     # Filtrar por Proveedor
     if proveedor == 'Ninguno':
         df_venta_perdida_filtrada = VENTA_PERDIDA
@@ -248,12 +248,12 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, s
 
     # Filtrar por Artículo
     if articulo_ingresado == 'Ninguno' or articulo_ingresado == '':
-        df_venta_perdida_filtrada = VENTA_PERDIDA
-        df_venta_filtrada = VENTA
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada
+        df_venta_filtrada = df_venta_filtrada
     else:
-        df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['ARTICULO'].astype(str) == str(articulo_ingresado)]
-        df_venta_filtrada = VENTA[VENTA['ARTICULO'].astype(str) == str(articulo_ingresado)]
-
+        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['ARTICULO'].astype(str) == str(articulo_ingresado)]
+        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['ARTICULO'].astype(str) == str(articulo_ingresado)]
+        
     # Filtrar por División
     if division != 'Ninguno':
         df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['DIVISION'] == division]
