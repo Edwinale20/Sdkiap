@@ -251,7 +251,6 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, s
         df_venta_perdida_filtrada = VENTA_PERDIDA
         df_venta_filtrada = VENTA
     else:
-    # Filtra por el artículo ingresado
         df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['ARTICULO'].astype(str) == str(articulo_ingresado)]
         df_venta_filtrada = VENTA[VENTA['ARTICULO'].astype(str) == str(articulo_ingresado)]
 
