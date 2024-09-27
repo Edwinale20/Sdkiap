@@ -235,8 +235,6 @@ segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 #opciones_articulo = ['Ninguno'] + list(VENTA_PERDIDA['ARTICULO'].unique())
 #articulo = st.sidebar.text_input('Seleccione el Articulo', opciones_articulo)
 
-# Función para aplicar filtros, ahora usando st.cache_data
-@st.cache_data
 def aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento, articulo_ingresado):
     # Filtrar por Proveedor
     if proveedor == 'Ninguno':
