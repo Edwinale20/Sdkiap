@@ -409,7 +409,7 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
                  text='% Venta Perdida',
                  title='% Venta Perdida por subcategoria 📊',
                  labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos'},
-                 hover_data={'% Venta Perdida': ':.2f'})
+                 hover_data={'% Venta Perdida': ':.1f'})
 
     # Ajustar el diseño para mostrar las etiquetas de porcentaje
     fig.update_traces(texttemplate='%{text:.1f}%', textposition='inside', hovertemplate='%{x}<br>$%{y} pesos<br>%{text:.1f}% de Venta Perdida')
