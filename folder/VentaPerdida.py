@@ -1,23 +1,54 @@
 import pandas as pd
-import glob
 import os
 import streamlit as st
 import plotly.express as px
 import numpy as np
 import plotly.graph_objects as go
+from io import BytesIO
+import requests
 import plotly.io as pio
-import subprocess
-
-
-
-# Get a list of all CSV files in a directory
-csv_files = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.csv')
-venta_semanal = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta semanal/*.xlsx')
-excel = ("C:\\Users\\omen0\\OneDrive\\Documentos\VP317\\MASTER.xlsx")
-MASTER = pd.read_excel(excel)
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
+st.markdown("Datos a partir del 26 de agosto del 2024.", unsafe_allow_html=True)
+
+
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+
+# Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
+@st.cache_data(ttl=3600)
+def list_files_in_github_folder(folder_url):
+    response = requests.get(folder_url)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    files_info = response.json()
+
+    # Obtener las raw URLs
+    raw_urls = [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
+    return raw_urls
+
+# Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
+@st.cache_data(ttl=3600)
+def download_file_from_github(url):
+    response = requests.get(url)
+    response.raise_for_status()  # Verifica si la solicitud fue exitosa
+    return BytesIO(response.content)
+
+# URLs de las carpetas en GitHub usando la API (sin raw aún)
+csv_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20Perdida'
+venta_semanal_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20semanal'
+master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
+
+# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida" (usando la API)
+csv_files = list_files_in_github_folder(csv_folder_url)
+
+# Descargar y leer todos los archivos CSV en un solo DataFrame con la codificación correcta
+csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
+
+# Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
+venta_semanal = list_files_in_github_folder(venta_semanal_folder_url)
+
+# Cargar el archivo MASTER desde GitHub
+MASTER = pd.read_excel(download_file_from_github(master_github_url))
 
 
 # Definir paleta de colores global 
@@ -28,7 +59,6 @@ pio.templates["colors2"].layout.colorway = ['#2C7865', '#EE2526', '#FF9800', '#0
 # Aplicar plantilla personalizada por defecto
 pio.templates.default = "colors"
 pio.templates.default2 = "colors2"
-
 #---------------------------------------------------------------------
 @st.cache_data
 def venta_perdida(csv_files):
