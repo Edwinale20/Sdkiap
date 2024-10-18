@@ -209,8 +209,6 @@ st.sidebar.header("Selecciona un filtro")
 opciones_proveedor = ['Ninguno'] + list(VENTA_PERDIDA['PROVEEDOR'].unique())
 proveedor = st.sidebar.selectbox('Seleccione el Proveedor', opciones_proveedor)
 
-articulo_ingresado = st.sidebar.text_input('Ingrese el SKU del Artículo')
-
 opciones_division = ['Ninguno'] + list(VENTA_PERDIDA['DIVISION'].unique())
 division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 
@@ -243,16 +241,6 @@ def aplicar_filtros(VENTA_PERDIDA, VENTA, PROVEEDOR, DIVISION, PLAZA, MERCADO, S
     else:
         df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] == proveedor]
         df_venta_filtrada = VENTA[VENTA['PROVEEDOR'] == proveedor]
-
-    # Filtrar por Artículo
-    if articulo_ingresado == 'Ninguno' or articulo_ingresado == '':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada
-        df_venta_filtrada = df_venta_filtrada
-    else:
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['ARTICULO'].astype(str) == str(articulo_ingresado)]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['ARTICULO'].astype(str) == str(articulo_ingresado)]
-
-    return df_venta_perdida_filtrada, df_venta_filtrada
 
         
     # Filtrar por División
