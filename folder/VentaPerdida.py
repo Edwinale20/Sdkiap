@@ -1,54 +1,23 @@
 import pandas as pd
+import glob
 import os
 import streamlit as st
 import plotly.express as px
 import numpy as np
 import plotly.graph_objects as go
-from io import BytesIO
-import requests
 import plotly.io as pio
+import subprocess
+
+
+
+# Get a list of all CSV files in a directory
+csv_files = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta Pérdida/*.csv')
+venta_semanal = glob.glob('C:/Users/omen0/OneDrive - ICONN/Venta semanal/*.xlsx')
+excel = ("C:\\Users\\omen0\\OneDrive\\Documentos\VP317\\MASTER.xlsx")
+MASTER = pd.read_excel(excel)
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
-st.markdown("Datos a partir del 26 de agosto del 2024.", unsafe_allow_html=True)
-
-
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-
-# Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
-@st.cache_data(ttl=3600)
-def list_files_in_github_folder(folder_url):
-    response = requests.get(folder_url)
-    response.raise_for_status()  # Verifica si la solicitud fue exitosa
-    files_info = response.json()
-    
-    # Obtener las raw URLs
-    raw_urls = [file_info['download_url'] for file_info in files_info if file_info['type'] == 'file']
-    return raw_urls
-
-# Función para descargar y leer archivos CSV y Excel desde GitHub (raw URLs)
-@st.cache_data(ttl=3600)
-def download_file_from_github(url):
-    response = requests.get(url)
-    response.raise_for_status()  # Verifica si la solicitud fue exitosa
-    return BytesIO(response.content)
-
-# URLs de las carpetas en GitHub usando la API (sin raw aún)
-csv_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20Perdida'
-venta_semanal_folder_url = 'https://api.github.com/repos/Edwinale20/Sdkiap/contents/Venta%20semanal'
-master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MASTER.xlsx'
-
-# Obtener las URLs de los archivos CSV en la carpeta "Venta Perdida" (usando la API)
-csv_files = list_files_in_github_folder(csv_folder_url)
-
-# Descargar y leer todos los archivos CSV en un solo DataFrame con la codificación correcta
-csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
-
-# Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
-venta_semanal = list_files_in_github_folder(venta_semanal_folder_url)
-
-# Cargar el archivo MASTER desde GitHub
-MASTER = pd.read_excel(download_file_from_github(master_github_url))
 
 
 # Definir paleta de colores global 
@@ -61,7 +30,7 @@ pio.templates.default = "colors"
 pio.templates.default2 = "colors2"
 
 #---------------------------------------------------------------------
-@st.cache_data(ttl=3600)
+@st.cache_data
 def venta_perdida(csv_files):
     # Función para calcular la semana contable
     def calcular_dia(fecha):
@@ -71,7 +40,7 @@ def venta_perdida(csv_files):
 
     # Loop through each CSV file and append its contents to the combined dataframe
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file, encoding='ISO-8859-1', usecols=["PROVEEDOR",	"CATEGORIA",	"ID_ARTICULO",	"DESC_ARTICULO",	"DIVISION",	"PLAZA",	"MERCADO",	"VENTA_PERDIDA_PESOS"])
+        df = pd.read_csv(csv_file, encoding='ISO-8859-1')
         
         # Extraer el nombre del archivo sin la ruta completa y sin la extensión .csv
         file_name = os.path.splitext(os.path.basename(csv_file))[0]
@@ -87,6 +56,8 @@ def venta_perdida(csv_files):
         combined_df = pd.concat([combined_df, df])
 
     # Eliminar las columnas no deseadas
+    combined_df = combined_df.drop(columns=['UPC','CAMPO', 'INVENTARIO_UDS','INVENTARIO_PESOS','VENTA_UDS_PTD','VENTA_PESOS_PTD','NUM_TIENDA','NOMBRE_TIENDA','ESTATUS', 'PROVEEDOR', 'Fecha', 'CATEGORIA'])
+    #combined_df.loc[combined_df['DESC_ARTICULO'].str.contains('Vuse', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
     combined_df['DIVISION'] = combined_df['DIVISION'].astype(str).str[:2]
     combined_df['PLAZA'] = combined_df['PLAZA'].astype(str).str[:3]
     combined_df['MERCADO'] = combined_df['MERCADO'].astype(str).str[1:]
@@ -104,7 +75,7 @@ def venta_perdida(csv_files):
     return combined_df
 
 #---------------------------------------------------------------------
-@st.cache_data(ttl=3600)
+@st.cache_data
 def venta(venta_semanal):
     concat_venta = pd.DataFrame()
 
@@ -157,6 +128,7 @@ VENTA_PERDIDA = venta_perdida(csv_files)
 VENTA = venta(venta_semanal)
 MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
 
+
 familia_dict = MASTER.set_index('ARTICULO')['FAMILIA'].to_dict()
 segmento_dict = MASTER.set_index('ARTICULO')['SEGMENTO'].to_dict()
 subcategoria_dict = MASTER.set_index('ARTICULO')['SUBCATEGORIA'].to_dict()
@@ -175,10 +147,7 @@ VENTA['PROVEEDOR'] = VENTA['ARTICULO'].map(proveedor_dict)
 
 VENTA = VENTA.dropna(subset=['PROVEEDOR'])
 VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
-VENTA = VENTA[VENTA['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
-VENTA_PERDIDA = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] != 'DRUGS EXPRESS, S.A DE C.V.']
-VENTA = VENTA[VENTA['FAMILIA'] != 'CHESTERFIELD']
-VENTA_PERDIDA = VENTA_PERDIDA[VENTA_PERDIDA['FAMILIA'] != 'CHESTERFIELD']
+
 
 # Diccionario de mapeo de códigos de plaza a nombres
 map_plaza = {
@@ -203,8 +172,19 @@ map_plaza = {
 VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
 VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
 
+map_division = {
+    "10": "Coah-Tamps",
+    "20": "México-Península",
+    "30": "Pacífico",
+    "50": "Nuevo León",
+}
+
+# Aplicar el mapeo al DataFrame
+VENTA['DIVISION'] = VENTA['DIVISION'].map(map_division)
+VENTA_PERDIDA['DIVISION'] = VENTA_PERDIDA['DIVISION'].map(map_division)
+
 #---------------------------------------------------------------------
-st.sidebar.header("Selecciona un filtro")
+
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
 opciones_proveedor = ['Ninguno'] + list(VENTA_PERDIDA['PROVEEDOR'].unique())
 proveedor = st.sidebar.selectbox('Seleccione el Proveedor', opciones_proveedor)
@@ -230,67 +210,68 @@ categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
 segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
-#opciones_articulo = ['Ninguno'] + list(VENTA_PERDIDA['ARTICULO'].unique())
-#articulo = st.sidebar.text_input('Seleccione el Articulo', opciones_articulo)
+#articulo_ingresado = st.sidebar.text_input('Ingrese el SKU del Artículo')
 
-def aplicar_filtros(VENTA_PERDIDA, VENTA, PROVEEDOR, DIVISION, PLAZA, MERCADO, SEMANA, FAMILIA, CATEGORIA, SEGMENTO):
-    # Filtrar por Proveedor
-    if proveedor == 'Ninguno':
-        df_venta_perdida_filtrada = VENTA_PERDIDA
-        df_venta_filtrada = VENTA
-    else:
-        df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] == proveedor]
-        df_venta_filtrada = VENTA[VENTA['PROVEEDOR'] == proveedor]
 
-        
-    # Filtrar por División
-    if division != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['DIVISION'] == division]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['DIVISION'] == division]
+# Filtrar por Proveedor
+if proveedor == 'Ninguno':
+    df_venta_perdida_filtrada = VENTA_PERDIDA
+    df_venta_filtrada = VENTA
+else:
+    df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['PROVEEDOR'] == proveedor]
+    df_venta_filtrada = VENTA[VENTA['PROVEEDOR'] == proveedor]
 
-    # Filtrar por Plaza
-    if plaza != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
-    # Filtrar por Mercado
-    if mercado != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['MERCADO'] == mercado]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['MERCADO'] == mercado]
+# Filtrar por División
+if division != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['DIVISION'] == division]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['DIVISION'] == division]
 
-    # Filtrar por Semana
-    if semana != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'] == semana]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Semana Contable'] == semana]
+# Filtrar por Plaza
+if plaza != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
-    # Filtrar por Familia
-    if familia != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] == familia]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] == familia]
+# Filtrar por Mercado
+if mercado != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['MERCADO'] == mercado]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['MERCADO'] == mercado]
 
-    # Filtrar por Categoria
-    if categoria != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SUBCATEGORIA'] == categoria]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SUBCATEGORIA'] == categoria]
+# Filtrar por Semana
+if semana != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'] == semana]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Semana Contable'] == semana]
 
-    # Filtrar por Segmento
-    if segmento != 'Ninguno':
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SEGMENTO'] == segmento]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SEGMENTO'] == segmento]
+# Filtrar por Familia
+if familia != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] == familia]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] == familia]
 
-    # Filtrar por Segmento
-    #if articulo != 'Ninguno':
-        #df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['ARTICULO'] == articulo]
-        #df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['ARTICULO'] == articulo]
+# Filtrar por Categoria
+if categoria != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SUBCATEGORIA'] == categoria]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SUBCATEGORIA'] == categoria]
 
-    # Modificar la columna 'Semana Contable' en ambos DataFrames
-    df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
-    df_venta_filtrada['Semana Contable'] = df_venta_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
+# Filtrar por Segmento
+if segmento != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SEGMENTO'] == segmento]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SEGMENTO'] == segmento]
 
-    return df_venta_perdida_filtrada, df_venta_filtrada
+# Filtrar por Artículo
+#if articulo_ingresado == 'Ninguno' or articulo_ingresado == '':
+    df_venta_perdida_filtrada = VENTA_PERDIDA
+    df_venta_filtrada = VENTA
+#else:
+    # Filtra por el artículo ingresado
+    #df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['ARTICULO'].astype(str) == str(articulo_ingresado)]
+    #df_venta_filtrada = VENTA[VENTA['ARTICULO'].astype(str) == str(articulo_ingresado)]
 
-# Llamar a la función de filtros
-df_venta_perdida_filtrada, df_venta_filtrada = aplicar_filtros(VENTA_PERDIDA, VENTA, proveedor, division, plaza, mercado, semana, familia, categoria, segmento)
+# Modificar la columna 'Semana Contable' en ambos DataFrames
+df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
+df_venta_filtrada['Semana Contable'] = df_venta_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
+df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'CHESTERFIELD']
+df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'CHESTERFIELD']
+
 
 
 #--------------------------------------------------------------------
@@ -340,40 +321,52 @@ def graficar_porcentaje_venta_perdida_por_semana(df_venta_filtrada, df_venta_per
 figura = graficar_porcentaje_venta_perdida_por_semana(df_venta_filtrada, df_venta_perdida_filtrada)
 
 
-
 @st.cache_data
-def graficar_venta_perdida_por_division(df_venta_perdida_filtrada, df_venta_filtrada):
-    # Sumar las ventas perdidas y netas por Proveedor
-    df_venta_perdida_por_division = df_venta_perdida_filtrada.groupby('PROVEEDOR')['VENTA_PERDIDA_PESOS'].sum().reset_index()
-    df_venta_por_division = df_venta_filtrada.groupby('PROVEEDOR')['Venta Neta Total'].sum().reset_index()
+def graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_venta_filtrada):
+    # Filtrar semanas comunes
+    semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
+    df_venta_perdida_filtrada_suma = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'].isin(semanas_comunes)]
 
-    # Combinar los DataFrames para calcular el porcentaje
-    df_combined = pd.merge(df_venta_perdida_por_division, df_venta_por_division, on='PROVEEDOR', how='left')
+    # Agrupar por Proveedor y Semana Contable para sumar la venta perdida
+    df_venta_perdida_por_proveedor_y_semana = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'PROVEEDOR'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+
+    # Agrupar por Semana Contable para sumar la venta neta total
+    df_venta_filtrada_suma = df_venta_filtrada[df_venta_filtrada['Semana Contable'].isin(semanas_comunes)].groupby('Semana Contable')['Venta Neta Total'].sum().reset_index()
+
+    # Calcular el porcentaje de venta perdida sobre la venta neta total
+    df_combined = pd.merge(df_venta_perdida_por_proveedor_y_semana, df_venta_filtrada_suma, on='Semana Contable', how='left')
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total'].replace(0, np.nan)) * 100
 
-    # Crear la figura con el porcentaje de venta perdida
-    fig = go.Figure(go.Bar(
-        x=df_combined['PROVEEDOR'],
-        y=df_combined['% Venta Perdida'],
-        name='% Venta Perdida',
-        hovertemplate='Proveedor: %{x}<br>% Venta Perdida: %{y:.1f}%<extra></extra>'
-    ))
+    # Crear la gráfica de líneas por proveedor
+    fig = go.Figure()
+
+    # Añadir una línea por cada proveedor
+    proveedores = df_combined['PROVEEDOR'].unique()
+    for proveedor in proveedores:
+        df_proveedor = df_combined[df_combined['PROVEEDOR'] == proveedor]
+        fig.add_trace(go.Scatter(
+            x=df_proveedor['Semana Contable'],
+            y=df_proveedor['% Venta Perdida'],
+            mode='lines+markers',
+            name=proveedor,
+            hovertemplate='%{x}<br>% Venta Perdida: %{y:.2f}%<extra></extra>'
+        ))
 
     # Configurar el diseño de la gráfica
     fig.update_layout(
-        title='% Venta Perdida por Proveedor 🗺️',
+        title='% de Venta Perdida por Proveedor y Semana 🗓️',
         title_font=dict(size=24),
-        xaxis=dict(title='Proveedor'),
-        yaxis=dict(title='% Venta Perdida'),
-        yaxis_tickformat=".1f",  # Formato del eje y para mostrar solo un decimal
-        template="colors2"
+        xaxis=dict(title='Semana Contable'),
+        yaxis=dict(title='% de Venta Perdida'),
+        yaxis_tickformat=".2f",  # Formato de los ticks del eje y
+        template="plotly"  # Aplicar la plantilla personalizada
     )
-
 
     return fig
 
 # Uso de la función
-figura2 = graficar_venta_perdida_por_division(df_venta_perdida_filtrada, df_venta_filtrada)
+figura2 = graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_venta_filtrada)
+
 
 
 
@@ -390,17 +383,25 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
     df_venta_perdida_suma['% Venta Perdida'] = (df_venta_perdida_suma['VENTA_PERDIDA_PESOS'] / df_venta_perdida_suma['Venta Neta Total'].replace(0, np.nan)) * 100
 
     # Crear la gráfica apilada
-    fig = px.bar(df_venta_perdida_suma, 
-                 x='Semana Contable', 
-                 y='VENTA_PERDIDA_PESOS', 
-                 color='SUBCATEGORIA', 
-                 text='% Venta Perdida',
-                 title='% Venta Perdida por subcategoria 📊',
-                 labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos'},
-                 hover_data={'% Venta Perdida': ':.1f'})
+    fig = px.bar(
+        df_venta_perdida_suma, 
+        x='Semana Contable', 
+        y=df_venta_perdida_suma['VENTA_PERDIDA_PESOS'] / 1e6,  # Convertir a millones
+        color='SUBCATEGORIA', 
+        text='% Venta Perdida',
+        title='% Venta Perdida por Categoria 📊',
+        labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos (M)'},
+        hover_data={'% Venta Perdida': ':.1f'}
+    )
+
 
     # Ajustar el diseño para mostrar las etiquetas de porcentaje
-    fig.update_traces(texttemplate='%{text:.1f}%', textposition='inside', hovertemplate='%{x}<br>$%{y} pesos<br>%{text:.1f}% de Venta Perdida')
+    fig.update_traces(
+        texttemplate='%{text:.2f}%', 
+        textposition='inside', 
+        hovertemplate='%{x}<br>$%{y:.2f}M de pesos<br>%{text:.1f}% de Venta Perdida'
+    )
+
 
     # Configurar el layout
     fig.update_layout(title_font=dict(size=24), barmode='stack',  template="colors", yaxis=dict(title='Venta Perdida en Pesos'))
@@ -586,7 +587,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     # Ajustar el diseño del gráfico
     fig.update_layout(
         title_font=dict(size=24),
-        template="colors",  # Usar la plantilla colors2
+        template="colors2",  # Usar la plantilla colors2
         showlegend=False  # Ocultar la leyenda
     )
 
@@ -594,7 +595,6 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
 
 # Uso de la función
 figura7 = graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrada)
-
 
 
 @st.cache_data
@@ -626,7 +626,7 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
                                  name=f'División {division}'))
 
     # Configurar el layout
-    fig.update_layout(title="Monitoreo de Venta Perdida semanal por División 🏴🏳️",
+    fig.update_layout(title="Venta Perdida semanal por División 🏴🏳️",
                       yaxis_title="% Venta Perdida",
                       hovermode="closest")
 
@@ -636,9 +636,7 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
 figura8 = graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
 
 
-
 #---------------------------------------------------------------------
-
 # Divisor y encabezado
 
 st.divider()
@@ -656,34 +654,30 @@ with c3:
     st.plotly_chart(figura3, use_container_width=True)
 
 st.divider()
-st.subheader(':orange[Comparación de Ventas por Mercado y División]')
-
-# Crear columnas
-c4, c5, c2 = st.columns([4, 3, 4])
-
-
-# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
-with c4:
-    st.plotly_chart(figura4, use_container_width=True)
-with c5:
-    st.plotly_chart(figura5, use_container_width=True)
-with c2:
-    st.plotly_chart(figura2, use_container_width=True)
-
-st.divider()
 st.subheader(':orange[Revisión por División y Plaza]')
 
 # Crear columnas
-c8, c7 = st.columns([4, 4])
+c4, c5 = st.columns([4, 4])
 
-with c7:
+with c4:
     st.plotly_chart(figura7, use_container_width=True)
 
-with c8:    
+with c5:    
     st.plotly_chart(figura8, use_container_width=True)
 
-import psutil
-mem = psutil.virtual_memory()
-st.write(f"Memoria usada: {mem.percent}%")
+
+st.divider()
+st.subheader(':orange[Comparación de Ventas por Mercado y División]')
+
+# Crear columnas
+c6, c7, c8 = st.columns([4, 3, 4])
+
+# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
+with c6:
+    st.plotly_chart(figura4, use_container_width=True)
+with c7:
+    st.plotly_chart(figura5, use_container_width=True)
+with c8:
+    st.plotly_chart(figura2, use_container_width=True)
 
 
