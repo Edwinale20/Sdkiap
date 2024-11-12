@@ -673,7 +673,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
 
     # Crear un diccionario de mapeo ARTICULO -> DESCRIPCIÓN
-    articulo_a_descripcion = master.set_index('ARTICULO')['DESCRIPCIÓN'].to_dict()
+    articulo_a_descripcion = MASTER.set_index('ARTICULO')['DESCRIPCIÓN'].to_dict()
 
     # Filtrar semanas comunes
     semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
