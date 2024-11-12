@@ -527,7 +527,7 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
                  color_discrete_sequence=custom_colors)  # Aplicando la paleta de colores personalizada
 
     # Configurar el layout para que solo se muestre el % Venta Perdida en el hover
-    fig.update_traces(hovertemplate='%{y:.1f}%')
+    fig.update_traces(hovertemplate='%{x}<br>$%{y:,.2f} pesos perdidos<br>% Venta Perdida: %{text:.1f}%')
 
     # Configurar el layout general
     fig.update_layout(title_font=dict(size=24),
