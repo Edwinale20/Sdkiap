@@ -724,7 +724,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     return fig
 
 # Uso de la función
-figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada, master)
+figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada, MASTER)
 
 #---------------------------------------------------------------------
 # Divisor y encabezado
