@@ -300,7 +300,7 @@ if segmento != 'Ninguno':
 df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
 df_venta_filtrada['Semana Contable'] = df_venta_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
 df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'BYE']
-df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'BYE']
+df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'BYE'] 
 
 
 
