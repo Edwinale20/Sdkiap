@@ -666,38 +666,46 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
 figura8 = graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
 
 @st.cache_data
-def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtrada):
+def graficar_top_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
     # Filtrar semanas comunes
     semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
     df_venta_filtrada_suma = df_venta_filtrada[df_venta_filtrada['Semana Contable'].isin(semanas_comunes)]
     df_venta_perdida_filtrada_suma = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'].isin(semanas_comunes)]
     
-    # Sumar las ventas netas y perdidas por familia
+    # Sumar las ventas netas y perdidas por artículo
     df_venta_suma = df_venta_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['Venta Neta Total'].sum().reset_index()
     df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
 
-    # Combinar los DataFrames para poder calcular el porcentaje
+    # Combinar los DataFrames para calcular el porcentaje
     df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'ARTICULO'])
 
-    # Calcular el porcentaje de venta perdida respecto a la venta neta total de la misma familia
+    # Calcular el porcentaje de venta perdida respecto a la venta neta total por artículo
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total'].replace(0, np.nan)) * 100
 
-    # Crear una tabla pivote para que la familia sea una columna y la semana se muestre en el eje x
-    df_pivot = df_combined.pivot(index='Semana Contable', columns='ARTICULO', values='% Venta Perdida').reset_index()
+    # Ordenar por venta perdida total y seleccionar el top 10
+    top_articulos = (
+        df_combined.groupby('ARTICULO')['VENTA_PERDIDA_PESOS']
+        .sum()
+        .nlargest(10)
+        .index
+    )
+    df_top_combined = df_combined[df_combined['ARTICULO'].isin(top_articulos)]
+
+    # Crear una tabla pivote para que los artículos sean columnas y la semana se muestre en el eje x
+    df_pivot = df_top_combined.pivot(index='Semana Contable', columns='ARTICULO', values='% Venta Perdida').reset_index()
 
     # Definir una paleta de colores personalizada similar a la gráfica de la izquierda
     custom_colors = [
-    '#00712D', '#FF9800', '#000080', '#FFB347', '#33A85C', '#FF6347', '#000000', '#FFD700', 
-    '#66C88B', '#FF4500', '#FFCC66', '#008080', '#CD5C5C', '#FF7F50', '#006400', '#FFA07A', 
-    '#8B0000', '#FFDEAD', '#ADFF2F', '#2F4F4F'
+        '#00712D', '#FF9800', '#000080', '#FFB347', '#33A85C', '#FF6347', 
+        '#000000', '#FFD700', '#66C88B', '#FF4500'
     ]
 
     # Crear la gráfica de barras apiladas
     fig = px.bar(df_pivot, 
                  x='Semana Contable', 
                  y=df_pivot.columns[1:],  # Excluyendo la columna 'Semana Contable'
-                 title='Venta Perdida por Familia 📚',
-                 labels={'value': '% Venta Perdida', 'variable': 'Familia'},
+                 title='Top 10 Artículos con Mayor Venta Perdida',
+                 labels={'value': '% Venta Perdida', 'variable': 'Artículo'},
                  hover_name='Semana Contable',
                  color_discrete_sequence=custom_colors)  # Aplicando la paleta de colores personalizada
 
@@ -712,7 +720,7 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     return fig
 
 # Uso de la función
-figura9 = graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtrada)
+figura9 = graficar_top_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
 
 
 
