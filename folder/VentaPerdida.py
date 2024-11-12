@@ -665,6 +665,56 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
 # Uso de la función
 figura8 = graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
 
+@st.cache_data
+def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtrada):
+    # Filtrar semanas comunes
+    semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
+    df_venta_filtrada_suma = df_venta_filtrada[df_venta_filtrada['Semana Contable'].isin(semanas_comunes)]
+    df_venta_perdida_filtrada_suma = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'].isin(semanas_comunes)]
+    
+    # Sumar las ventas netas y perdidas por familia
+    df_venta_suma = df_venta_filtrada_suma.groupby(['Semana Contable', 'FAMILIA'])['Venta Neta Total'].sum().reset_index()
+    df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'FAMILIA'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+
+    # Combinar los DataFrames para poder calcular el porcentaje
+    df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'FAMILIA'])
+
+    # Calcular el porcentaje de venta perdida respecto a la venta neta total de la misma familia
+    df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total'].replace(0, np.nan)) * 100
+
+    # Crear una tabla pivote para que la familia sea una columna y la semana se muestre en el eje x
+    df_pivot = df_combined.pivot(index='Semana Contable', columns='FAMILIA', values='% Venta Perdida').reset_index()
+
+    # Definir una paleta de colores personalizada similar a la gráfica de la izquierda
+    custom_colors = [
+    '#00712D', '#FF9800', '#000080', '#FFB347', '#33A85C', '#FF6347', '#000000', '#FFD700', 
+    '#66C88B', '#FF4500', '#FFCC66', '#008080', '#CD5C5C', '#FF7F50', '#006400', '#FFA07A', 
+    '#8B0000', '#FFDEAD', '#ADFF2F', '#2F4F4F'
+    ]
+
+    # Crear la gráfica de barras apiladas
+    fig = px.bar(df_pivot, 
+                 x='Semana Contable', 
+                 y=df_pivot.columns[1:],  # Excluyendo la columna 'Semana Contable'
+                 title='Venta Perdida por Familia 📚',
+                 labels={'value': '% Venta Perdida', 'variable': 'Familia'},
+                 hover_name='Semana Contable',
+                 color_discrete_sequence=custom_colors)  # Aplicando la paleta de colores personalizada
+
+    # Configurar el layout para que solo se muestre el % Venta Perdida en el hover
+    fig.update_traces(hovertemplate='%{y:.1f}%')
+
+    # Configurar el layout general
+    fig.update_layout(title_font=dict(size=24),
+                      xaxis=dict(title='Semana Contable'),
+                      yaxis=dict(title='% Venta Perdida'))
+
+    return fig
+
+# Uso de la función
+figura9 = graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtrada)
+
+
 
 #---------------------------------------------------------------------
 # Divisor y encabezado
@@ -710,4 +760,11 @@ with c7:
 with c8:
     st.plotly_chart(figura2, use_container_width=True)
 
+st.divider()
+st.subheader(':orange[Artículos con mayor venta perdida]')
+
+c9 = st.columns([1])
+
+with c9:
+    st.plotly_chart(figura9, use_container_width=True)
 
