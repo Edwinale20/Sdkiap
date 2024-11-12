@@ -299,8 +299,8 @@ if segmento != 'Ninguno':
 # Modificar la columna 'Semana Contable' en ambos DataFrames
 df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
 df_venta_filtrada['Semana Contable'] = df_venta_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
-df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'PALL MALL']
-df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'PALL MALL']
+df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'NULO']
+df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'NULO']
 
 
 
