@@ -703,7 +703,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
         text='VENTA_PERDIDA_PESOS',
         title='Top 10 Artículos con Mayor Venta Perdida (En Pesos)',
         labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'DESCRIPCIÓN': 'Descripción del Artículo'},
-        hover_data={'VENTA_PERDIDA_PESOS': ':.2f'}
+        hover_data={'VENTA_PERDIDA_PESOS': ':,.2f'}
     )
 
     # Ajustar el diseño para mostrar las etiquetas de valores
