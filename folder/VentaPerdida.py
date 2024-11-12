@@ -601,7 +601,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     fig = px.bar(df_combined, 
                  x='PLAZA', 
                  y='VENTA_PERDIDA_PESOS',  # Usar el valor absoluto de la venta perdida
-                 title='Venta Perdida por Plaza 🌄',
+                 title='Venta Perdida acumulada por Plaza 🌄',
                  color='% Venta Perdida',  # Utilizar el porcentaje como color
                  labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'PLAZA': 'Plaza'},
                  color_continuous_scale=px.colors.sequential.RdBu,
