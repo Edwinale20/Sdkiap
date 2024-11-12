@@ -5,7 +5,7 @@ import plotly.express as px
 import numpy as np
 import plotly.graph_objects as go
 from io import BytesIO
-import requests
+import requests 
 import plotly.io as pio
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
