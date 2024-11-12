@@ -673,17 +673,17 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     df_venta_perdida_filtrada_suma = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'].isin(semanas_comunes)]
     
     # Sumar las ventas netas y perdidas por familia
-    df_venta_suma = df_venta_filtrada_suma.groupby(['Semana Contable', 'FAMILIA'])['Venta Neta Total'].sum().reset_index()
+    df_venta_suma = df_venta_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['Venta Neta Total'].sum().reset_index()
     df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'FAMILIA'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
 
     # Combinar los DataFrames para poder calcular el porcentaje
-    df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'FAMILIA'])
+    df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'ARTICULO'])
 
     # Calcular el porcentaje de venta perdida respecto a la venta neta total de la misma familia
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total'].replace(0, np.nan)) * 100
 
     # Crear una tabla pivote para que la familia sea una columna y la semana se muestre en el eje x
-    df_pivot = df_combined.pivot(index='Semana Contable', columns='FAMILIA', values='% Venta Perdida').reset_index()
+    df_pivot = df_combined.pivot(index='Semana Contable', columns='ARTICULO', values='% Venta Perdida').reset_index()
 
     # Definir una paleta de colores personalizada similar a la gráfica de la izquierda
     custom_colors = [
