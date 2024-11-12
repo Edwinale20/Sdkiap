@@ -762,9 +762,7 @@ with c8:
 
 st.divider()
 st.subheader(':orange[Artículos con mayor venta perdida]')
-
-c9 = st.columns([4])
-
-with c9:
+c9 = st.columns([4])  # Si planeas añadir más columnas, ajusta los pesos.
+with c9[0]:  # Accede explícitamente a la primera columna.
     st.plotly_chart(figura9, use_container_width=True)
 
