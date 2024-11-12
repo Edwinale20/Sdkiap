@@ -708,7 +708,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
 
     # Ajustar el diseño para mostrar las etiquetas de valores
     fig.update_traces(
-        texttemplate='$%{text:.2f}', 
+        texttemplate='$%{text:,.2f}', 
         textposition='inside', 
         hovertemplate='%{x}<br>$%{y:,.2f} pesos perdidos<br>'
     )
