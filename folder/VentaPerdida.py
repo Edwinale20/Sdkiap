@@ -763,7 +763,7 @@ with c8:
 st.divider()
 st.subheader(':orange[Artículos con mayor venta perdida]')
 
-c9 = st.columns([1])
+c9 = st.columns([4])
 
 with c9:
     st.plotly_chart(figura9, use_container_width=True)
