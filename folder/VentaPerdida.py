@@ -670,7 +670,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     # Convertir ARTICULO a string para garantizar la conexión con MASTER
     df_venta_filtrada['ARTICULO'] = df_venta_filtrada['ARTICULO'].astype(str)
     df_venta_perdida_filtrada['ARTICULO'] = df_venta_perdida_filtrada['ARTICULO'].astype(str)
-    master['ARTICULO'] = master['ARTICULO'].astype(str)
+    MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
 
     # Crear un diccionario de mapeo ARTICULO -> DESCRIPCIÓN
     articulo_a_descripcion = master.set_index('ARTICULO')['DESCRIPCIÓN'].to_dict()
