@@ -518,28 +518,26 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     ]
 
     # Crear la gráfica de barras apiladas
-    fig = px.bar(
-        df_pivot, 
-        x='Semana Contable', 
-        y=df_pivot.columns[1:],  # Excluyendo la columna 'Semana Contable'
-        title='Venta Perdida por Familia 📚',
-        labels={'value': 'Venta Perdida en %', 'variable': 'Familia'},
-        hover_name='Semana Contable',
-        color_discrete_sequence=custom_colors
-    )
+    fig = px.bar(df_pivot, 
+                 x='Semana Contable', 
+                 y=df_pivot.columns[1:],  # Excluyendo la columna 'Semana Contable'
+                 title='Venta Perdida por Familia 📚',
+                 labels={'value': '% Venta Perdida', 'variable': 'Familia'},
+                 hover_name='Semana Contable',
+                 color_discrete_sequence=custom_colors)  # Aplicando la paleta de colores personalizada
 
-# Ajustar el diseño para mostrar las etiquetas de porcentaje y valores
-    fig.update_traces(
-        texttemplate='%{y:.2f}%', 
-        textposition='inside', 
-        hovertemplate='%{x}<br>$%{y:,.2f} pesos perdidos<br>% Venta Perdida: %{text:.1f}%'
-    )
+    # Configurar el layout para que solo se muestre el % Venta Perdida en el hover
+    fig.update_traces(hovertemplate='%{y:.1f}%')
+
+    # Configurar el layout general
+    fig.update_layout(title_font=dict(size=24),
+                      xaxis=dict(title='Semana Contable'),
+                      yaxis=dict(title='% Venta Perdida'))
 
     return fig
 
 # Uso de la función
 figura5 = graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtrada)
-
 
 
 @st.cache_data
