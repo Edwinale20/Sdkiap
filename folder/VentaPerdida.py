@@ -666,12 +666,19 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
 figura8 = graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
 
 @st.cache_data
-def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada):
+def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada, master):
+    # Convertir ARTICULO a string para garantizar la conexión con MASTER
+    df_venta_filtrada['ARTICULO'] = df_venta_filtrada['ARTICULO'].astype(str)
+    df_venta_perdida_filtrada['ARTICULO'] = df_venta_perdida_filtrada['ARTICULO'].astype(str)
+    master['ARTICULO'] = master['ARTICULO'].astype(str)
+
+    # Crear un diccionario de mapeo ARTICULO -> DESCRIPCIÓN
+    articulo_a_descripcion = master.set_index('ARTICULO')['DESCRIPCIÓN'].to_dict()
+
     # Filtrar semanas comunes
     semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
-    df_venta_filtrada_suma = df_venta_filtrada[df_venta_filtrada['Semana Contable'].isin(semanas_comunes)]
     df_venta_perdida_filtrada_suma = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'].isin(semanas_comunes)]
-    
+
     # Sumar las ventas perdidas por artículo
     df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
 
@@ -684,15 +691,18 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     )
     df_top_venta_perdida = df_venta_perdida_suma[df_venta_perdida_suma['ARTICULO'].isin(top_articulos)]
 
+    # Mapear ARTICULO a DESCRIPCIÓN
+    df_top_venta_perdida['DESCRIPCIÓN'] = df_top_venta_perdida['ARTICULO'].map(articulo_a_descripcion)
+
     # Crear la gráfica apilada
     fig = px.bar(
         df_top_venta_perdida, 
         x='Semana Contable', 
         y='VENTA_PERDIDA_PESOS', 
-        color='ARTICULO',
+        color='DESCRIPCIÓN',  # Usamos DESCRIPCIÓN en lugar de ARTICULO
         text='VENTA_PERDIDA_PESOS',
         title='Top 10 Artículos con Mayor Venta Perdida (En Pesos)',
-        labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'ARTICULO': 'Artículo'},
+        labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'DESCRIPCIÓN': 'Descripción del Artículo'},
         hover_data={'VENTA_PERDIDA_PESOS': ':.2f'}
     )
 
@@ -700,7 +710,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     fig.update_traces(
         texttemplate='$%{text:.2f}', 
         textposition='inside', 
-        hovertemplate='%{x}<br>$%{y:.2f} pesos perdidos<br>Artículo: %{color}'
+        hovertemplate='%{x}<br>$%{y:.2f} pesos perdidos<br>Descripción: %{color}'
     )
 
     # Configurar el layout general
@@ -714,10 +724,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     return fig
 
 # Uso de la función
-figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada)
-
-
-
+figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada, master)
 
 #---------------------------------------------------------------------
 # Divisor y encabezado
