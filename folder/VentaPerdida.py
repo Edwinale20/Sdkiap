@@ -666,61 +666,56 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
 figura8 = graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
 
 @st.cache_data
-def graficar_top_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
+def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada):
     # Filtrar semanas comunes
     semanas_comunes = set(df_venta_filtrada['Semana Contable']).intersection(set(df_venta_perdida_filtrada['Semana Contable']))
     df_venta_filtrada_suma = df_venta_filtrada[df_venta_filtrada['Semana Contable'].isin(semanas_comunes)]
     df_venta_perdida_filtrada_suma = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Semana Contable'].isin(semanas_comunes)]
     
-    # Sumar las ventas netas y perdidas por artículo
-    df_venta_suma = df_venta_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['Venta Neta Total'].sum().reset_index()
+    # Sumar las ventas perdidas por artículo
     df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
 
-    # Combinar los DataFrames para calcular el porcentaje
-    df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'ARTICULO'])
-
-    # Calcular el porcentaje de venta perdida respecto a la venta neta total por artículo
-    df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total'].replace(0, np.nan)) * 100
-
-    # Ordenar por venta perdida total y seleccionar el top 10
+    # Calcular el total de venta perdida por artículo para determinar el Top 10
     top_articulos = (
-        df_combined.groupby('ARTICULO')['VENTA_PERDIDA_PESOS']
+        df_venta_perdida_suma.groupby('ARTICULO')['VENTA_PERDIDA_PESOS']
         .sum()
         .nlargest(10)
         .index
     )
-    df_top_combined = df_combined[df_combined['ARTICULO'].isin(top_articulos)]
+    df_top_venta_perdida = df_venta_perdida_suma[df_venta_perdida_suma['ARTICULO'].isin(top_articulos)]
 
-    # Crear una tabla pivote para que los artículos sean columnas y la semana se muestre en el eje x
-    df_pivot = df_top_combined.pivot(index='Semana Contable', columns='ARTICULO', values='% Venta Perdida').reset_index()
+    # Crear la gráfica apilada
+    fig = px.bar(
+        df_top_venta_perdida, 
+        x='Semana Contable', 
+        y='VENTA_PERDIDA_PESOS', 
+        color='ARTICULO',
+        text='VENTA_PERDIDA_PESOS',
+        title='Top 10 Artículos con Mayor Venta Perdida (En Pesos)',
+        labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'ARTICULO': 'Artículo'},
+        hover_data={'VENTA_PERDIDA_PESOS': ':.2f'}
+    )
 
-    # Definir una paleta de colores personalizada similar a la gráfica de la izquierda
-    custom_colors = [
-        '#00712D', '#FF9800', '#000080', '#FFB347', '#33A85C', '#FF6347', 
-        '#000000', '#FFD700', '#66C88B', '#FF4500'
-    ]
-
-    # Crear la gráfica de barras apiladas
-    fig = px.bar(df_pivot, 
-                 x='Semana Contable', 
-                 y=df_pivot.columns[1:],  # Excluyendo la columna 'Semana Contable'
-                 title='Top 10 Artículos con Mayor Venta Perdida',
-                 labels={'value': '% Venta Perdida', 'variable': 'Artículo'},
-                 hover_name='Semana Contable',
-                 color_discrete_sequence=custom_colors)  # Aplicando la paleta de colores personalizada
-
-    # Configurar el layout para que solo se muestre el % Venta Perdida en el hover
-    fig.update_traces(hovertemplate='%{y:.1f}%')
+    # Ajustar el diseño para mostrar las etiquetas de valores
+    fig.update_traces(
+        texttemplate='$%{text:.2f}', 
+        textposition='inside', 
+        hovertemplate='%{x}<br>$%{y:.2f} pesos perdidos<br>Artículo: %{color}'
+    )
 
     # Configurar el layout general
-    fig.update_layout(title_font=dict(size=24),
-                      xaxis=dict(title='Semana Contable'),
-                      yaxis=dict(title='% Venta Perdida'))
+    fig.update_layout(
+        title_font=dict(size=24), 
+        barmode='stack', 
+        yaxis=dict(title='Venta Perdida en Pesos'),
+        xaxis=dict(title='Semana Contable')
+    )
 
     return fig
 
 # Uso de la función
-figura9 = graficar_top_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada)
+figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_filtrada)
+
 
 
 
