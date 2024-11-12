@@ -674,7 +674,7 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     
     # Sumar las ventas netas y perdidas por familia
     df_venta_suma = df_venta_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['Venta Neta Total'].sum().reset_index()
-    df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'FAMILIA'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
+    df_venta_perdida_suma = df_venta_perdida_filtrada_suma.groupby(['Semana Contable', 'ARTICULO'])['VENTA_PERDIDA_PESOS'].sum().reset_index()
 
     # Combinar los DataFrames para poder calcular el porcentaje
     df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'ARTICULO'])
