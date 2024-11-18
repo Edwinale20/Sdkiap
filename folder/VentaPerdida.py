@@ -237,8 +237,6 @@ familia = st.sidebar.selectbox('Seleccione la Familia', opciones_familia)
 opciones_categoria = ['Ninguno'] + list(VENTA_PERDIDA['SUBCATEGORIA'].unique())
 categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 
-opciones_segmento = ['Ninguno'] + list(VENTA_PERDIDA['SEGMENTO'].unique())
-segmento = st.sidebar.selectbox('Seleccione el Segmento', opciones_segmento)
 
 #articulo_ingresado = st.sidebar.text_input('Ingrese el SKU del Artículo')
 
@@ -281,11 +279,6 @@ if familia != 'Ninguno':
 if categoria != 'Ninguno':
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SUBCATEGORIA'] == categoria]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SUBCATEGORIA'] == categoria]
-
-# Filtrar por Segmento
-if segmento != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SEGMENTO'] == segmento]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SEGMENTO'] == segmento]
 
 # Filtrar por Artículo
 #if articulo_ingresado == 'Ninguno' or articulo_ingresado == '':
