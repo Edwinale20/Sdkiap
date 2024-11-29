@@ -702,7 +702,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
     fig.update_traces(
         texttemplate='$%{text:,.2f}', 
         textposition='inside', 
-        hovertemplate='%{x}<br>$%{y:,.2f} pesos perdidos<br>'
+        hovertemplate='%{x}<br>$%{y:,.2f} pesos<br>'
     )
 
     # Configurar el layout general
