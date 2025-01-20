@@ -13,8 +13,6 @@ st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 st.markdown("Se incluyen datos de las últimas 5 semanas.", unsafe_allow_html=True)
 
 
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
 @st.cache_data(ttl=3600)
 def list_files_in_github_folder(folder_url):
