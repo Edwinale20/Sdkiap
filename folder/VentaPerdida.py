@@ -80,7 +80,7 @@ def venta_perdida(csv_files):
         df['Fecha'] = pd.to_datetime(file_name, format='%d%m%Y', errors='coerce')
         
         # Calcular la semana contable
-        df['Semana Contable'] = df['Fecha'].apply(lambda x: f"{x.year}{x.isocalendar()[1]}" if pd.notnull(x) else 'Fecha inválida')
+        df['Semana Contable'] = df['Fecha'].apply(lambda x: f"{x.year}{str(x.isocalendar()[1]).zfill(2)}" if pd.notnull(x) else 'Fecha inválida')
         
         # Concatenar el DataFrame actual al DataFrame combinado
         combined_df = pd.concat([combined_df, df])
@@ -135,21 +135,23 @@ def venta(venta_semanal):
     # Eliminar columnas específicas no deseadas
     columnas_a_eliminar = [col for col in concat_venta.columns if 'Unnamed' in col] + ['Metrics']
     concat_venta = concat_venta.drop(columns=columnas_a_eliminar, errors='ignore') 
-    concat_venta = concat_venta.dropna(subset=['Venta Neta Total', 'Artículo' ])
+    #concat_venta = concat_venta.dropna(subset=['Venta Neta Total', 'Artículo' ])
     concat_venta['División'] = concat_venta['División'].astype(float).astype(int).astype(str)
     concat_venta['Plaza'] = concat_venta['Plaza'].astype(float).astype(int).astype(str)
     concat_venta['Mercado'] = concat_venta['Mercado'].astype(float).astype(int).astype(str)
     concat_venta['Artículo'] = concat_venta['Artículo'].astype(float).astype(int).astype(str)
     concat_venta['Semana Contable'] = concat_venta['Semana Contable'].astype('str')
-    concat_venta['Venta Neta Total'] = concat_venta['Venta Neta Total'].round(0).astype('int64')
+    concat_venta['Venta Neta Total'] = concat_venta['Venta Neta Total'].fillna(0).round(0).astype('int64')
     concat_venta = concat_venta.rename(columns={
         'Artículo': 'ARTICULO',
         'División': 'DIVISION',
-        'Plaza': 'PLAZA',
+        'Plaza': 'PLAZA', 
         'Mercado': 'MERCADO',
     })
  
     return concat_venta
+
+
 
 #---------------------------------------------------------------------
 
@@ -175,7 +177,7 @@ VENTA['SEGMENTO'] = VENTA['ARTICULO'].map(segmento_dict)
 VENTA['SUBCATEGORIA'] = VENTA['ARTICULO'].map(subcategoria_dict)
 VENTA['PROVEEDOR'] = VENTA['ARTICULO'].map(proveedor_dict)
 
-VENTA = VENTA.dropna(subset=['PROVEEDOR'])
+#VENTA = VENTA.dropna(subset=['PROVEEDOR'])
 VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
 
 
@@ -199,9 +201,10 @@ map_plaza = {
 }
 
 # Aplicar el mapeo al DataFrame
-VENTA['PLAZA'] = VENTA['PLAZA'].map(map_plaza)
-VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].map(map_plaza)
+VENTA['PLAZA'] = VENTA['PLAZA'].apply(lambda x: map_plaza.get(x, x))
+VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['PLAZA'].apply(lambda x: map_plaza.get(x, x))
 
+ 
 map_division = {
     "10": "Coah-Tamps",
     "20": "México-Península",
@@ -212,6 +215,13 @@ map_division = {
 # Aplicar el mapeo al DataFrame
 VENTA['DIVISION'] = VENTA['DIVISION'].map(map_division)
 VENTA_PERDIDA['DIVISION'] = VENTA_PERDIDA['DIVISION'].map(map_division)
+
+# Calcular la suma de 'Venta Neta Total'
+if 'Venta Neta Total' in VENTA.columns:
+    suma_venta_neta_total = VENTA['Venta Neta Total'].sum()
+    print(f"Suma total de 'Venta Neta Total': {suma_venta_neta_total}")
+else:
+    print("La columna 'Venta Neta Total' no existe en el DataFrame.")
 
 #---------------------------------------------------------------------
 
@@ -238,7 +248,6 @@ opciones_categoria = ['Ninguno'] + list(VENTA_PERDIDA['SUBCATEGORIA'].unique())
 categoria = st.sidebar.selectbox('Seleccione la Categoria', opciones_categoria)
 
 
-#articulo_ingresado = st.sidebar.text_input('Ingrese el SKU del Artículo')
 
 
 # Filtrar por Proveedor
@@ -280,14 +289,6 @@ if categoria != 'Ninguno':
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['SUBCATEGORIA'] == categoria]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['SUBCATEGORIA'] == categoria]
 
-# Filtrar por Artículo
-#if articulo_ingresado == 'Ninguno' or articulo_ingresado == '':
-    df_venta_perdida_filtrada = VENTA_PERDIDA
-    df_venta_filtrada = VENTA
-#else:
-    # Filtra por el artículo ingresado
-    #df_venta_perdida_filtrada = VENTA_PERDIDA[VENTA_PERDIDA['ARTICULO'].astype(str) == str(articulo_ingresado)]
-    #df_venta_filtrada = VENTA[VENTA['ARTICULO'].astype(str) == str(articulo_ingresado)]
 
 # Modificar la columna 'Semana Contable' en ambos DataFrames
 df_venta_perdida_filtrada['Semana Contable'] = df_venta_perdida_filtrada['Semana Contable'].apply(lambda x: f"Semana {str(x)[4:]}")
@@ -768,3 +769,5 @@ c9 = st.columns([4])  # Si planeas añadir más columnas, ajusta los pesos.
 with c9[0]:  # Accede explícitamente a la primera columna.
     st.plotly_chart(figura9, use_container_width=True)
 
+
+ 
