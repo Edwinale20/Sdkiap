@@ -181,8 +181,8 @@ VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
 
 # Diccionario de mapeo de códigos de plaza a nombres
 map_plaza = {
-    "100": "Matamoros",
-    "110": "Reynosa",
+    "100": "Reynosa",
+    "110": "Matamoros",
     "200": "México",
     "300": "Jalisco",
     "400": "Coahuila (Saltillo)",
