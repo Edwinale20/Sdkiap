@@ -710,7 +710,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
         title_font=dict(size=20), 
         barmode='stack', 
         yaxis=dict(title='Venta Perdida en Pesos'),
-        xaxis=dict(title='Semana Contable')
+        xaxis=dict(title='Semana Contable', template="colors2")
     )
 
     return fig
