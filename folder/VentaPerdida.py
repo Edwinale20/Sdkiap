@@ -706,7 +706,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
 
     # Configurar el layout general
     fig.update_layout(
-        title_font=dict(size=24), 
+        title_font=dict(size=20), 
         barmode='stack', 
         yaxis=dict(title='Venta Perdida en Pesos'),
         xaxis=dict(title='Semana Contable')
