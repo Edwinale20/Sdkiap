@@ -326,7 +326,7 @@ def graficar_porcentaje_venta_perdida_por_semana(df_venta_filtrada, df_venta_per
     # Configurar el diseño de la gráfica
     fig.update_layout(
         title='% de Venta Perdida por Semana 🗓️',
-        title_font=dict(size=24),
+        title_font=dict(size=20),
         #xaxis=dict(title='Semana Contable'),
         yaxis=dict(title='% de Venta Perdida'),
         yaxis_tickformat=".2f",  # Formato de los ticks del eje y
@@ -378,7 +378,7 @@ def graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_
     # Configurar el diseño de la gráfica
     fig.update_layout(
         title='% de Venta Perdida por Proveedor y Semana 🗓️',
-        title_font=dict(size=24),
+        title_font=dict(size=20),
         xaxis=dict(title='Semana Contable'),
         yaxis=dict(title='% de Venta Perdida'),
         yaxis_tickformat=".2f",  # Formato de los ticks del eje y
@@ -427,7 +427,7 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
 
 
     # Configurar el layout
-    fig.update_layout(title_font=dict(size=24), barmode='stack',  template="colors", yaxis=dict(title='Venta Perdida en Pesos'))
+    fig.update_layout(title_font=dict(size=20), barmode='stack',  template="colors", yaxis=dict(title='Venta Perdida en Pesos'))
 
     return fig
 
@@ -473,7 +473,7 @@ def graficar_venta_perdida_por_mercado_lineas(df_venta_filtrada, df_venta_perdid
     fig.update_traces(textposition="top center")
 
     # Configurar el layout general
-    fig.update_layout(title_font=dict(size=24),template="colors", xaxis=dict(title='Semana Contable'), yaxis=dict(title='% Venta Perdida'))
+    fig.update_layout(title_font=dict(size=20),template="colors", xaxis=dict(title='Semana Contable'), yaxis=dict(title='% Venta Perdida'))
 
     return fig
 
@@ -523,7 +523,7 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     fig.update_traces(hovertemplate='%{y:.1f}%')
 
     # Configurar el layout general
-    fig.update_layout(title_font=dict(size=24),
+    fig.update_layout(title_font=dict(size=20),
                       xaxis=dict(title='Semana Contable'),
                       yaxis=dict(title='% Venta Perdida'))
 
@@ -555,7 +555,7 @@ def graficar_venta_perdida_por_segmento(df_venta_filtrada, df_venta_perdida_filt
 
     # Ajustar layout y formato de texto
     fig.update_layout( 
-                      title_font=dict(size=24),
+                      title_font=dict(size=20),
                       #xaxis=dict(title='SEGMENTO'),
                       yaxis=dict(title='Venta Perdida'),
                       template="colors2")
@@ -608,7 +608,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
 
     # Ajustar el diseño del gráfico
     fig.update_layout(
-        title_font=dict(size=24),
+        title_font=dict(size=20),
         template="colors2",  # Usar la plantilla colors2
         showlegend=False  # Ocultar la leyenda
     )
