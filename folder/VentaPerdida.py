@@ -504,11 +504,6 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     df_pivot = df_combined.pivot(index='Semana Contable', columns='FAMILIA', values='% Venta Perdida').reset_index()
 
     # Definir una paleta de colores personalizada similar a la gráfica de la izquierda
-    custom_colors = [
-    '#00712D', '#FF9800', '#000080', '#FFB347', '#33A85C', '#FF6347', '#000000', '#FFD700', 
-    '#66C88B', '#FF4500', '#FFCC66', '#008080', '#CD5C5C', '#FF7F50', '#006400', '#FFA07A', 
-    '#8B0000', '#FFDEAD', '#ADFF2F', '#2F4F4F'
-    ]
 
     # Crear la gráfica de barras apiladas
     fig = px.bar(df_pivot, 
@@ -697,7 +692,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
         x='Semana Contable', 
         y='VENTA_PERDIDA_PESOS', 
         color='DESCRIPCIÓN',  # Usamos DESCRIPCIÓN en lugar de ARTICULO
-        color_discrete_sequence = [custom_colors],
+        color_discrete_sequence = ['#0D4715', '#B8001F', '#FFB22C', '#0D4715', '#E9762B', '#F9DBBA', '#5B99C2', '#4D55CC'],
         text='VENTA_PERDIDA_PESOS',
         title='Top 10 Artículos con Mayor Venta Perdida (En Pesos)',
         labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'DESCRIPCIÓN': 'Descripción del Artículo'},
