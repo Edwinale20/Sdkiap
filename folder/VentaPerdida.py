@@ -691,7 +691,7 @@ def graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdida_fil
         x='Semana Contable', 
         y='VENTA_PERDIDA_PESOS', 
         color='DESCRIPCIÓN',  # Usamos DESCRIPCIÓN en lugar de ARTICULO
-        color_discrete_sequence = ['#007074', '#FF9800', '#9694FF', '#FFB347', '#33A85C', '#1230AE', '#8D0B41', '#FFD700', 
+        color_discrete_sequence = ['#007074', '#FF9800', '#9694FF', '#FFB347', '#004225', '#1230AE', '#8D0B41', '#FFD700', 
          '#66C88B', '#EB5B00', '#FFA07A', '#B80000', '#FFDEAD', '#ADFF2F', '#2F4F4F', "#4D55CC", "#640D5F", "#16404D"],
         text='VENTA_PERDIDA_PESOS',
         title='Top 10 Artículos con Mayor Venta Perdida (En Pesos)',
