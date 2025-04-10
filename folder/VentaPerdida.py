@@ -574,42 +574,36 @@ figura6 = graficar_venta_perdida_por_segmento(df_venta_filtrada, df_venta_perdid
 
 @st.cache_data
 def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrada):
-    # Sumar la venta perdida y venta neta total por plaza
-    df_venta_perdida_por_plaza = df_venta_perdida_filtrada.groupby('PLAZA').agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
-    df_venta_neta_por_plaza = df_venta_filtrada.groupby('PLAZA').agg({'Venta Neta Total': 'sum'}).reset_index()
+    # Sumar la venta perdida y venta neta total por plaza y semana
+    df_venta_perdida_por_plaza = df_venta_perdida_filtrada.groupby(['Semana Contable', 'PLAZA']).agg({'VENTA_PERDIDA_PESOS': 'sum'}).reset_index()
+    df_venta_neta_por_plaza = df_venta_filtrada.groupby(['Semana Contable', 'PLAZA']).agg({'Venta Neta Total': 'sum'}).reset_index()
 
     # Combinar los DataFrames para calcular el porcentaje de venta perdida
-    df_combined = pd.merge(df_venta_perdida_por_plaza, df_venta_neta_por_plaza, on='PLAZA', how='inner')
+    df_combined = pd.merge(df_venta_perdida_por_plaza, df_venta_neta_por_plaza, on=['Semana Contable', 'PLAZA'], how='inner')
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total']) * 100
-
-    # Redondear el porcentaje a un decimal
     df_combined['% Venta Perdida'] = df_combined['% Venta Perdida'].round(1)
 
-    # Ordenar las plazas de mayor a menor porcentaje de venta perdida
-    df_combined = df_combined.sort_values(by='% Venta Perdida', ascending=False)
+    # Crear gráfico de líneas
+    fig = go.Figure()
 
-    # Crear gráfico de barras usando los valores de venta perdida
-    fig = px.bar(df_combined, 
-                 x='PLAZA', 
-                 y='VENTA_PERDIDA_PESOS',  # Usar el valor absoluto de la venta perdida
-                 title='Venta Perdida acumulada por Plaza 🌄',
-                 color='% Venta Perdida',  # Utilizar el porcentaje como color
-                 labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos', 'PLAZA': 'Plaza'},
-                 color_continuous_scale=px.colors.sequential.RdBu,
-                 custom_data=['% Venta Perdida'])  # Incluir el % de venta perdida en los datos personalizados
+    for plaza in df_combined['PLAZA'].unique():
+        df_plaza = df_combined[df_combined['PLAZA'] == plaza]
+        fig.add_trace(go.Scatter(
+            x=df_plaza['Semana Contable'],
+            y=df_plaza['% Venta Perdida'],
+            mode='lines+markers+text',
+            text=df_plaza['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
+            textposition='top right',
+            name=f'Plaza {plaza}'
+        ))
 
-    # Mostrar los valores en las barras y ajustar el formato
-    fig.update_traces(
-        texttemplate='$%{y:,.0f}',  # Mostrar la venta perdida sin decimales
-        textposition='inside',     # Colocar los textos dentro de las barras
-        hovertemplate='%{x}: $%{y:,.0f} pesos<br>% Venta Perdida: %{customdata[0]}%'  # Formato del hover sin decimales
-    )
-
-    # Ajustar el diseño del gráfico
     fig.update_layout(
+        title='Venta Perdida semanal por Plaza 🌄',
+        yaxis_title='% Venta Perdida',
+        hovermode='closest',
         title_font=dict(size=20),
-        template="colors2",  # Usar la plantilla colors2
-        showlegend=False  # Ocultar la leyenda
+        template="colors2",
+        showlegend=True
     )
 
     return fig
