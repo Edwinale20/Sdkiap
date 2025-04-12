@@ -254,7 +254,7 @@ tipo_filtro_acacia = st.sidebar.selectbox(
 )
 
 # Paso 3 - Mostrar multiselect solo si quiere filtrar
-if tipo_filtro_acacia == 'Filtrar por Plaza Específica':
+if tipo_filtro_acacia == 'Plaza ACACIA':
     opciones_plaza_acacia = list(set(plazas_acacia.values()))
     plazas_acacia_seleccionadas = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
 else:
