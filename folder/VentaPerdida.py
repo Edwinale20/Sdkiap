@@ -41,7 +41,15 @@ master_github_url = 'https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/MA
 csv_files = list_files_in_github_folder(csv_folder_url)
 
 # Descargar y leer todos los archivos CSV en un solo DataFrame con la codificación correcta
-csv_dataframes = [pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1') for file_url in csv_files]
+csv_dataframes = []
+
+for file_url in csv_files:
+    try:
+        df = pd.read_csv(download_file_from_github(file_url), encoding='ISO-8859-1')
+        csv_dataframes.append(df)
+    except Exception as e:
+        st.warning(f"No se pudo descargar o leer: {file_url}")
+        st.error(e)
 
 # Obtener las URLs de los archivos Excel en la carpeta "Venta Semanal"
 venta_semanal = list_files_in_github_folder(venta_semanal_folder_url)
