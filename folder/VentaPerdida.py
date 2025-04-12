@@ -694,6 +694,7 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
 
     # Configurar el layout
     fig.update_layout(title="Venta Perdida semanal por División 🏴🏳️",
+                      title_font=dict(size=20),
                       yaxis_title="% Venta Perdida",
                       hovermode="closest")
 
