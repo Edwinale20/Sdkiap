@@ -242,7 +242,7 @@ else:
 
 #---------------------------------------------------------------------
 
-st.sidebar.title("Nombre de tu Título")
+st.sidebar.title("Filtros 🔠")
 
 
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
