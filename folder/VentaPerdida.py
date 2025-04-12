@@ -628,6 +628,8 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     df_combined = pd.merge(df_venta_perdida_por_plaza, df_venta_neta_por_plaza, on=['Semana Contable', 'PLAZA'], how='inner')
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total']) * 100
     df_combined['% Venta Perdida'] = df_combined['% Venta Perdida'].round(1)
+    colores = ['#007074', '#FFBF00', '#9694FF', '#222831', '#004225', '#1230AE', '#8D0B41', '#522258',
+               '#1F7D53', '#EB5B00', '#0D1282', '#09122C', '#ADFF2F', '#2F4F4F', "#7C00FE", "#D10363", "#16404D"]
 
     # Crear gráfico de líneas
     fig = go.Figure()
@@ -641,6 +643,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
             text=df_plaza['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
             textposition='top right',
             name=plaza,
+            line=dict(color=colores[i % len(colores)]),  # ← Aquí el color automático por orden
             hovertemplate=
                 '<b>Plaza:</b> ' + plaza + '<br>' +
                 '<b>Semana:</b> %{x}<br>'+
