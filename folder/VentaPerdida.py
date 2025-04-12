@@ -771,7 +771,7 @@ figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdi
 # Divisor y encabezado
 
 st.divider()
-st.subheader(':orange[Comparación de Ventas por Semana y Categoria]')
+st.subheader(':orange[Comparación de Venta perdida por Semana y Categoria]')
 
 # Crear columnas
 c1, c6, c3 = st.columns([4, 3, 4])
@@ -798,7 +798,7 @@ with c5:
 
 
 st.divider()
-st.subheader(':orange[Comparación de Ventas por Mercado y División]')
+st.subheader(':orange[Comparación de Venta perdida por Mercado y División]')
 
 # Crear columnas
 c6, c7, c8 = st.columns([4, 3, 4])
