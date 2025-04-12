@@ -196,7 +196,6 @@ map_plaza = {
     "720": "Morelos",
     "800": "Yucatán",
     "890": "Quintana Roo",
-    # Agrega más mapeos según sea necesario
 }
 
 # Aplicar el mapeo al DataFrame
@@ -219,12 +218,18 @@ plazas_acacia = {
     "100": "Reynosa",
     "110": "Matamoros",
     "200": "México",
+    "300": "Jalisco",
+    "400": "Coahuila (Saltillo)",
+    "410": "Coahuila (Torreón)",
+    "500": "Nuevo León",
     "600": "Baja California (Tijuana)",
     "610": "Baja California (Ensenada)",
     "620": "Baja California (Mexicali)",
     "650": "Sonora (Hermosillo)",
     "700": "Puebla",
     "720": "Morelos",
+    "800": "Yucatán",
+    "890": "Quintana Roo",
 }
  
 
