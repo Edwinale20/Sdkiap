@@ -215,7 +215,7 @@ map_division = {
 VENTA['DIVISION'] = VENTA['DIVISION'].map(map_division)
 VENTA_PERDIDA['DIVISION'] = VENTA_PERDIDA['DIVISION'].map(map_division)
 
-map_acacia = {
+plazas_acacia = {
     "100": "Reynosa",
     "110": "Matamoros",
     "200": "México",
