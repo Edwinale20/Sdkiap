@@ -365,7 +365,7 @@ def graficar_porcentaje_venta_perdida_por_semana(df_venta_filtrada, df_venta_per
 
     # Configurar el diseño de la gráfica
     fig.update_layout(
-        title='% de Venta Perdida por Semana 🗓️',
+        title='Venta Perdida semanal 🗓️',
         title_font=dict(size=20),
         #xaxis=dict(title='Semana Contable'),
         yaxis=dict(title='% de Venta Perdida'),
@@ -417,7 +417,7 @@ def graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_
 
     # Configurar el diseño de la gráfica
     fig.update_layout(
-        title='% de Venta Perdida por Proveedor y Semana 🗓️',
+        title='Venta Perdida semanal por Proveedor 🗓️',
         title_font=dict(size=20),
         xaxis=dict(title='Semana Contable'),
         yaxis=dict(title='% de Venta Perdida'),
@@ -452,7 +452,7 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
         y=df_venta_perdida_suma['VENTA_PERDIDA_PESOS'] / 1e6,  # Convertir a millones
         color='SUBCATEGORIA', 
         text='% Venta Perdida',
-        title='% Venta Perdida por Categoria 📊',
+        title='Venta Perdida por Categoria 📊',
         labels={'VENTA_PERDIDA_PESOS': 'Venta Perdida en Pesos (M)'},
         hover_data={'% Venta Perdida': ':.1f'}
     )
@@ -553,7 +553,7 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
     fig = px.bar(df_pivot, 
                  x='Semana Contable', 
                  y=df_pivot.columns[1:],  # Excluyendo la columna 'Semana Contable'
-                 title='Venta Perdida por Familia 📚',
+                 title='Venta Perdida por Familia de artículos 📚',
                  labels={'value': '% Venta Perdida', 'variable': 'Familia'},
                  hover_name='Semana Contable',
                  color_discrete_sequence=custom_colors)  # Aplicando la paleta de colores personalizada
