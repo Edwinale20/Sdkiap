@@ -215,6 +215,22 @@ map_division = {
 VENTA['DIVISION'] = VENTA['DIVISION'].map(map_division)
 VENTA_PERDIDA['DIVISION'] = VENTA_PERDIDA['DIVISION'].map(map_division)
 
+map_acacia = {
+    "100": "Reynosa",
+    "110": "Matamoros",
+    "200": "México",
+    "600": "Baja California (Tijuana)",
+    "610": "Baja California (Ensenada)",
+    "620": "Baja California (Mexicali)",
+    "650": "Sonora (Hermosillo)",
+    "700": "Puebla",
+    "720": "Morelos",
+}
+
+# Aplicar el mapeo al DataFrame
+VENTA['PLAZA'] = VENTA['Plazas ACACIA'].map(map_acacia)
+VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['Plazas ACACIA'].map(map_acacia)
+
 # Calcular la suma de 'Venta Neta Total'
 if 'Venta Neta Total' in VENTA.columns:
     suma_venta_neta_total = VENTA['Venta Neta Total'].sum()
@@ -233,6 +249,9 @@ division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 
 opciones_plaza = ['Ninguno'] + list(VENTA_PERDIDA['PLAZA'].unique())
 plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
+
+opciones_plaza_acacia= ['Ninguno'] + list(VENTA_PERDIDA['Plazas ACACIA'].unique())
+plaza_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
 
 opciones_mercado = ['Ninguno'] + list(VENTA_PERDIDA['MERCADO'].unique())
 mercado = st.sidebar.selectbox('Seleccione el Mercado', opciones_mercado)
@@ -267,6 +286,11 @@ if division != 'Ninguno':
 if plaza != 'Ninguno':
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
+
+# Filtrar por Plaza ACACIA
+if plaza_acacia != 'Ninguno':
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas ACACIA'] == plaza_acacia]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas ACACIA'] == plaza_acacia]
 
 # Filtrar por Mercado
 if mercado != 'Ninguno':
