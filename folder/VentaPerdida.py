@@ -633,8 +633,8 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     # Crear gráfico de líneas
     fig = go.Figure()
     
-    colores = ['#007074', '#FFBF00', '#9694FF', '#222831', '#004225', '#1230AE', '#8D0B41', '#522258',
-               '#1F7D53', '#EB5B00', '#0D1282', '#09122C', '#ADFF2F', '#2F4F4F', "#7C00FE", "#D10363", "#16404D"]
+    colores = ['#00712D', '#FF9800', '#000080', '#FFB347', '#33A85C', '#FF6347', '#000000', '#FFD700', 
+               '#66C88B', '#FF4500', '#FFCC66', '#008080', '#CD5C5C', '#FF7F50', '#006400', '#FFA07A', '#8B0000', '#FFDEAD', '#ADFF2F', '#2F4F4F']
     
     for i, plaza in enumerate(df_combined['PLAZA'].unique()):
         df_plaza = df_combined[df_combined['PLAZA'] == plaza]
