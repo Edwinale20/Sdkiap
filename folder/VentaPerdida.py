@@ -628,12 +628,14 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     df_combined = pd.merge(df_venta_perdida_por_plaza, df_venta_neta_por_plaza, on=['Semana Contable', 'PLAZA'], how='inner')
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total']) * 100
     df_combined['% Venta Perdida'] = df_combined['% Venta Perdida'].round(1)
-    colores = ['#007074', '#FFBF00', '#9694FF', '#222831', '#004225', '#1230AE', '#8D0B41', '#522258',
-               '#1F7D53', '#EB5B00', '#0D1282', '#09122C', '#ADFF2F', '#2F4F4F', "#7C00FE", "#D10363", "#16404D"]
+
 
     # Crear gráfico de líneas
     fig = go.Figure()
-
+    
+    colores = ['#007074', '#FFBF00', '#9694FF', '#222831', '#004225', '#1230AE', '#8D0B41', '#522258',
+               '#1F7D53', '#EB5B00', '#0D1282', '#09122C', '#ADFF2F', '#2F4F4F', "#7C00FE", "#D10363", "#16404D"]
+    
     for plaza in df_combined['PLAZA'].unique():
         df_plaza = df_combined[df_combined['PLAZA'] == plaza]
         fig.add_trace(go.Scatter(
