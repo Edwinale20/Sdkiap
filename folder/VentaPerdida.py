@@ -641,8 +641,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
             text=df_plaza['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
             textposition='top right',
             name=plaza,
-            color_discrete_sequence = ['#007074', '#FFBF00', '#9694FF', '#222831', '#004225', '#1230AE', '#8D0B41', '#522258', 
-             '#1F7D53', '#EB5B00', '#0D1282', '#09122C', '#ADFF2F', '#2F4F4F', "#7C00FE", "#D10363", "#16404D"],            
+            color_continuous_scale=px.colors.sequential.Viridis,
             hovertemplate=
                 '<b>Plaza:</b> ' + plaza + '<br>' +
                 '<b>Semana:</b> %{x}<br>'+
@@ -656,7 +655,6 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
         yaxis_title='% Venta Perdida',
         hovermode='closest',
         title_font=dict(size=20),
-        template="colors2",
         showlegend=True
     )
 
