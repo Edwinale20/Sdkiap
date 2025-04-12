@@ -247,18 +247,19 @@ division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 opciones_plaza = ['Ninguno'] + list(VENTA_PERDIDA['PLAZA'].unique())
 plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
 
-# Filtro ACACIA - Selección de tipo de filtro
+# 1. Preguntas en Sidebar qué quiere hacer
 tipo_filtro_acacia = st.sidebar.selectbox(
     'Seleccione filtro Plaza ACACIA',
     ['Todas', 'Filtrar por Plaza Específica']
 )
 
-# Si elige filtrar por plaza específica — mostrar opciones
+# 2. Si quiere filtrar, muestras el multiselect
 if tipo_filtro_acacia == 'Filtrar por Plaza Específica':
     opciones_plaza_acacia = list(VENTA_PERDIDA['Plazas_acacia'].unique())
     plazas_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
 else:
-    plazas_acacia = []  # Vacio si eligió "Todas"
+    plazas_acacia = []  # Si elige "Todas" no selecciona nada
+
 
 opciones_mercado = ['Ninguno'] + list(VENTA_PERDIDA['MERCADO'].unique())
 mercado = st.sidebar.selectbox('Seleccione el Mercado', opciones_mercado)
