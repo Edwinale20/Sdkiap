@@ -10,7 +10,8 @@ import plotly.io as pio
 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
-st.markdown("Se incluyen datos de las últimas 5 semanas.", unsafe_allow_html=True)
+st.markdown("Se incluyen datos de las últimas 7 semanas.", unsafe_allow_html=True)
+st.markdown("Para considerar el encedido del piloto de ACACIA, tomar en cuenta a partir de la semana 12 (el encendido fue el día 17 de marzo)", unsafe_allow_html=True)
 
 
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
