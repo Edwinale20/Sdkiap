@@ -686,7 +686,7 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
                                     '<b>Semana:</b> %{x}<br>'+
                                     '<b>% Venta Perdida:</b> %{y:.1f}%<br>'+
                                     '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}<extra></extra>',
-                                customdata=df_plaza[['VENTA_PERDIDA_PESOS']].values
+                                customdata=df_div[['VENTA_PERDIDA_PESOS']].values
                                      ))
 
     # Configurar el layout
