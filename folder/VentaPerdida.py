@@ -254,7 +254,7 @@ tipo_filtro_acacia = st.sidebar.selectbox(
 )
 
 # Paso 3 - Mostrar multiselect solo si quiere filtrar
-if tipo_filtro_acacia == 'Plaza ACACIA':
+if tipo_filtro_acacia == 'Plazas ACACIA':
     opciones_plaza_acacia = list(set(plazas_acacia.values()))
     plazas_acacia_seleccionadas = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
 else:
@@ -295,7 +295,7 @@ if plaza != 'Ninguno':
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
-# Paso 4 - Filtrar solo si seleccionó plazas
+# Paso 3 - Filtrar solo si seleccionó plazas
 if plazas_acacia_seleccionadas:
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'].isin(plazas_acacia_seleccionadas)]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'].isin(plazas_acacia_seleccionadas)]
