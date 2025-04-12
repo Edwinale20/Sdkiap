@@ -247,8 +247,9 @@ division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 opciones_plaza = ['Ninguno'] + list(VENTA_PERDIDA['PLAZA'].unique())
 plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
 
-opciones_plaza_acacia = ['Ninguno'] + plazas_acacia
+opciones_plaza_acacia = ['Ninguno'] + list(plazas_acacia.values())
 plaza_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
+
 
 opciones_mercado = ['Ninguno'] + list(VENTA_PERDIDA['MERCADO'].unique())
 mercado = st.sidebar.selectbox('Seleccione el Mercado', opciones_mercado)
@@ -285,9 +286,10 @@ if plaza != 'Ninguno':
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
 # Filtrar por Plaza ACACIA
-if 'Ninguno' not in plaza_acacia and plaza_acacia:
+if plaza_acacia != ['Ninguno'] and plaza_acacia:
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'].isin(plaza_acacia)]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'].isin(plaza_acacia)]
+
 
 
 # Filtrar por Mercado
