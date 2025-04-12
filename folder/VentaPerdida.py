@@ -551,12 +551,10 @@ def graficar_venta_perdida_por_familia(df_venta_filtrada, df_venta_perdida_filtr
 
     # Definir una paleta de colores personalizada similar a la gráfica de la izquierda
     custom_colors = [
-    colores = [
         '#00712D', '#FF9800', '#000080', '#FF6347', '#000000',
         '#FFD700', '#008080', '#CD5C5C', '#FF7F50', '#006400',
         '#8B0000', '#FFDEAD', '#ADFF2F', '#2F4F4F', '#33A85C']
 
-     ]
     # Crear la gráfica de barras apiladas
     fig = px.bar(df_pivot, 
                  x='Semana Contable', 
