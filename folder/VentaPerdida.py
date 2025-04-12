@@ -417,7 +417,7 @@ def graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_
                 '%{x}<br>'
                 '% Venta Perdida: %{y:.2f}%<br>'
                 '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}'
-                '<extra></extra>')
+                '<extra></extra>'),
             customdata=df_plaza[['VENTA_PERDIDA_PESOS']].values
 
         ))
