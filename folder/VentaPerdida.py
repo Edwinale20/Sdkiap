@@ -249,8 +249,8 @@ plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
 
 # Paso 2 - Sidebar para elegir filtro
 tipo_filtro_acacia = st.sidebar.selectbox(
-    'Seleccione Plaza ACACIA',
-    ['Todas', 'PlazaS ACACIA']
+    'Seleccione la Plaza ACACIA',
+    ['Todas', 'Plazas ACACIA']
 )
 
 # Paso 3 - Mostrar multiselect solo si quiere filtrar
