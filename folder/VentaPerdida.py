@@ -255,7 +255,7 @@ tipo_filtro_acacia = st.sidebar.selectbox(
 
 # 2. Si quiere filtrar, muestras el multiselect
 if tipo_filtro_acacia == 'Filtrar por Plaza Específica':
-    opciones_plaza_acacia = list(VENTA_PERDIDA['Plazas_acacia'].unique())
+    opciones_plaza_acacia = list(set(plazas_acacia.values()))
     plazas_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
 else:
     plazas_acacia = []  # Si elige "Todas" no selecciona nada
