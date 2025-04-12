@@ -226,7 +226,7 @@ plazas_acacia = {
     "700": "Puebla",
     "720": "Morelos",
 }
-
+ 
 
 # Calcular la suma de 'Venta Neta Total'
 if 'Venta Neta Total' in VENTA.columns:
