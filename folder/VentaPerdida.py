@@ -413,7 +413,8 @@ def graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_
             y=df_proveedor['% Venta Perdida'],
             mode='lines+markers',
             name=proveedor,
-            hovertemplate='%{x}<br>% Venta Perdida: %{y:.2f}%<extra></extra>'
+            hovertemplate='%{x}<br>% Venta Perdida: %{y:.2f}%<extra></extra>'+
+                          '<b>% Venta Perdida:</b> %{y:.1f}%<br>'
         ))
 
     # Configurar el diseño de la gráfica
@@ -463,8 +464,7 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
     fig.update_traces(
         texttemplate='%{text:.2f}%', 
         textposition='inside', 
-        hovertemplate='%{x}<br>$%{y:.2f}M de pesos<br>%{text:.1f}% de Venta Perdida',
-                      '<b>% Venta Perdida:</b> %{y:.1f}%<br>')
+        hovertemplate='%{x}<br>$%{y:.2f}M de pesos<br>%{text:.1f}% de Venta Perdida')
 
 
     # Configurar el layout
