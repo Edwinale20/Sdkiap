@@ -641,7 +641,6 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
             text=df_plaza['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
             textposition='top right',
             name=plaza,
-            color_continuous_scale=px.colors.sequential.Viridis,
             hovertemplate=
                 '<b>Plaza:</b> ' + plaza + '<br>' +
                 '<b>Semana:</b> %{x}<br>'+
