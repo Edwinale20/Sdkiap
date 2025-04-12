@@ -297,9 +297,9 @@ if plaza != 'Ninguno':
 
 # Si elige filtrar, ahora sí muestras las opciones
 # Filtro PLAZA ACACIA
-if tipo_filtro_acacia == 'Filtrar por Plaza Específica' and plaza_acacia:
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas_acacia'].isin(plaza_acacia)]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas_acacia'].isin(plaza_acacia)]
+if tipo_filtro_acacia == 'Filtrar por Plaza Específica' and plazas_acacia:
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas_acacia'].isin(plazas_acacia)]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas_acacia'].isin(plazas_acacia)]
 
 
 # Filtrar por Mercado
