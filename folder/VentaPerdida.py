@@ -636,7 +636,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     colores = ['#007074', '#FFBF00', '#9694FF', '#222831', '#004225', '#1230AE', '#8D0B41', '#522258',
                '#1F7D53', '#EB5B00', '#0D1282', '#09122C', '#ADFF2F', '#2F4F4F', "#7C00FE", "#D10363", "#16404D"]
     
-    for plaza in df_combined['PLAZA'].unique():
+    for i, plaza in enumerate(df_combined['PLAZA'].unique()):
         df_plaza = df_combined[df_combined['PLAZA'] == plaza]
         fig.add_trace(go.Scatter(
             x=df_plaza['Semana Contable'],
@@ -645,7 +645,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
             text=df_plaza['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
             textposition='top right',
             name=plaza,
-            line=dict(color=colores[i % len(colores)]),  # ← Aquí el color automático por orden
+            line=dict(color=colores[i % len(colores)]),  # ← Esto ya funciona bien
             hovertemplate=
                 '<b>Plaza:</b> ' + plaza + '<br>' +
                 '<b>Semana:</b> %{x}<br>'+
@@ -653,6 +653,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
                 '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}<extra></extra>',
             customdata=df_plaza[['VENTA_PERDIDA_PESOS']].values
         ))
+
 
     fig.update_layout(
         title='Venta Perdida semanal por Plaza 🌄',
