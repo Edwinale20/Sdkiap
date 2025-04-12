@@ -702,6 +702,7 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
         fig.add_trace(go.Scatter(x=df_div['Semana Contable'], 
                                  y=df_div['% Venta Perdida'], 
                                  mode='lines+markers+text',
+                                 name=division
                                  text=df_div['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
                                  textposition='top right',
                                 hovertemplate=
