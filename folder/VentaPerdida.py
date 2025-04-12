@@ -242,6 +242,9 @@ else:
 
 #---------------------------------------------------------------------
 
+st.sidebar.title("Nombre de tu Título")
+
+
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
 opciones_proveedor = ['Ninguno'] + list(VENTA_PERDIDA['PROVEEDOR'].unique())
 proveedor = st.sidebar.selectbox('Seleccione el Proveedor', opciones_proveedor)
