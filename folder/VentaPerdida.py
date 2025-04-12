@@ -463,7 +463,9 @@ def graficar_venta_perdida_por_subcategoria(df_venta_filtrada, df_venta_perdida_
     fig.update_traces(
         texttemplate='%{text:.2f}%', 
         textposition='inside', 
-        hovertemplate='%{x}<br>$%{y:.2f}M de pesos<br>%{text:.1f}% de Venta Perdida'
+        hovertemplate='%{x}<br>$%{y:.2f}M de pesos<br>%{text:.1f}% de Venta Perdida',
+                      '<b>% Venta Perdida:</b> %{y:.1f}%<br>'
+
     )
 
 
