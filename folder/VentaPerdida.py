@@ -632,6 +632,11 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
             text=df_plaza['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
             textposition='top right',
             name=plaza
+            hovertemplate=
+                '<b>Semana:</b> %{x}<br>'+
+                '<b>% Venta Perdida:</b> %{y:.1f}%<br>'+
+                '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}<extra></extra>',
+            customdata=df_plaza[['VENTA_PERDIDA_PESOS']].values
         ))
 
     fig.update_layout(
