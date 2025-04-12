@@ -681,7 +681,13 @@ def graficar_venta_perdida(df_venta_filtrada, df_venta_perdida_filtrada):
                                  mode='lines+markers+text',
                                  text=df_div['% Venta Perdida'].apply(lambda x: f'{x:.1f}%'),
                                  textposition='top right',
-                                 name=f'División {division}'))
+                                hovertemplate=
+                                    '<b>División:</b> ' + division + '<br>' +
+                                    '<b>Semana:</b> %{x}<br>'+
+                                    '<b>% Venta Perdida:</b> %{y:.1f}%<br>'+
+                                    '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}<extra></extra>',
+                                customdata=df_plaza[['VENTA_PERDIDA_PESOS']].values
+                                     ))
 
     # Configurar el layout
     fig.update_layout(title="Venta Perdida semanal por División 🏴🏳️",
