@@ -413,8 +413,11 @@ def graficar_venta_perdida_por_proveedor_y_semana(df_venta_perdida_filtrada, df_
             y=df_proveedor['% Venta Perdida'],
             mode='lines+markers',
             name=proveedor,
-            hovertemplate='%{x}<br>% Venta Perdida: %{y:.2f}%<extra></extra>'+
-                          '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}<extra></extra>',
+            hovertemplate=(
+                '%{x}<br>'
+                '% Venta Perdida: %{y:.2f}%<br>'
+                '<b>Venta Perdida $:</b> %{customdata[0]:,.0f}'
+                '<extra></extra>'
         ))
 
     # Configurar el diseño de la gráfica
