@@ -247,10 +247,18 @@ division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 opciones_plaza = ['Ninguno'] + list(VENTA_PERDIDA['PLAZA'].unique())
 plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
 
+# Filtro ACACIA - Selección de tipo de filtro
 tipo_filtro_acacia = st.sidebar.selectbox(
     'Seleccione filtro Plaza ACACIA',
     ['Todas', 'Filtrar por Plaza Específica']
 )
+
+# Si elige filtrar por plaza específica — mostrar opciones
+if tipo_filtro_acacia == 'Filtrar por Plaza Específica':
+    opciones_plaza_acacia = list(VENTA_PERDIDA['Plazas_acacia'].unique())
+    plazas_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
+else:
+    plazas_acacia = []  # Vacio si eligió "Todas"
 
 opciones_mercado = ['Ninguno'] + list(VENTA_PERDIDA['MERCADO'].unique())
 mercado = st.sidebar.selectbox('Seleccione el Mercado', opciones_mercado)
@@ -287,14 +295,11 @@ if plaza != 'Ninguno':
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
 # Si elige filtrar, ahora sí muestras las opciones
-if tipo_filtro_acacia == 'Filtrar por Plaza Específica':
-    opciones_plaza_acacia = list(VENTA_PERDIDA['Plazas_acacia'].unique())
-    plaza_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
+# Filtro PLAZA ACACIA
+if tipo_filtro_acacia == 'Filtrar por Plaza Específica' and plaza_acacia:
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas_acacia'].isin(plaza_acacia)]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas_acacia'].isin(plaza_acacia)]
 
-    # Filtras solo si seleccionó algo
-    if plaza_acacia:
-        df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas_acacia'].isin(plaza_acacia)]
-        df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas_acacia'].isin(plaza_acacia)]
 
 # Filtrar por Mercado
 if mercado != 'Ninguno':
