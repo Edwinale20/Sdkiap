@@ -228,8 +228,8 @@ map_acacia = {
 }
 
 # Aplicar el mapeo al DataFrame
-VENTA['PLAZA'] = VENTA['Plazas ACACIA'].map(map_acacia)
-VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['Plazas ACACIA'].map(map_acacia)
+VENTA['PLAZA'] = VENTA['Plazas_acacia'].map(map_acacia)
+VENTA_PERDIDA['PLAZA'] = VENTA_PERDIDA['Plazas_acacia'].map(map_acacia)
 
 # Calcular la suma de 'Venta Neta Total'
 if 'Venta Neta Total' in VENTA.columns:
@@ -250,7 +250,7 @@ division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 opciones_plaza = ['Ninguno'] + list(VENTA_PERDIDA['PLAZA'].unique())
 plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
 
-opciones_plaza_acacia= ['Ninguno'] + list(VENTA_PERDIDA['Plazas ACACIA'].unique())
+opciones_plaza_acacia= ['Ninguno'] + list(VENTA_PERDIDA['Plazas_acacia'].unique())
 plaza_acacia = st.sidebar.multiselect('Seleccione la Plaza ACACIA', opciones_plaza_acacia)
 
 opciones_mercado = ['Ninguno'] + list(VENTA_PERDIDA['MERCADO'].unique())
@@ -289,8 +289,8 @@ if plaza != 'Ninguno':
 
 # Filtrar por Plaza ACACIA
 if plaza_acacia != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas ACACIA'] == plaza_acacia]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas ACACIA'] == plaza_acacia]
+    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['Plazas_acacia'] == plaza_acacia]
+    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['Plazas_acacia'] == plaza_acacia]
 
 # Filtrar por Mercado
 if mercado != 'Ninguno':
