@@ -266,7 +266,7 @@ plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
 
 # Paso 2 - Sidebar para elegir filtro
 tipo_filtro_acacia = st.sidebar.selectbox(
-    'Seleccione la Plaza ACACIA',
+    'Seleccione la Plaza ACACIA 🏪',
     ['Todas', 'Plazas ACACIA']
 )
 
