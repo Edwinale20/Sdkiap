@@ -676,7 +676,7 @@ def graficar_venta_perdida_por_plaza(df_venta_perdida_filtrada, df_venta_filtrad
     
     fig.update_traces(
     textposition="top left",
-    textfont=dict(size=23)  # Ajusta el valor de size según tus preferencias
+    textfont=dict(size=17)  # Ajusta el valor de size según tus preferencias
     )
 
     return fig
