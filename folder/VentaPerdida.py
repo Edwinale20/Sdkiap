@@ -251,7 +251,7 @@ else:
     print("La columna 'Venta Neta Total' no existe en el DataFrame.")
 
 #---------------------------------------------------------------------
-st.sidebar.image("el-logo.png", use_column_width=True)
+st.sidebar.image("https://github.com/Edwinale20/Sdkiap/blob/main/folder/el-logo.png", use_column_width=True)
 st.sidebar.title("Filtros 🔠")
 
 
