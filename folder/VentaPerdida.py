@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from io import BytesIO
 import requests 
 import plotly.io as pio
-
+ 
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 st.markdown("🆕 Se añadió el filtro Plazas ACACIA. Con este filtro se podrá visualizar el performance en venta perdida de las plazas en donde ya inició el piloto de ACACIA, además de poder comparar con el resto de plazas dicho indicador.", unsafe_allow_html=True)
