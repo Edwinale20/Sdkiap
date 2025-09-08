@@ -897,7 +897,7 @@ with kpi_top:
     # Artículo en %
     with c7:
         nombre, pct = kpis["Articulo"]
-        st.metric("📦 Artículo 80/20 con alta VP (Últimas 3 semanas)", f"{pct:.2f}%", delta=nombre)
+        st.metric("🚨 Artículo 80/20 con alta VP (Últimas 3 semanas)", f"{pct:.2f}%", delta=nombre)
 
     # Plaza en $
     with c8:
