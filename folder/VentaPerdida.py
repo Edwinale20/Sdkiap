@@ -895,16 +895,16 @@ with kpi_top:
     # Artículo en %
     with c7:
         nombre, pct = kpis["Articulo"]
-        st.metric("📦 Artículo con alta VP (3 sem)", f"{pct:.2f}%", delta=nombre)
+        st.metric("📦 Artículo 80/20 con alta VP (Últimas 3 semanas)", f"{pct:.2f}%", delta=nombre)
 
     # Plaza en $
     with c8:
         nombre, vp = kpis["Plaza"]
-        st.metric("🏬 Plaza con mayor VP (últ. sem)", f"${vp:,.0f}", delta=nombre)
+        st.metric("🏬 Plaza con mayor VP (Última semana)", f"${vp:,.0f}", delta=nombre)
 
     # Mercado en $
     with c9:
         nombre, vp = kpis["Mercado"]
-        st.metric("🛒 Mercado con mayor VP (3 sem)", f"${vp:,.0f}", delta=nombre)
+        st.metric("🛒 Mercado con mayor VP (Últimas 3 semanas)", f"${vp:,.0f}", delta=nombre)
 
  
