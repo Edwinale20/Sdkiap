@@ -247,8 +247,8 @@ else:
     print("La columna 'Venta Neta Total' no existe en el DataFrame.")
 
 #---------------------------------------------------------------------
-st.sidebar.title("Filtros 🔠")
 st.sidebar.image("https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/folder/el-logo.png", width=170)
+st.sidebar.title("Filtros 🔠")
 
 
 # Paso 1: Crear una lista de opciones para el filtro, incluyendo "Ninguno"
