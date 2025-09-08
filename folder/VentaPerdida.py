@@ -95,7 +95,6 @@ def venta_perdida(csv_files):
 
     # Eliminar las columnas no deseadas
     combined_df = combined_df.drop(columns=['UPC','CAMPO', 'INVENTARIO_UDS','INVENTARIO_PESOS','VENTA_UDS_PTD','VENTA_PESOS_PTD','NUM_TIENDA','NOMBRE_TIENDA','ESTATUS', 'PROVEEDOR', 'Fecha', 'CATEGORIA'])
-    #combined_df.loc[combined_df['DESC_ARTICULO'].str.contains('Vuse', case=False, na=False), 'CATEGORIA'] = '062 RRPs (Vapor y tabaco calentado)'
     combined_df['DIVISION'] = combined_df['DIVISION'].astype(str).str[:2]
     combined_df['PLAZA'] = combined_df['PLAZA'].astype(str).str[:3]
     combined_df['MERCADO'] = combined_df['MERCADO'].astype(str).str[1:]
@@ -185,7 +184,6 @@ VENTA['SEGMENTO'] = VENTA['ARTICULO'].map(segmento_dict)
 VENTA['SUBCATEGORIA'] = VENTA['ARTICULO'].map(subcategoria_dict)
 VENTA['PROVEEDOR'] = VENTA['ARTICULO'].map(proveedor_dict)
 
-#VENTA = VENTA.dropna(subset=['PROVEEDOR'])
 VENTA_PERDIDA = VENTA_PERDIDA.dropna(subset=['PROVEEDOR'])
 
 
@@ -251,7 +249,6 @@ else:
     print("La columna 'Venta Neta Total' no existe en el DataFrame.")
 
 #---------------------------------------------------------------------
-st.sidebar.image("https://raw.githubusercontent.com/Edwinale20/Sdkiap/main/folder/el-logo.png", width=170)
 st.sidebar.title("Filtros 🔠")
 
 
@@ -262,19 +259,16 @@ proveedor = st.sidebar.selectbox('Seleccione el Proveedor', opciones_proveedor)
 opciones_division = ['Ninguno'] + list(VENTA_PERDIDA['DIVISION'].unique())
 division = st.sidebar.selectbox('Seleccione la División', opciones_division)
 
-opciones_plaza = ['Ninguno'] + list(VENTA_PERDIDA['PLAZA'].unique())
-plaza = st.sidebar.selectbox('Seleccione la Plaza', opciones_plaza)
-
 # Paso 2 - Sidebar para elegir filtro
 tipo_filtro_acacia = st.sidebar.selectbox(
-    'Seleccione la Plaza ACACIA 🏪',
-    ['Total plazas', 'Plazas ACACIA 🏪']
+    'Seleccione la Plaza 🏪',
+    ['Total plazas', 'Plazas 🏪']
 )
 
 # Paso 3 - Mostrar multiselect solo si quiere filtrar
-if tipo_filtro_acacia == 'Plazas ACACIA 🏪':
+if tipo_filtro_acacia == 'Plazas 🏪':
     opciones_plaza_acacia = list(set(plazas_acacia.values()))
-    plazas_acacia_seleccionadas = st.sidebar.multiselect('Plazas ACACIA 🏪', opciones_plaza_acacia)
+    plazas_acacia_seleccionadas = st.sidebar.multiselect('Plazas 🏪', opciones_plaza_acacia)
 else:
     plazas_acacia_seleccionadas = []  # No selecciona nada
 
@@ -307,11 +301,6 @@ else:
 if division != 'Ninguno':
     df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['DIVISION'] == division]
     df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['DIVISION'] == division]
-
-# Filtrar por Plaza
-if plaza != 'Ninguno':
-    df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['PLAZA'] == plaza]
-    df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['PLAZA'] == plaza]
 
 # Paso 3 - Filtrar solo si seleccionó plazas
 if plazas_acacia_seleccionadas:
@@ -503,10 +492,7 @@ def graficar_venta_perdida_por_mercado_lineas(df_venta_filtrada, df_venta_perdid
 
     # Combinar los DataFrames para poder calcular el porcentaje
     df_combined = pd.merge(df_venta_perdida_suma, df_venta_suma, on=['Semana Contable', 'MERCADO'])
-
-    # Calcular el porcentaje de venta perdida respecto a la venta neta total del mismo mercado
     df_combined['% Venta Perdida'] = (df_combined['VENTA_PERDIDA_PESOS'] / df_combined['Venta Neta Total']) * 100
-
     # Redondear el porcentaje a un decimal y formatear como texto con el símbolo %
     df_combined['% Venta Perdida'] = df_combined['% Venta Perdida'].round(1).astype(str) + '%'
 
@@ -797,25 +783,20 @@ figura9 = graficar_top_venta_perdida_en_dinero(df_venta_filtrada, df_venta_perdi
 
 #---------------------------------------------------------------------
 # Divisor y encabezado
-
+# Primera parte
 st.divider()
 st.subheader(':orange[Comparación de Venta perdida por Semana y Categoria]')
-
-# Crear columnas
 c1, c6, c3 = st.columns([4, 3, 4])
 
-# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
 with c1:
     st.plotly_chart(figura, use_container_width=True)
 with c6:
     st.plotly_chart(figura6, use_container_width=True)
 with c3:
     st.plotly_chart(figura3, use_container_width=True)
-
+# Segunda parte
 st.divider()
-st.subheader(':orange[Revisión por División y Plaza]')
-
-# Crear columnas
+st.subheader(':orange[Comparación por División y Plaza]')
 c4, c5 = st.columns([4, 4])
 
 with c4:
@@ -824,14 +805,11 @@ with c4:
 with c5:    
     st.plotly_chart(figura8, use_container_width=True)
 
-
+# Tercera parte
 st.divider()
 st.subheader(':orange[Comparación de Venta perdida por Mercado y División]')
-
-# Crear columnas
 c6, c7, c8 = st.columns([4, 3, 4])
 
-# Columna 1: Gráfica de Comparación de Venta Perdida y Venta Neta por Proveedor
 with c6:
     st.plotly_chart(figura4, use_container_width=True)
 with c7:
@@ -839,11 +817,95 @@ with c7:
 with c8:
     st.plotly_chart(figura2, use_container_width=True)
 
+# Cuarta parte
 st.divider()
 st.subheader(':orange[Artículos con mayor venta perdida]')
 c9 = st.columns([4])  # Si planeas añadir más columnas, ajusta los pesos.
-with c9[0]:  # Accede explícitamente a la primera columna.
+with c9[0]:  
     st.plotly_chart(figura9, use_container_width=True)
 
+MASTER['ARTICULO'] = MASTER['ARTICULO'].astype(str)
+articulo_a_descripcion = MASTER.set_index('ARTICULO')['DESCRIPCIÓN'].to_dict()
+
+def Fig10(df_venta_perdida_filtrada, df_venta_filtrada, articulo_a_descripcion=None):
+    def pick(df, opciones):
+        return next((c for c in opciones if c in df.columns), None)
+
+    col_articulo = pick(df_venta_perdida_filtrada, ["ARTICULO","Artículo","ARTÍCULO"])
+    col_plaza    = pick(df_venta_perdida_filtrada, ["PLAZA","Plaza"])
+    col_mercado  = pick(df_venta_perdida_filtrada, ["MERCADO","Mercado"])
+    col_semana   = pick(df_venta_perdida_filtrada, ["Semana Contable","SEMANA_CONTABLE"])
+
+    df_combined = pd.merge(
+        df_venta_perdida_filtrada, 
+        df_venta_filtrada, 
+        on=[col_articulo,col_plaza,col_mercado,col_semana], 
+        how="inner"
+    )
+
+    df_combined['% Venta Perdida'] = (
+        df_combined['VENTA_PERDIDA_PESOS'] / 
+        df_combined['Venta Neta Total'].replace(0, np.nan)
+    ) * 100
+
+    # Últimas 3 semanas
+    ult_3_sem = sorted(df_combined[col_semana].unique(), reverse=True)[:3]
+    df_3sem = df_combined[df_combined[col_semana].isin(ult_3_sem)]
+
+    # 1️⃣ Artículo → en %
+    art_kpi = (
+        df_3sem.groupby(col_articulo)[["Venta Neta Total","VENTA_PERDIDA_PESOS"]]
+        .sum()
+        .assign(pct=lambda d: (d["VENTA_PERDIDA_PESOS"]/d["Venta Neta Total"].replace(0,np.nan))*100)
+        .sort_values(["Venta Neta Total","VENTA_PERDIDA_PESOS"], ascending=False)
+        .head(1)
+    )
+    art_code = art_kpi.index[0]
+    art_desc = articulo_a_descripcion.get(str(art_code), str(art_code)) if articulo_a_descripcion else str(art_code)
+    art_pct  = art_kpi["pct"].iloc[0]
+
+    # 2️⃣ Plaza → en pesos $
+    ultima_sem = max(df_combined[col_semana])
+    plaza_grp = (
+        df_combined[df_combined[col_semana]==ultima_sem]
+        .groupby(col_plaza)["VENTA_PERDIDA_PESOS"]
+        .sum()
+    )
+    plaza_kpi = plaza_grp.idxmax()
+    plaza_vp  = plaza_grp.max()
+
+    # 3️⃣ Mercado → en pesos $
+    mercado_grp = (
+        df_3sem.groupby(col_mercado)["VENTA_PERDIDA_PESOS"]
+        .sum()
+    )
+    mercado_kpi = mercado_grp.idxmax()
+    mercado_vp  = mercado_grp.max()
+
+    return {
+        "Articulo": (art_desc, art_pct),
+        "Plaza": (plaza_kpi, plaza_vp),
+        "Mercado": (mercado_kpi, mercado_vp)
+    }
+
+kpis = Fig10(df_venta_perdida_filtrada, df_venta_filtrada, articulo_a_descripcion)
+
+with kpi_top:
+    c7, c8, c9 = st.columns([4,3,4])
+
+    # Artículo en %
+    with c7:
+        nombre, pct = kpis["Articulo"]
+        st.metric("📦 Artículo con alta VP (3 sem)", f"{pct:.2f}%", delta=nombre)
+
+    # Plaza en $
+    with c8:
+        nombre, vp = kpis["Plaza"]
+        st.metric("🏬 Plaza con mayor VP (últ. sem)", f"${vp:,.0f}", delta=nombre)
+
+    # Mercado en $
+    with c9:
+        nombre, vp = kpis["Mercado"]
+        st.metric("🛒 Mercado con mayor VP (3 sem)", f"${vp:,.0f}", delta=nombre)
 
  
