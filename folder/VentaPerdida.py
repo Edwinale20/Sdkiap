@@ -14,7 +14,7 @@ st.markdown("✅ Se incluyen datos de las últimas 6 semanas.", unsafe_allow_htm
 st.markdown("🧮 KPI´s principales", unsafe_allow_html=True)
  
 kpi_top = st.container()
-  
+   
 # Función para obtener la lista de archivos en una carpeta de GitHub con URL raw
 @st.cache_data(ttl=3600)
 def list_files_in_github_folder(folder_url):
