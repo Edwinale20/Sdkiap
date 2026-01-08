@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from io import BytesIO
 import requests 
 import plotly.io as pio
-    
+      
 st.set_page_config(page_title="Reporte de Venta Pérdida Cigarros y RRPS", page_icon="🚬", layout="wide", initial_sidebar_state="expanded")
 st.title("📊 Reporte de Venta Perdida Cigarros y RRPS 🚬")
 st.markdown("✅ Se incluyen datos de las últimas 6 semanas.", unsafe_allow_html=True)
