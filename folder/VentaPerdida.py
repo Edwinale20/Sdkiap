@@ -911,3 +911,5 @@ with kpi_top:
         st.metric("🛒 Mercado con mayor VP (Últimas 3 semanas)", f"${vp:,.0f}", delta=nombre)
 
  
+st.write(df[['Día','Fecha','Semana Contable']].head(10))
+st.write(df[['Día','Fecha','Semana Contable']].tail(10))
