@@ -88,7 +88,8 @@ def venta_perdida(csv_files):
         df['Fecha'] = pd.to_datetime(file_name, format='%d%m%Y', errors='coerce')
         
         # Calcular la semana contable
-        df['Semana Contable'] = df['Fecha'].apply(lambda x: f"{x.year}{str(x.isocalendar()[1]).zfill(2)}" if pd.notnull(x) else 'Fecha inválida')
+        iso = df['Fecha'].dt.isocalendar()
+        df['Semana Contable'] = iso['year'].astype(str) + iso['week'].astype(str).astype(str).str.zfill(2)
         
         # Concatenar el DataFrame actual al DataFrame combinado
         combined_df = pd.concat([combined_df, df])
