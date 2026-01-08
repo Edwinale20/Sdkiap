@@ -333,9 +333,9 @@ if categoria != 'Ninguno':
 # Modificar la columna 'Semana Contable' en ambos DataFrames
 # Semana Contable se queda como texto ordenable: YYYY-WWW (ej: 2025-W52, 2026-W01)
 for d in (df_venta_perdida_filtrada, df_venta_filtrada):
-    wk = pd.to_numeric(d['Semana Contable'], errors='coerce').astype('Int64')      # limpia 202601.0 etc
-    s  = wk.astype(str).str.zfill(6)                                              # asegura 6 dígitos
-    d['Semana Contable'] = s.str[:4] + "-W" + s.str[-2:]                          # 2026-W01
+    wk = pd.to_numeric(d['Semana Contable'], errors='coerce').astype('Int64')
+    s  = wk.astype(str).str.zfill(6)
+    d['Semana Contable'] = s.str[:4] + "-Sem " + s.str[-2:]
 
 df_venta_perdida_filtrada = df_venta_perdida_filtrada[df_venta_perdida_filtrada['FAMILIA'] != 'BYE']
 df_venta_filtrada = df_venta_filtrada[df_venta_filtrada['FAMILIA'] != 'BYE'] 
